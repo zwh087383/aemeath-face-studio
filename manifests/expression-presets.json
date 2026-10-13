@@ -1,0 +1,25 @@
+{
+  "model": "鸣潮_爱弥斯1.05.pmx",
+  "source_sha256": "79b622d0a87ab61516d2c3008d241d9145daa905acbcbd29d070c68cc55fa437",
+  "preview": "http://127.0.0.1:18764/",
+  "default_strength": 0.8,
+  "morph_formula": "clamp(coefficient * strength, 0, 1); 114 blush follows the blush slider * strength",
+  "transition": "exponential smoothing: 1 - exp(-12 * deltaSeconds); blink follows a 0.28-second curve",
+  "presets": [
+    {"name":"自然","morphs":{},"head_tilt_radians":0},
+    {"name":"浅笑","morphs":{"6":0.24,"41":0.28,"61":0.48},"head_tilt_radians":-0.018},
+    {"name":"开心","morphs":{"6":0.65,"24":1.25,"52":0.42,"61":0.55},"head_tilt_radians":-0.035},
+    {"name":"疑惑","morphs":{"10":0.7,"21":0.25,"42":0.22,"56":0.20,"87":0.3},"head_tilt_radians":0.11},
+    {"name":"认真","morphs":{"0":0.6,"3":0.22,"34":0.4,"62":0.45,"87":0.5},"head_tilt_radians":0.012},
+    {"name":"惊讶","morphs":{"14":0.7,"42":0.7,"49":0.15,"56":0.6},"head_tilt_radians":0},
+    {"name":"害羞","morphs":{"10":0.35,"36":0.3,"38":0.17,"61":0.38,"114":0.85},"head_tilt_radians":-0.06},
+    {"name":"俏皮","morphs":{"6":0.5,"25":1.25,"61":0.65,"52":0.16},"head_tilt_radians":-0.07}
+  ],
+  "mouths":{"あ":52,"い":53,"う":54,"え":55,"お":56},
+  "manual_mouth_weight":0.4,
+  "blush":{"morph":114,"name":"照れ公式","material":11},
+  "physics":false,
+  "audio":false,
+  "renderer":{"three":"0.186.1","three_mmd":"0.1.0","backend":"WebGL2 TSL","tone_mapping":"NeutralToneMapping"},
+  "scope":"Standalone local preview only; original model/textures and WAI source are unchanged by this task."
+}

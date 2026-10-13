@@ -1,0 +1,36 @@
+<project toolsVersion="5.6">
+  <dependency name="gtest" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/gtest/${config}">
+    <package name="gtest" version="1.13.0-0-${platform}-static-${config}" platforms="linux-x86_64 windows-x86_64" />
+  </dependency>
+  <dependency name="benchmark" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/benchmark/${config}">
+    <package name="benchmark" version="1.9.1-1-${platform}-${config}" platforms="linux-x86_64 windows-x86_64" />
+  </dependency>
+  <dependency name="eigen" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/eigen">
+    <package name="eigen" version="3.4.0-0" platforms="windows-x86_64 linux-x86_64" />
+  </dependency>
+  <dependency name="zlib" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/zlib/${config}">
+    <package name="zlib" version="1.3.1-0-windows-x86_64-static-${config}" platforms="windows-x86_64" />
+    <package name="zlib" version="1.3.1-0-linux-x86_64-static-${config}" platforms="linux-x86_64" />
+  </dependency>
+  <dependency name="magic_enum" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/magic_enum">
+    <package name="magic_enum" version="0.9.5-0" />
+  </dependency>
+  <dependency name="refl-cpp" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/refl-cpp">
+    <package name="refl-cpp" version="0.12.4-0" />
+  </dependency>
+  <dependency name="audiofile" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/audiofile" tags="non-redist">
+    <package name="audiofile" version="1.1.1-0" />
+  </dependency>
+  <dependency name="cxxopts" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/cxxopts">
+    <package name="cxxopts" version="3.2.0-1" />
+  </dependency>
+  <dependency name="nlohmann_json" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/nlohmann_json">
+    <package name="nlohmann_json" version="3.11.2-0" />
+  </dependency>
+  <dependency name="cnpy" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/cnpy/${config}">
+    <package name="cnpy" version="20180601-0-cci-${platform}-static-${config}" />
+  </dependency>
+  <dependency name="tbtsvd" linkPath="vendor/Audio2Face-3D-SDK/_deps/target-deps/tbtsvd">
+    <package name="tbtsvd" version="0.0-21e06aa-1" />
+  </dependency>
+</project>

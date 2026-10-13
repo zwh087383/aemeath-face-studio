@@ -1,0 +1,3 @@
+[submodule "vendor/Audio2Face-3D-SDK"]
+	path = vendor/Audio2Face-3D-SDK
+	url = https://github.com/NVIDIA/Audio2Face-3D-SDK.git

@@ -1,0 +1,17 @@
+{
+  "name": "aemeath-face-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local PMX expression studio and Audio2Face lip-sync preview",
+  "scripts": {
+    "start": "node server.cjs",
+    "check": "node --check server.cjs && node --check viewer.js && node --check expressions/viewer.js"
+  },
+  "dependencies": {
+    "@takahirox/three-mmd": "0.1.0",
+    "mmd-parser": "1.1.4",
+    "three": "0.186.1"
+  },
+  "engines": {"node": ">=20"}
+}

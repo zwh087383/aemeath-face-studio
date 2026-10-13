@@ -1,0 +1,81 @@
+{
+  "repo": "nvidia/Audio2Face-3D-v2.3.1-Claire",
+  "revision": "a46eafb067adfdd7cc8f5c7941586b309004561c",
+  "files": [
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\.gitattributes",
+      "bytes": 1519,
+      "sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\README.md",
+      "bytes": 11162,
+      "sha256": "17385721f7940e3e4d4d2e266a54ace3aff5dadea8518334135d05a716cb3518"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\a2f_ms_config.json",
+      "bytes": 7413,
+      "sha256": "380f87208cd683bc0fa8d03387b9b8b0c30706c07e5e878fbfc18f21e9858336"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\bs_skin.npz",
+      "bytes": 39182291,
+      "sha256": "cc94a937af9438f007b811b3f686015d7e96fc0ce964974905e130724ff1c4db"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\bs_skin_config.json",
+      "bytes": 4944,
+      "sha256": "8580023e66336320e3802efe5c9be8a72fd5aa6162561d27225a056565345e4c"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\bs_tongue.npz",
+      "bytes": 1147669,
+      "sha256": "82032cb3a4f08d1f6e543ce80e8d9587aca8394b8cc009384ef21db19a90450e"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\bs_tongue_config.json",
+      "bytes": 1871,
+      "sha256": "9ef4d5ee664cb0975624de11b689b374c69d74b99126297ac4bdd58b9470a750"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\config.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\implicit_emo_db.npz",
+      "bytes": 1713860,
+      "sha256": "562ee9fac5eded20753eb40230519a7304156c177f52d9aa44580d5cf57c0447"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\model.json",
+      "bytes": 484,
+      "sha256": "1a03fc1c3b1978e9c73c197c4fe5af90da63f1c7d65cb85750035f60608fe1fd"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\model_config.json",
+      "bytes": 980,
+      "sha256": "8d0da080d3960177f920b5aa1734da86715d9ed2c307e6245c12525f2066b800"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\model_data.npz",
+      "bytes": 106350002,
+      "sha256": "4c2205365533790add8219170b9505960e31d2fca82708f2e3db31c5ccf092a4"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\network.onnx",
+      "bytes": 159044772,
+      "sha256": "6bb7a3a3c22491960e71a14742891e0d7205d7c80414aebe326cad82fd6867c3"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\network_info.json",
+      "bytes": 1017,
+      "sha256": "41b49f603139c2b52f395793480cc830685634cc94955bbad80121787a36fc21"
+    },
+    {
+      "path": "models\\Audio2Face-3D-v2.3.1-Claire\\trt_info.json",
+      "bytes": 506,
+      "sha256": "b288b5bba1e9eb0a1c49db0d3e182203d303c3ff26b8a6a284a3879b01758d0a"
+    }
+  ]
+}

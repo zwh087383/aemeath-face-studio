@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-12",
+  "url": "http://127.0.0.1:18765/",
+  "method": "Observed real local browser through CUA; not a mocked renderer",
+  "model_rendered": true,
+  "playback_time_advanced": true,
+  "pause_observed_at_seconds": 6.38,
+  "seek_positions_checked_seconds": [7.93, 9.53],
+  "volume_comparison_at_9_53_seconds": {"pmx_52_a": 0.2428, "other_vowels": 0},
+  "audio2face_comparison_at_9_53_seconds": {"pmx_54_u": 0.1337, "pmx_56_o": 0.2236},
+  "smile_overlay_observed": true,
+  "offset_test": {"offset_ms": 100, "audio_seconds": 9.53, "sampled_animation_seconds": 9.63},
+  "contact_sheet_saved_and_visually_inspected": true,
+  "captured_browser_warning_error_count_at_finish": 0,
+  "final_state": "paused at 0 seconds, neutral mood, zero offset, controls enabled",
+  "screenshot": "browser-preview.jpg",
+  "contact_sheet": "preview-contact-sheet.png",
+  "limitations": [
+    "This validates playback of precomputed curves, not a live speech service.",
+    "PMX retargeting remains an approximate mapping and does not expose every source channel.",
+    "No quantitative phoneme-level lip-sync quality evaluation or character voice cloning was performed."
+  ]
+}

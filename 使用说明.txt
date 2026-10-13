@@ -1,0 +1,72 @@
+GitHub 仓库的通用启动/恢复方式请先阅读 README.md；下文保留首次本机试验记录。
+
+Audio2Face / 爱弥斯：独立本地试验
+工作目录：F:\AI-Shared\model_test\face
+建立日期：2026-10-12
+
+当前已完成
+1. 在此目录准备 NVIDIA 官方 Audio2Face-3D-SDK、Claire 2.3.1 模型、CUDA 12.9.1 局部工具链和 TensorRT 10.13.2.6。
+2. 使用本机 Visual Studio 2022 和 CMake 编译官方 SDK，再编译独立的 WAV → 面部控制参数导出程序。
+3. 在 RTX 5070 Ti Laptop GPU 上运行 14.935 秒中文测试音频，导出 52 路标准面部参数及 16 路额外舌头参数。
+4. 使用爱弥斯 PMX 的原生口型制作独立浏览器预览，可播放、暂停、拖动进度、调整幅度、调整同步偏移、对比音量驱动、叠加表情和导出对照图。
+
+打开预览
+浏览器访问：http://127.0.0.1:18765/
+若服务已经关闭，在 PowerShell 执行：
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "F:\AI-Shared\model_test\face\scripts\start-preview.ps1"
+服务只绑定本机回环地址。保持此进程运行，Ctrl+C 可结束服务。
+
+重新导出测试音频的口型（使用已编译程序和本机引擎）
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "F:\AI-Shared\model_test\face\scripts\run-probe.ps1" -ChunkSamples 320 -FrameRate 30
+
+使用其他语音
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "F:\AI-Shared\model_test\face\scripts\run-probe.ps1" -AudioPath "F:\AI-Shared\model_test\face\audio\your-voice.wav" -OutputPath "F:\AI-Shared\model_test\face\outputs\your-voice.json" -ChunkSamples 320 -FrameRate 30
+输入必须是非空、单声道、16000 Hz WAV。预览当前固定展示 chinese-probe 音频及其结果；换音频需要一并更新对应结果和 waveform.json。仅导出 JSON 不会自动切换预览。
+
+需要重新编译时
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "F:\AI-Shared\model_test\face\scripts\build-local.ps1"
+只有更换 GPU / TensorRT 或需要重建引擎时，增加 -RebuildEngine。
+该脚本复用本机已有 D:\VS、D:\CMake 和 Python 3.10。环境变量只在当前 PowerShell 进程内设置。
+
+本机实测（单次观测，非正式性能基准）
+- 音频：Microsoft Huihui Desktop 中文测试声音，14.935 秒，16 kHz、16-bit、单声道。
+- 30 FPS、20 ms 音频块：449 帧，推理及参数拷贝耗时 2.488 秒；初始化另计 0.463 秒。
+- 60 FPS、20 ms 音频块：897 帧，推理及参数拷贝耗时 4.789 秒；初始化另计 0.460 秒。
+- 初次 60 FPS 整段输入运行曾耗时 13.592 秒、初始化 1.319 秒。预热、GPU 频率、桌面负载和输入方式会影响结果。
+- 20 ms 分块测试在累计输入 260 ms 音频后生成首帧。测试没有按真实时钟等待输入，因此这是模型的数据需求，不是完整对话的实测延迟。
+- 当前浏览器先读取已生成的曲线，再按音频 currentTime 同步；没有连接实时 TTS、麦克风或 WAI。
+- 所有帧的 68 个值均通过数量、有限性、范围、时间单调性和关键嘴部变化检查。
+
+目录与产物
+models/Audio2Face-3D-v2.3.1-Claire/  原始模型与固定版本来源记录，约 307 MB。
+runtime/                          此目录独有 CUDA 与 TensorRT，约 5.06 GB。
+cache/                            下载压缩包、编译依赖缓存与 TensorRT 缓存，约 3.13 GB。
+vendor/Audio2Face-3D-SDK/           官方 SDK，未改其跟踪源码。
+native/                           本地试验导出程序的独立源码。
+build/                            SDK DLL 和 face_probe.exe。
+assets/Aemeath/                    原始人物模型与贴图的副本。
+audio/chinese-probe.wav            中文测试语音。
+outputs/chinese-probe.json         30 FPS 推理结果，含通道名、逐帧时间和权重。
+outputs/chinese-probe-60fps.json    首次 60 FPS 整段输入结果。
+outputs/chinese-probe-60fps-chunked.json  后续 60 FPS 分块结果。
+outputs/engines/claire/network.trt 本机 TensorRT 引擎，约 161 MB。
+outputs/validation.json            验证和测量记录。
+outputs/disk-usage.json            实测文件体积，GB 为十进制。
+outputs/preview-contact-sheet.png  实际模型渲染的六格对照图。
+preview/                          本地播放页面与依赖；server.cjs 是服务入口。
+scripts/                          环境、构建、数据准备、导出、验证和启动脚本。
+logs/                             原始执行日志、下载校验和恢复记录。
+
+适配现状
+Audio2Face 的 68 路输出与 PMX 的 199 个表情并非一一对应。目前预览映射五元音、口宽及嘴角，圆唇和合唇加入组合约束；它是初步调校，尚非完整角色面部绑定。大量眼部/舌头通道未映射到人物。眨眼、呼吸和浅笑/认真为独立表现层，语音情绪输入全部为零，未做自动情绪识别。没有修改原始 PMX 顶点、贴图或 WAI 业务源码。
+
+来源
+SDK: https://github.com/NVIDIA/Audio2Face-3D-SDK
+SDK commit: 1ca0f02535ed774f5dbcd724a31cd486368dc783
+Model: https://huggingface.co/nvidia/Audio2Face-3D-v2.3.1-Claire
+CUDA manifest: https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.9.1.json
+TensorRT: https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.13.2/zip/TensorRT-10.13.2.6.Windows.win10.cuda-12.9.zip
+Character: https://www.aplaybox.com/details/model/VAUBif86B0mu
+模型 / CUDA 使用上游提供的散列校验；TensorRT 验证长度、ZIP CRC 并记录本机计算的 SHA256。SDK 声明的编译依赖从 NVIDIA 官方 CloudFront 下载；其下载器 SSL 连接失败后使用系统 Python HTTPS 获取同一版本，没有关闭 TLS 校验。完整错误与恢复过程保留在 logs。
+
+本地实验合计约 8.90 GB（约 8.29 GiB），包含下载包与开发工具，不代表将来部署客户端必须携带全部内容。

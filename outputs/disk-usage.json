@@ -1,0 +1,92 @@
+{
+  "measured_at_utc": "2026-10-13T05:21:58.462288+00:00",
+  "root": "F:\\AI-Shared\\model_test\\face",
+  "directories": [
+    {
+      "directory": "assets",
+      "bytes": 68149591,
+      "gb_decimal": 0.068,
+      "gib": 0.063,
+      "files": 57
+    },
+    {
+      "directory": "audio",
+      "bytes": 477966,
+      "gb_decimal": 0.0,
+      "gib": 0.0,
+      "files": 1
+    },
+    {
+      "directory": "build",
+      "bytes": 113092156,
+      "gb_decimal": 0.113,
+      "gib": 0.105,
+      "files": 243
+    },
+    {
+      "directory": "cache",
+      "bytes": 3133558863,
+      "gb_decimal": 3.134,
+      "gib": 2.918,
+      "files": 3617
+    },
+    {
+      "directory": "logs",
+      "bytes": 1588402,
+      "gb_decimal": 0.002,
+      "gib": 0.001,
+      "files": 20
+    },
+    {
+      "directory": "models",
+      "bytes": 307472183,
+      "gb_decimal": 0.307,
+      "gib": 0.286,
+      "files": 16
+    },
+    {
+      "directory": "native",
+      "bytes": 8867,
+      "gb_decimal": 0.0,
+      "gib": 0.0,
+      "files": 2
+    },
+    {
+      "directory": "outputs",
+      "bytes": 163633323,
+      "gb_decimal": 0.164,
+      "gib": 0.152,
+      "files": 8
+    },
+    {
+      "directory": "preview",
+      "bytes": 21391914,
+      "gb_decimal": 0.021,
+      "gib": 0.02,
+      "files": 1322
+    },
+    {
+      "directory": "runtime",
+      "bytes": 5063913025,
+      "gb_decimal": 5.064,
+      "gib": 4.716,
+      "files": 2196
+    },
+    {
+      "directory": "scripts",
+      "bytes": 25249,
+      "gb_decimal": 0.0,
+      "gib": 0.0,
+      "files": 11
+    },
+    {
+      "directory": "vendor",
+      "bytes": 30904035,
+      "gb_decimal": 0.031,
+      "gib": 0.029,
+      "files": 1126
+    }
+  ],
+  "total_bytes": 8904215574,
+  "note": "File lengths including archives and caches; not physical allocated disk clusters."
+}

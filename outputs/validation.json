@@ -1,0 +1,1100 @@
+{
+  "validation": "passed",
+  "measurements": [
+    {
+      "audio_path": "F:\\AI-Shared\\model_test\\face\\audio\\chinese-probe.wav",
+      "audio_seconds": 14.935,
+      "chunk_samples": 0,
+      "first_output_after_audio_seconds": 14.935,
+      "format": "audio2face-blendshapes-v1",
+      "fps": 60,
+      "frame_count": 897,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "inference_seconds": 13.5917036,
+      "load_seconds": 1.3190165,
+      "model": "Claire 2.3.1",
+      "model_config": "F:\\AI-Shared\\model_test\\face\\outputs\\engines\\claire\\model.json",
+      "realtime_factor": 0.9100571543354536,
+      "sample_rate": 16000,
+      "streaming_test_paced_in_wall_time": false,
+      "vram_free_difference_bytes": 333447168,
+      "weight_count": 68,
+      "file": "chinese-probe-60fps.json",
+      "channel_statistics": {
+        "eyeBlinkLeft": {
+          "min": 0.0,
+          "max": 0.011717310175299644,
+          "mean": 0.0006203038474298815
+        },
+        "eyeLookDownLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookInLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookOutLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookUpLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeSquintLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeWideLeft": {
+          "min": 0.0,
+          "max": 0.1064760759472847,
+          "mean": 0.024276704710355625
+        },
+        "eyeBlinkRight": {
+          "min": 0.0,
+          "max": 0.010964329354465008,
+          "mean": 0.0006132255849330359
+        },
+        "eyeLookDownRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookInRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookOutRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookUpRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeSquintRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeWideRight": {
+          "min": 0.0,
+          "max": 0.10531668365001678,
+          "mean": 0.024103743655246163
+        },
+        "jawForward": {
+          "min": 0.0,
+          "max": 0.07770707458257675,
+          "mean": 0.006236286709749486
+        },
+        "jawLeft": {
+          "min": 0.0,
+          "max": 0.10186173766851425,
+          "mean": 0.007388538126370533
+        },
+        "jawRight": {
+          "min": 0.0,
+          "max": 0.22873327136039734,
+          "mean": 0.036523807958616414
+        },
+        "jawOpen": {
+          "min": 0.0,
+          "max": 0.5629249811172485,
+          "mean": 0.07598071852507755
+        },
+        "mouthClose": {
+          "min": 0.0,
+          "max": 0.6452606320381165,
+          "mean": 0.050180043872501176
+        },
+        "mouthFunnel": {
+          "min": 0.0,
+          "max": 0.49474725127220154,
+          "mean": 0.043054332317450046
+        },
+        "mouthPucker": {
+          "min": 0.0,
+          "max": 0.3378359079360962,
+          "mean": 0.02710502464922576
+        },
+        "mouthLeft": {
+          "min": 0.0,
+          "max": 0.013372024521231651,
+          "mean": 0.0005102882056187448
+        },
+        "mouthRight": {
+          "min": 0.0,
+          "max": 0.054929740726947784,
+          "mean": 0.009161049143604093
+        },
+        "mouthSmileLeft": {
+          "min": 0.0,
+          "max": 0.3210197985172272,
+          "mean": 0.04214834780064349
+        },
+        "mouthSmileRight": {
+          "min": 0.0,
+          "max": 0.29366642236709595,
+          "mean": 0.04286177954651034
+        },
+        "mouthFrownLeft": {
+          "min": 0.0,
+          "max": 0.20412670075893402,
+          "mean": 0.017073932827347163
+        },
+        "mouthFrownRight": {
+          "min": 0.0,
+          "max": 0.20355865359306335,
+          "mean": 0.016573522633508576
+        },
+        "mouthDimpleLeft": {
+          "min": 0.0,
+          "max": 0.4661209285259247,
+          "mean": 0.06220709372278995
+        },
+        "mouthDimpleRight": {
+          "min": 0.0,
+          "max": 0.4595821797847748,
+          "mean": 0.06137189450465133
+        },
+        "mouthStretchLeft": {
+          "min": 0.0,
+          "max": 0.8438737392425537,
+          "mean": 0.14949240668706903
+        },
+        "mouthStretchRight": {
+          "min": 0.000761180417612195,
+          "max": 0.8416127562522888,
+          "mean": 0.14993335527437712
+        },
+        "mouthRollLower": {
+          "min": 0.0,
+          "max": 0.7206360101699829,
+          "mean": 0.09510067744027854
+        },
+        "mouthRollUpper": {
+          "min": 0.0,
+          "max": 0.38557469844818115,
+          "mean": 0.04776380664242786
+        },
+        "mouthShrugLower": {
+          "min": 0.0,
+          "max": 0.19381166994571686,
+          "mean": 0.01321254227715715
+        },
+        "mouthShrugUpper": {
+          "min": 0.0,
+          "max": 0.6336999535560608,
+          "mean": 0.13352384694800412
+        },
+        "mouthPressLeft": {
+          "min": 0.0,
+          "max": 0.5152440667152405,
+          "mean": 0.045052132463808583
+        },
+        "mouthPressRight": {
+          "min": 0.0,
+          "max": 0.5185551643371582,
+          "mean": 0.04316796611174942
+        },
+        "mouthLowerDownLeft": {
+          "min": 0.0,
+          "max": 0.33541038632392883,
+          "mean": 0.02711609720905652
+        },
+        "mouthLowerDownRight": {
+          "min": 0.0,
+          "max": 0.33460092544555664,
+          "mean": 0.028318539298757408
+        },
+        "mouthUpperUpLeft": {
+          "min": 0.0,
+          "max": 0.08380548655986786,
+          "mean": 0.008852185011198152
+        },
+        "mouthUpperUpRight": {
+          "min": 0.0,
+          "max": 0.08363284170627594,
+          "mean": 0.009478892922818175
+        },
+        "browDownLeft": {
+          "min": 0.0,
+          "max": 0.004066124092787504,
+          "mean": 0.00017169060128098345
+        },
+        "browDownRight": {
+          "min": 0.0,
+          "max": 0.003841537982225418,
+          "mean": 8.890552730223447e-05
+        },
+        "browInnerUp": {
+          "min": 0.0,
+          "max": 0.02859201282262802,
+          "mean": 0.0014337608307356691
+        },
+        "browOuterUpLeft": {
+          "min": 0.0,
+          "max": 0.09466207027435303,
+          "mean": 0.025521796214034293
+        },
+        "browOuterUpRight": {
+          "min": 0.0,
+          "max": 0.09662224352359772,
+          "mean": 0.025937081247825684
+        },
+        "cheekPuff": {
+          "min": 0.0,
+          "max": 0.09331691265106201,
+          "mean": 0.00871808384449331
+        },
+        "cheekSquintLeft": {
+          "min": 0.0,
+          "max": 0.007380842696875334,
+          "mean": 3.63264638610707e-05
+        },
+        "cheekSquintRight": {
+          "min": 0.0,
+          "max": 0.008231486193835735,
+          "mean": 7.234620822348377e-05
+        },
+        "noseSneerLeft": {
+          "min": 0.0,
+          "max": 0.002484706463292241,
+          "mean": 7.913799498566616e-06
+        },
+        "noseSneerRight": {
+          "min": 0.0,
+          "max": 0.0026245613116770983,
+          "mean": 1.0701445060105446e-05
+        },
+        "tongueOut": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueTipUp": {
+          "min": 0.0,
+          "max": 0.0009645605459809303,
+          "mean": 3.4697692768093833e-06
+        },
+        "tongueTipDown": {
+          "min": 0.0,
+          "max": 0.24230974912643433,
+          "mean": 0.033638060256659406
+        },
+        "tongueTipLeft": {
+          "min": 0.0,
+          "max": 5.894219793844968e-05,
+          "mean": 1.7581502231336113e-07
+        },
+        "tongueTipRight": {
+          "min": 0.0,
+          "max": 0.021497122943401337,
+          "mean": 0.0029540162817620623
+        },
+        "tongueRollUp": {
+          "min": 0.0,
+          "max": 0.006932062096893787,
+          "mean": 5.891790892224766e-05
+        },
+        "tongueRollDown": {
+          "min": 0.0,
+          "max": 0.14085820317268372,
+          "mean": 0.01279479583570632
+        },
+        "tongueRollLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueRollRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueUp": {
+          "min": 0.0,
+          "max": 0.010217724367976189,
+          "mean": 0.00015274703684286291
+        },
+        "tongueDown": {
+          "min": 0.20000000298023224,
+          "max": 0.6898232698440552,
+          "mean": 0.28489910099352217
+        },
+        "tongueLeft": {
+          "min": 0.0,
+          "max": 0.0664377361536026,
+          "mean": 0.01100896376721362
+        },
+        "tongueRight": {
+          "min": 0.0,
+          "max": 0.05474512651562691,
+          "mean": 0.009329437428469376
+        },
+        "tongueIn": {
+          "min": 0.0,
+          "max": 0.4219466745853424,
+          "mean": 0.04905951423440082
+        },
+        "tongueStretch": {
+          "min": 0.0,
+          "max": 0.04888898506760597,
+          "mean": 0.004271647216479757
+        },
+        "tongueWide": {
+          "min": 0.0,
+          "max": 0.0002557887928560376,
+          "mean": 1.8619818102334518e-06
+        },
+        "tongueNarrow": {
+          "min": 0.0,
+          "max": 0.007455363404005766,
+          "mean": 0.0005111054884711874
+        }
+      },
+      "validation": "passed"
+    },
+    {
+      "audio_path": "F:\\AI-Shared\\model_test\\face\\audio\\chinese-probe.wav",
+      "audio_seconds": 14.935,
+      "chunk_samples": 320,
+      "first_output_after_audio_seconds": 0.26,
+      "format": "audio2face-blendshapes-v1",
+      "fps": 30,
+      "frame_count": 449,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "inference_seconds": 2.4882546,
+      "load_seconds": 0.4633128,
+      "model": "Claire 2.3.1",
+      "model_config": "F:\\AI-Shared\\model_test\\face\\outputs\\engines\\claire\\model.json",
+      "realtime_factor": 0.16660559758955473,
+      "sample_rate": 16000,
+      "streaming_test_paced_in_wall_time": false,
+      "vram_free_difference_bytes": 333447168,
+      "weight_count": 68,
+      "file": "chinese-probe.json",
+      "channel_statistics": {
+        "eyeBlinkLeft": {
+          "min": 0.0,
+          "max": 0.011917388066649437,
+          "mean": 0.0006246699188569642
+        },
+        "eyeLookDownLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookInLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookOutLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookUpLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeSquintLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeWideLeft": {
+          "min": 0.0,
+          "max": 0.10433772206306458,
+          "mean": 0.02419284809116056
+        },
+        "eyeBlinkRight": {
+          "min": 0.0,
+          "max": 0.011155884712934494,
+          "mean": 0.000617092710993961
+        },
+        "eyeLookDownRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookInRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookOutRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookUpRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeSquintRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeWideRight": {
+          "min": 0.0,
+          "max": 0.10313589870929718,
+          "mean": 0.024020248941251297
+        },
+        "jawForward": {
+          "min": 0.0,
+          "max": 0.07892099022865295,
+          "mean": 0.006326187665816093
+        },
+        "jawLeft": {
+          "min": 0.0,
+          "max": 0.10081123560667038,
+          "mean": 0.007458682356240943
+        },
+        "jawRight": {
+          "min": 0.0,
+          "max": 0.230512335896492,
+          "mean": 0.03631084096111764
+        },
+        "jawOpen": {
+          "min": 0.0,
+          "max": 0.5644849538803101,
+          "mean": 0.07623811216643275
+        },
+        "mouthClose": {
+          "min": 0.0,
+          "max": 0.6438791155815125,
+          "mean": 0.050119977411190474
+        },
+        "mouthFunnel": {
+          "min": 0.0,
+          "max": 0.49202555418014526,
+          "mean": 0.04279965061292926
+        },
+        "mouthPucker": {
+          "min": 0.0,
+          "max": 0.33985811471939087,
+          "mean": 0.027087172405137853
+        },
+        "mouthLeft": {
+          "min": 0.0,
+          "max": 0.014207703061401844,
+          "mean": 0.000509101488132313
+        },
+        "mouthRight": {
+          "min": 0.0,
+          "max": 0.05442441254854202,
+          "mean": 0.009114645845523963
+        },
+        "mouthSmileLeft": {
+          "min": 0.0,
+          "max": 0.327151358127594,
+          "mean": 0.04249061477710667
+        },
+        "mouthSmileRight": {
+          "min": 0.0,
+          "max": 0.29919227957725525,
+          "mean": 0.04319818580381682
+        },
+        "mouthFrownLeft": {
+          "min": 0.0,
+          "max": 0.19916130602359772,
+          "mean": 0.017141113627307185
+        },
+        "mouthFrownRight": {
+          "min": 0.0,
+          "max": 0.19960418343544006,
+          "mean": 0.016653842549282545
+        },
+        "mouthDimpleLeft": {
+          "min": 0.0,
+          "max": 0.4682662785053253,
+          "mean": 0.062250983094128125
+        },
+        "mouthDimpleRight": {
+          "min": 0.0,
+          "max": 0.4615011513233185,
+          "mean": 0.06141402434603147
+        },
+        "mouthStretchLeft": {
+          "min": 0.0,
+          "max": 0.847913920879364,
+          "mean": 0.1498310052074662
+        },
+        "mouthStretchRight": {
+          "min": 0.0008222800097428262,
+          "max": 0.8455051779747009,
+          "mean": 0.15026646408287161
+        },
+        "mouthRollLower": {
+          "min": 0.0,
+          "max": 0.7130265831947327,
+          "mean": 0.09559938399808768
+        },
+        "mouthRollUpper": {
+          "min": 0.0,
+          "max": 0.35356396436691284,
+          "mean": 0.04777438940140958
+        },
+        "mouthShrugLower": {
+          "min": 0.0,
+          "max": 0.19721746444702148,
+          "mean": 0.013277980024565775
+        },
+        "mouthShrugUpper": {
+          "min": 0.0,
+          "max": 0.6383992433547974,
+          "mean": 0.1343811274300545
+        },
+        "mouthPressLeft": {
+          "min": 0.0,
+          "max": 0.5428893566131592,
+          "mean": 0.045259708755585194
+        },
+        "mouthPressRight": {
+          "min": 0.0,
+          "max": 0.5460408926010132,
+          "mean": 0.043376270891698744
+        },
+        "mouthLowerDownLeft": {
+          "min": 0.0,
+          "max": 0.3300636410713196,
+          "mean": 0.02713757152865048
+        },
+        "mouthLowerDownRight": {
+          "min": 0.0,
+          "max": 0.33212795853614807,
+          "mean": 0.028379808306269596
+        },
+        "mouthUpperUpLeft": {
+          "min": 0.0,
+          "max": 0.0819065049290657,
+          "mean": 0.008867322936234582
+        },
+        "mouthUpperUpRight": {
+          "min": 0.0,
+          "max": 0.0820557102560997,
+          "mean": 0.00949749013819227
+        },
+        "browDownLeft": {
+          "min": 0.0,
+          "max": 0.004007397219538689,
+          "mean": 0.00016374715341588953
+        },
+        "browDownRight": {
+          "min": 0.0,
+          "max": 0.003759551327675581,
+          "mean": 8.945435405305544e-05
+        },
+        "browInnerUp": {
+          "min": 0.0,
+          "max": 0.02851141430437565,
+          "mean": 0.0014914668814295603
+        },
+        "browOuterUpLeft": {
+          "min": 0.0,
+          "max": 0.0930594652891159,
+          "mean": 0.025422611811954345
+        },
+        "browOuterUpRight": {
+          "min": 0.0,
+          "max": 0.09503602981567383,
+          "mean": 0.025838179313885278
+        },
+        "cheekPuff": {
+          "min": 0.0,
+          "max": 0.09298672527074814,
+          "mean": 0.008699862479806243
+        },
+        "cheekSquintLeft": {
+          "min": 0.0,
+          "max": 0.006151630077511072,
+          "mean": 4.359940311018513e-05
+        },
+        "cheekSquintRight": {
+          "min": 0.0,
+          "max": 0.006894666701555252,
+          "mean": 8.304297965116879e-05
+        },
+        "noseSneerLeft": {
+          "min": 0.0,
+          "max": 0.0012728634756058455,
+          "mean": 5.356970041957093e-06
+        },
+        "noseSneerRight": {
+          "min": 0.0,
+          "max": 0.0017904398264363408,
+          "mean": 8.361126277554274e-06
+        },
+        "tongueOut": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueTipUp": {
+          "min": 0.0,
+          "max": 0.0009466094779781997,
+          "mean": 4.798296153470708e-06
+        },
+        "tongueTipDown": {
+          "min": 0.0,
+          "max": 0.24223816394805908,
+          "mean": 0.0337624731997283
+        },
+        "tongueTipLeft": {
+          "min": 0.0,
+          "max": 4.900639760307968e-05,
+          "mean": 1.833172963292002e-07
+        },
+        "tongueTipRight": {
+          "min": 0.0,
+          "max": 0.021509217098355293,
+          "mean": 0.0029670337584794797
+        },
+        "tongueRollUp": {
+          "min": 0.0,
+          "max": 0.006245611235499382,
+          "mean": 6.661518641025707e-05
+        },
+        "tongueRollDown": {
+          "min": 0.0,
+          "max": 0.12779657542705536,
+          "mean": 0.01279226457233435
+        },
+        "tongueRollLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueRollRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueUp": {
+          "min": 0.0,
+          "max": 0.009745828807353973,
+          "mean": 0.0001648783527951447
+        },
+        "tongueDown": {
+          "min": 0.20000000298023224,
+          "max": 0.6897549033164978,
+          "mean": 0.2850470206387059
+        },
+        "tongueLeft": {
+          "min": 0.0,
+          "max": 0.06643929332494736,
+          "mean": 0.010999990849442823
+        },
+        "tongueRight": {
+          "min": 0.0,
+          "max": 0.05474942922592163,
+          "mean": 0.009317606625446936
+        },
+        "tongueIn": {
+          "min": 0.0,
+          "max": 0.4075772166252136,
+          "mean": 0.048913294694465245
+        },
+        "tongueStretch": {
+          "min": 0.0,
+          "max": 0.042149823158979416,
+          "mean": 0.004252175674720601
+        },
+        "tongueWide": {
+          "min": 0.0,
+          "max": 0.000256444065598771,
+          "mean": 1.9426798413498954e-06
+        },
+        "tongueNarrow": {
+          "min": 0.0,
+          "max": 0.007396392058581114,
+          "mean": 0.0005066922180441972
+        }
+      },
+      "validation": "passed"
+    },
+    {
+      "audio_path": "F:\\AI-Shared\\model_test\\face\\audio\\chinese-probe.wav",
+      "audio_seconds": 14.935,
+      "chunk_samples": 320,
+      "first_output_after_audio_seconds": 0.26,
+      "format": "audio2face-blendshapes-v1",
+      "fps": 60,
+      "frame_count": 897,
+      "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "inference_seconds": 4.788929,
+      "load_seconds": 0.4603986,
+      "model": "Claire 2.3.1",
+      "model_config": "F:\\AI-Shared\\model_test\\face\\outputs\\engines\\claire\\model.json",
+      "realtime_factor": 0.3206514228322732,
+      "sample_rate": 16000,
+      "streaming_test_paced_in_wall_time": false,
+      "vram_free_difference_bytes": 333447168,
+      "weight_count": 68,
+      "file": "chinese-probe-60fps-chunked.json",
+      "channel_statistics": {
+        "eyeBlinkLeft": {
+          "min": 0.0,
+          "max": 0.011717310175299644,
+          "mean": 0.0006203038474298815
+        },
+        "eyeLookDownLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookInLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookOutLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookUpLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeSquintLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeWideLeft": {
+          "min": 0.0,
+          "max": 0.1064760759472847,
+          "mean": 0.024276704710355625
+        },
+        "eyeBlinkRight": {
+          "min": 0.0,
+          "max": 0.010964329354465008,
+          "mean": 0.0006132255849330359
+        },
+        "eyeLookDownRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookInRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookOutRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeLookUpRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeSquintRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "eyeWideRight": {
+          "min": 0.0,
+          "max": 0.10531668365001678,
+          "mean": 0.024103743655246163
+        },
+        "jawForward": {
+          "min": 0.0,
+          "max": 0.07770707458257675,
+          "mean": 0.006236286709749486
+        },
+        "jawLeft": {
+          "min": 0.0,
+          "max": 0.10186173766851425,
+          "mean": 0.007388538126370533
+        },
+        "jawRight": {
+          "min": 0.0,
+          "max": 0.22873327136039734,
+          "mean": 0.036523807958616414
+        },
+        "jawOpen": {
+          "min": 0.0,
+          "max": 0.5629249811172485,
+          "mean": 0.07598071852507755
+        },
+        "mouthClose": {
+          "min": 0.0,
+          "max": 0.6452606320381165,
+          "mean": 0.050180043872501176
+        },
+        "mouthFunnel": {
+          "min": 0.0,
+          "max": 0.49474725127220154,
+          "mean": 0.043054332317450046
+        },
+        "mouthPucker": {
+          "min": 0.0,
+          "max": 0.3378359079360962,
+          "mean": 0.02710502464922576
+        },
+        "mouthLeft": {
+          "min": 0.0,
+          "max": 0.013372024521231651,
+          "mean": 0.0005102882056187448
+        },
+        "mouthRight": {
+          "min": 0.0,
+          "max": 0.054929740726947784,
+          "mean": 0.009161049143604093
+        },
+        "mouthSmileLeft": {
+          "min": 0.0,
+          "max": 0.3210197985172272,
+          "mean": 0.04214834780064349
+        },
+        "mouthSmileRight": {
+          "min": 0.0,
+          "max": 0.29366642236709595,
+          "mean": 0.04286177954651034
+        },
+        "mouthFrownLeft": {
+          "min": 0.0,
+          "max": 0.20412670075893402,
+          "mean": 0.017073932827347163
+        },
+        "mouthFrownRight": {
+          "min": 0.0,
+          "max": 0.20355865359306335,
+          "mean": 0.016573522633508576
+        },
+        "mouthDimpleLeft": {
+          "min": 0.0,
+          "max": 0.4661209285259247,
+          "mean": 0.06220709372278995
+        },
+        "mouthDimpleRight": {
+          "min": 0.0,
+          "max": 0.4595821797847748,
+          "mean": 0.06137189450465133
+        },
+        "mouthStretchLeft": {
+          "min": 0.0,
+          "max": 0.8438737392425537,
+          "mean": 0.14949240668706903
+        },
+        "mouthStretchRight": {
+          "min": 0.000761180417612195,
+          "max": 0.8416127562522888,
+          "mean": 0.14993335527437712
+        },
+        "mouthRollLower": {
+          "min": 0.0,
+          "max": 0.7206360101699829,
+          "mean": 0.09510067744027854
+        },
+        "mouthRollUpper": {
+          "min": 0.0,
+          "max": 0.38557469844818115,
+          "mean": 0.04776380664242786
+        },
+        "mouthShrugLower": {
+          "min": 0.0,
+          "max": 0.19381166994571686,
+          "mean": 0.01321254227715715
+        },
+        "mouthShrugUpper": {
+          "min": 0.0,
+          "max": 0.6336999535560608,
+          "mean": 0.13352384694800412
+        },
+        "mouthPressLeft": {
+          "min": 0.0,
+          "max": 0.5152440667152405,
+          "mean": 0.045052132463808583
+        },
+        "mouthPressRight": {
+          "min": 0.0,
+          "max": 0.5185551643371582,
+          "mean": 0.04316796611174942
+        },
+        "mouthLowerDownLeft": {
+          "min": 0.0,
+          "max": 0.33541038632392883,
+          "mean": 0.02711609720905652
+        },
+        "mouthLowerDownRight": {
+          "min": 0.0,
+          "max": 0.33460092544555664,
+          "mean": 0.028318539298757408
+        },
+        "mouthUpperUpLeft": {
+          "min": 0.0,
+          "max": 0.08380548655986786,
+          "mean": 0.008852185011198152
+        },
+        "mouthUpperUpRight": {
+          "min": 0.0,
+          "max": 0.08363284170627594,
+          "mean": 0.009478892922818175
+        },
+        "browDownLeft": {
+          "min": 0.0,
+          "max": 0.004066124092787504,
+          "mean": 0.00017169060128098345
+        },
+        "browDownRight": {
+          "min": 0.0,
+          "max": 0.003841537982225418,
+          "mean": 8.890552730223447e-05
+        },
+        "browInnerUp": {
+          "min": 0.0,
+          "max": 0.02859201282262802,
+          "mean": 0.0014337608307356691
+        },
+        "browOuterUpLeft": {
+          "min": 0.0,
+          "max": 0.09466207027435303,
+          "mean": 0.025521796214034293
+        },
+        "browOuterUpRight": {
+          "min": 0.0,
+          "max": 0.09662224352359772,
+          "mean": 0.025937081247825684
+        },
+        "cheekPuff": {
+          "min": 0.0,
+          "max": 0.09331691265106201,
+          "mean": 0.00871808384449331
+        },
+        "cheekSquintLeft": {
+          "min": 0.0,
+          "max": 0.007380842696875334,
+          "mean": 3.63264638610707e-05
+        },
+        "cheekSquintRight": {
+          "min": 0.0,
+          "max": 0.008231486193835735,
+          "mean": 7.234620822348377e-05
+        },
+        "noseSneerLeft": {
+          "min": 0.0,
+          "max": 0.002484706463292241,
+          "mean": 7.913799498566616e-06
+        },
+        "noseSneerRight": {
+          "min": 0.0,
+          "max": 0.0026245613116770983,
+          "mean": 1.0701445060105446e-05
+        },
+        "tongueOut": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueTipUp": {
+          "min": 0.0,
+          "max": 0.0009645605459809303,
+          "mean": 3.4697692768093833e-06
+        },
+        "tongueTipDown": {
+          "min": 0.0,
+          "max": 0.24230974912643433,
+          "mean": 0.033638060256659406
+        },
+        "tongueTipLeft": {
+          "min": 0.0,
+          "max": 5.894219793844968e-05,
+          "mean": 1.7581502231336113e-07
+        },
+        "tongueTipRight": {
+          "min": 0.0,
+          "max": 0.021497122943401337,
+          "mean": 0.0029540162817620623
+        },
+        "tongueRollUp": {
+          "min": 0.0,
+          "max": 0.006932062096893787,
+          "mean": 5.891790892224766e-05
+        },
+        "tongueRollDown": {
+          "min": 0.0,
+          "max": 0.14085820317268372,
+          "mean": 0.01279479583570632
+        },
+        "tongueRollLeft": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueRollRight": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "tongueUp": {
+          "min": 0.0,
+          "max": 0.010217724367976189,
+          "mean": 0.00015274703684286291
+        },
+        "tongueDown": {
+          "min": 0.20000000298023224,
+          "max": 0.6898232698440552,
+          "mean": 0.28489910099352217
+        },
+        "tongueLeft": {
+          "min": 0.0,
+          "max": 0.0664377361536026,
+          "mean": 0.01100896376721362
+        },
+        "tongueRight": {
+          "min": 0.0,
+          "max": 0.05474512651562691,
+          "mean": 0.009329437428469376
+        },
+        "tongueIn": {
+          "min": 0.0,
+          "max": 0.4219466745853424,
+          "mean": 0.04905951423440082
+        },
+        "tongueStretch": {
+          "min": 0.0,
+          "max": 0.04888898506760597,
+          "mean": 0.004271647216479757
+        },
+        "tongueWide": {
+          "min": 0.0,
+          "max": 0.0002557887928560376,
+          "mean": 1.8619818102334518e-06
+        },
+        "tongueNarrow": {
+          "min": 0.0,
+          "max": 0.007455363404005766,
+          "mean": 0.0005111054884711874
+        }
+      },
+      "validation": "passed"
+    }
+  ],
+  "limits": [
+    "Chunk tests deliver audio without wall-clock pacing; they measure readiness, not end-to-end conversation latency.",
+    "Warm-up, GPU clock, renderer activity, and CPU scheduling affect timings; these are local single-run observations.",
+    "Explicit emotions are zero; no automatic emotion recognition is claimed.",
+    "PMX retargeting is an approximate hand-tuned mapping, not a trained 68-channel character rig."
+  ]
+}
