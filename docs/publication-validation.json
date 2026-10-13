@@ -1,0 +1,136 @@
+{
+  "files": 99,
+  "total_bytes": 72239912,
+  "largest": {
+    "path": "assets/Aemeath/鸣潮_爱弥斯1.05.pmx",
+    "bytes": 16589483
+  },
+  "credential_pattern_scan": "passed",
+  "probe": {
+    "audio_path": "audio/chinese-probe.wav",
+    "audio_seconds": 14.935,
+    "chunk_samples": 320,
+    "first_output_after_audio_seconds": 0.26,
+    "format": "audio2face-blendshapes-v1",
+    "fps": 30,
+    "frame_count": 449,
+    "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+    "inference_seconds": 12.2793904,
+    "load_seconds": 1.5900101,
+    "model": "Claire 2.3.1",
+    "model_config": "outputs/engines/claire/model.json",
+    "realtime_factor": 0.8221888449949782,
+    "sample_rate": 16000,
+    "streaming_test_paced_in_wall_time": false,
+    "vram_free_difference_bytes": 333447168,
+    "weight_count": 68,
+    "path_note": "Paths normalized relative to the original project; actual run used its existing local engine."
+  },
+  "probe_validation": "passed",
+  "date": "2026-10-12 America/Los_Angeles",
+  "source_commit_tested": "424f28b",
+  "checks": {
+    "javascript_syntax": "passed",
+    "powershell_ast_parse": "passed",
+    "python_compile": "passed",
+    "pinned_claire_sha256": "all 15 files passed",
+    "native_build": "passed with third-party CUDA C4819 codepage warnings",
+    "clean_clone_npm_ci": "passed",
+    "sdk_submodule_network_restore": "1ca0f02535ed774f5dbcd724a31cd486368dc783",
+    "http": [
+      {
+        "path": "/",
+        "status": 200,
+        "bytes": 8380
+      },
+      {
+        "path": "/expressions/",
+        "status": 200,
+        "bytes": 7639
+      },
+      {
+        "path": "/viewer.js",
+        "status": 200,
+        "bytes": 11364
+      },
+      {
+        "path": "/expressions/viewer.js",
+        "status": 200,
+        "bytes": 10294
+      },
+      {
+        "path": "/data/chinese-probe.json",
+        "status": 200,
+        "bytes": 370042
+      },
+      {
+        "path": "/data/waveform.json",
+        "status": 200,
+        "bytes": 11582
+      },
+      {
+        "path": "/model/%E9%B8%A3%E6%BD%AE_%E7%88%B1%E5%BC%A5%E6%96%AF1.05.pmx",
+        "status": 200,
+        "bytes": 16589483
+      },
+      {
+        "path": "/node_modules/three/build/three.module.js",
+        "status": 200,
+        "bytes": 662772
+      },
+      {
+        "path": "/node_modules/three/build/three.webgpu.js",
+        "status": 200,
+        "bytes": 2284850
+      },
+      {
+        "path": "/node_modules/three/build/three.tsl.js",
+        "status": 200,
+        "bytes": 36854
+      },
+      {
+        "path": "/node_modules/@takahirox/three-mmd/dist/index.js",
+        "status": 200,
+        "bytes": 565
+      },
+      {
+        "path": "/node_modules/mmd-parser/build/mmdparser.module.mjs",
+        "status": 200,
+        "bytes": 161227
+      },
+      {
+        "path": "/audio/chinese-probe.wav",
+        "status": 206,
+        "range": "bytes 0-255/477966"
+      }
+    ],
+    "browser": {
+      "audio_model_loaded": true,
+      "audio_played_to_end": true,
+      "seek_seconds": 2.4,
+      "six_frame_png_export": true,
+      "expression_model_loaded": true,
+      "eight_expression_gallery": true,
+      "expression_png_export": true,
+      "console_errors": []
+    }
+  },
+  "exports": {
+    "preview-contact-sheet.png": {
+      "bytes": 601219,
+      "sha256": "3db2f64dbe839bc987974324a0c8260a104fa1c0069ef141e73aee255146d9e1",
+      "location": "validation clone only; original screenshots retained"
+    },
+    "expression-contact-sheet.png": {
+      "bytes": 936984,
+      "sha256": "da9b0262f052239d1dbd8fcc4143075487ab3afd4b4bd0926bc87df7a3108cfb",
+      "location": "validation clone only; original screenshots retained"
+    }
+  },
+  "limits": [
+    "Clean clone validation covered preview installation, official SDK checkout, HTTP endpoints and real browser rendering.",
+    "Native driver was rebuilt and executed against the existing local CUDA, TensorRT, weights and engine; a second full multi-GB download or a different GPU was not tested.",
+    "The 12.2793904 second run is one local unpaced measurement, not a stable latency guarantee.",
+    "Credential scan checked common token/private-key patterns in text; it is not a formal security audit."
+  ]
+}

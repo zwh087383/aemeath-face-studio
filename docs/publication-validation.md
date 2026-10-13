@@ -1,7 +1,26 @@
-# Independent repository preparation — 2026-10-12
+# 仓库整理验证 · 2026-10-12
 
-The repository preserves both expression rendering experiments and the native Audio2Face driver. Packaging changes add the eight-expression entry point, a pinned npm manifest, a pinned upstream SDK submodule, model/runtime retrieval manifests, automatic discovery of local development tools, and repository-relative build dependency paths.
+本次将八表情试镜和语音口型预览、原生 Audio2Face 驱动、人物素材与示例结果整理为独立项目。新增固定版本的 npm 依赖、SDK 子模块、模型/运行库下载清单及可迁移的启动和构建脚本。渲染和口型映射的核心算法保持原有实现。
 
-The original GPU inference measurements and browser observations in `outputs/` are historical evidence from the initial local experiment. They are not relabeled as fresh inference benchmarks during publication.
+验证的源码提交为 `424f28b`；之后的提交只补充本文与验证记录。原始 `outputs/` 中的推理测量及截图继续作为首轮试验记录保存，未被本次结果覆盖。机器可读证据见 [publication-validation.json](publication-validation.json)。
 
-Publication checks are recorded below once completed. Repository visibility and remote commit identity are verified separately from local compilation and browser rendering.
+## 本次完成的检查
+
+- JavaScript 三个入口的 `node --check`、所有 PowerShell 脚本的 AST 解析和 Python 脚本编译通过。
+- Claire 固定 revision 的15个文件逐一通过大小与 SHA256 校验。
+- `build-local.ps1` 自动发现本机 Visual Studio、CMake、Ninja 和 Python，使用 `native` CUDA 架构重新编译 SDK 与原生驱动成功。第三方 CUDA 头文件有 C4819 编码警告，不影响构建结果。
+- 使用现有本机引擎对14.935秒中文音频重新运行推理：20ms分块输入、30FPS、449帧、68路参数。帧数、参数维度、有限性/范围、时间递增/间隔和嘴部变化检查通过。
+- 本次运行推理12.2793904秒，初始化1.5900101秒；累计260ms音频后首次输出。输入未按墙钟时间间隔送入，因此不代表端到端对话时延，也不能把早先2.488秒单次结果当作稳定性能承诺。
+- 在 `cache/publish-checkout` 建立全新本地检出，执行 `setup.ps1 -PreviewOnly`，通过 npm lockfile 安装3个包。
+- 在新检出中从官方 GitHub 拉取 SDK 子模块，确认提交为 `1ca0f02535ed774f5dbcd724a31cd486368dc783`。
+- 从新检出在 `127.0.0.1:18766` 启动预览。两个页面、脚本、实际 import map 入口、曲线数据与 PMX 的HTTP检查全部通过；WAV Range 请求返回206和正确的字节范围。
+- 实际浏览器加载人物成功；播放中文音频到结束、定位到2.40秒、导出六格口型图成功。八表情页面切换、八格画廊及 PNG 导出成功。两个页面未观察到浏览器 error 日志。
+- 新检出内导出的图像用于验证，原目录的首轮截图未被覆盖。
+- 发布前99个普通文件约72.24MB，另有1个 SDK Git 子模块；最大普通文件为16.59MB PMX。检查未发现常见访问令牌/私钥模式，模型权重、CUDA/TensorRT、下载缓存、日志及编译产物均未被暂存。此数量是补充本验证文件前的快照。
+- 自有源码的 `git diff --check` 通过；第三方原始素材说明保留原文，其中三行原有行末空格未清理。
+
+## 验证范围
+
+全新检出验证覆盖预览安装、SDK 网络恢复和真实浏览器渲染。本机原生驱动验证使用已经下载的 CUDA/TensorRT、权重及引擎；未重复下载整套数GB环境，也未在另一台设备上运行。工具链和权重的固定版本恢复脚本随仓库交付。
+
+GitHub 仓库目标为 `zwh087383/aemeath-face-studio`，发布分支为 `codex/initial-import-20261012`。仓库可见性和远程提交匹配在上传后另行验证，不用本地构建结果替代远端验证。
