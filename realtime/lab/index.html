@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>字幕驱动表情动作 · 实验验收台</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <header><div class="eyebrow">EXPERIMENTAL · LOCAL SUBTITLE SIDECAR</div><h1>语音继续说，字幕旁路选动作</h1><p>本地中文规则在独立 Worker 内选择表情与短动作，交给现有播放调度器。这里显示命令和测量结果；人物画面、Qwen 实时服务尚未接入。</p></header>
+    <section class="controls" aria-label="实验控制">
+      <div class="options"><label>音频分块 <select id="chunk"><option value="40">40 ms</option><option value="20">20 ms</option></select></label><label><input type="checkbox" id="fast"> 快速收完，继续播放</label><label><input type="checkbox" id="starve"> 模拟一次 1.2 秒断流</label><label>音量 <input type="range" id="volume" min="0" max="0.4" step="0.01" value="0.12"></label></div>
+      <div class="buttons"><button id="start" class="primary">开始本地流</button><button id="pause">暂停</button><button id="resume">恢复</button><button id="cancel" class="danger">打断回复</button><button id="replace">替换为新回复</button><button id="stale">注入旧动作</button></div>
+      <p id="message" role="status" aria-live="polite">尚未播放 · 不访问麦克风，不调用云端模型。</p>
+    </section>
+    <section class="subtitle-panel panel" aria-label="字幕旁路">
+      <div class="options"><label><input id="sidecar-enabled" type="checkbox" checked> 启用字幕旁路</label><label>表现强度 <select id="profile"><option value="gentle">克制</option><option value="balanced" selected>适中</option><option value="lively">活泼</option></select></label><label>验收模式 <select id="worker-mode"><option value="normal">正常</option><option value="slow">结果延迟 800 ms</option><option value="stalled">丢弃 Worker 回包</option></select></label></div>
+      <label for="subtitle-input">独立测试字幕</label>
+      <textarea id="subtitle-input" rows="3" maxlength="1024">你好，很高兴见到你！我轻轻挥挥手。让我想想这件事应该怎么解释。原来是这样，我明白了。别担心，我不会摇头。这个主意真不错，我们继续吧！</textarea>
+      <p>点击开始后分块投递以上文本。它是独立测试输入，并非播放音频的转写；选项在下一次开始时生效。</p>
+      <div class="buttons"><button id="subtitle-send">手动投递这段字幕</button><span id="sidecar-state">off</span></div>
+      <div class="subtitle-result"><div><small>已收到的字幕</small><p id="subtitle-live">等待测试字幕…</p></div><div><small>最近派发的命令</small><strong id="current-cue">等待动作命令</strong><span id="subtitle-reason">分析在 Worker 内运行，语音不等待它完成</span></div></div>
+    </section>
+    <section class="metrics" aria-label="实时指标">
+      <article><span>播放器</span><strong id="play-state">idle</strong><small id="generation">epoch —</small></article>
+      <article><span>实际媒体进度</span><strong id="media-time">0.000 s</strong><small id="buffer">队列 0.000 s</small></article>
+      <article><span>音频源节点</span><strong id="sources">0</strong><small id="input-state">输入未结束</small></article>
+      <article><span>本地调度 / 帧</span><strong id="cost">—</strong><small id="frames">尚无样本</small></article>
+    </section>
+    <section class="timeline"><div><span>播放</span><progress id="played" max="1" value="0"></progress><span id="duration">0.00 s</span></div><div><span>收包</span><progress id="received" max="1" value="0"></progress><span id="packets">0 包</span></div><p>进度来自 Web Audio 上下文时钟；这不是扬声器物理出声延迟测量。页面进入后台会安全打断，防止调度心跳失联。</p></section>
+    <section class="lower"><div class="panel"><h2>动作命令记录</h2><p>展示调度与收势命令，不代表角色画面已验收。</p><ol id="events"></ol></div><div class="panel"><h2>验收与证据</h2><p>连续采样统计本地调度耗时、帧间隔和音频节点数量。测试不含 PMX 渲染或云端推理。</p><div class="buttons"><button id="benchmark">采样 30 秒</button><button id="export">导出 JSON</button></div><pre id="evidence">等待操作…</pre></div></section>
+    <footer>独立目录 realtime/ · 角色工作室保持原样 · 接线后仍需验收实际手势与身体收势</footer>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

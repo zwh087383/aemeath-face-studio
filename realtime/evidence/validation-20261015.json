@@ -1,0 +1,601 @@
+{
+  "experimental": true,
+  "branch": "codex/experimental-subtitle-sidecar-20261015",
+  "generatedAt": "2026-10-15T10:17:17.597Z",
+  "node": {
+    "version": 1,
+    "generatedAt": "2026-10-15T10:16:51.932Z",
+    "environment": {
+      "node": "v24.15.0",
+      "platform": "win32",
+      "architecture": "x64"
+    },
+    "tests": {
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "passed": 97,
+      "failed": 0,
+      "skipped": 0,
+      "files": [
+        "tests/controller-sink.test.mjs",
+        "tests/scheduler.test.mjs",
+        "tests/stream-audio.test.mjs",
+        "tests/subtitle-rules.test.mjs",
+        "tests/subtitle-sidecar.test.mjs"
+      ],
+      "missingExistingTests": [],
+      "missingSubtitleTests": []
+    },
+    "rulesPerformance": {
+      "scope": "Node synchronous pure rules; alternating paired off/on loop; batch-average milliseconds per sentence. Excludes Worker, PCM, AudioContext, rendering and cloud. Does not prove zero overhead.",
+      "corpusSentences": 16,
+      "maxInputChars": 513,
+      "warmupPairs": 10,
+      "measuredPairs": 80,
+      "callsPerBatch": 320,
+      "measuredRuleCalls": 25600,
+      "offMsPerCall": {
+        "samples": 80,
+        "mean": 6.250000000003204E-06,
+        "p95": 9.687500000055138E-06,
+        "max": 0.000150937499999948
+      },
+      "onMsPerCall": {
+        "samples": 80,
+        "mean": 0.009847851562499982,
+        "p95": 0.01233468749999993,
+        "max": 0.017252812499999947
+      },
+      "pairedDeltaMsPerCall": {
+        "samples": 80,
+        "mean": 0.009841601562499986,
+        "p95": 0.01230937499999989,
+        "max": 0.017250624999999964
+      },
+      "maxCuesObserved": 2,
+      "sink": 9000
+    },
+    "performanceError": null,
+    "sourceChangedDuringTest": [],
+    "sourceManifest": [
+      {
+        "path": "browser-acceptance.cjs",
+        "sha256": "a9e1b52af33fa96c5ecd3a5791e0750763d6df8850338d58f3a90afa713cdba8"
+      },
+      {
+        "path": "browser-benchmark.cjs",
+        "sha256": "02284243573f739434592dc1939d0862af73291854f7e618b8c81836774a3746"
+      },
+      {
+        "path": "browser-subtitle-acceptance.cjs",
+        "sha256": "7931fe93b5bab9bb112fbb9131191fcef099891195530537359125344f6fd886"
+      },
+      {
+        "path": "CONTRACT.md",
+        "sha256": "5def07bccba74c476850195441221c74413e96cd875d0543895002b281e89f44"
+      },
+      {
+        "path": "controller-sink.mjs",
+        "sha256": "ae3223d8f33192d4fe5e9f3887a739acdb49986e6b53fa30c71c5be02b3a215b"
+      },
+      {
+        "path": "EXPERIMENTAL.md",
+        "sha256": "57be0e08f475ddfcc46d17c81f829f73a6b03ed18fda50430f15b260eb31dd3e"
+      },
+      {
+        "path": "lab/app.mjs",
+        "sha256": "d3a45eae4c4d33464645836570d42d4daacb6221aabda5ae679a174125947b22"
+      },
+      {
+        "path": "lab/index.html",
+        "sha256": "aab62da34a8c4145a203c44fa1720c661d6d5f2d93f1ae474685d5614e65f224"
+      },
+      {
+        "path": "lab/style.css",
+        "sha256": "f9e0f2faef2f21b7a6e40439825eb11c2161e5dfb6e58c8f449d5fd6bf00d4f9"
+      },
+      {
+        "path": "README.md",
+        "sha256": "d15ba27628e0d306f7fc3949aeb06ba00fa7bcac4d5bca57bdd3099be36f851a"
+      },
+      {
+        "path": "run-acceptance.mjs",
+        "sha256": "d0fbaae43ed49ed773d04e619b96b529e3d8b185560ed224e260557b997467d4"
+      },
+      {
+        "path": "scheduler.mjs",
+        "sha256": "09d094fa34d2eaeec41c90ebcce610cc4417e6e0c2d4cce675dd1fffb1b35e04"
+      },
+      {
+        "path": "serve.mjs",
+        "sha256": "75d8853864786bd8a2b7e9f71f9697a3dcb65325633c6d46d8cd6d38e62676c5"
+      },
+      {
+        "path": "stream-audio.mjs",
+        "sha256": "0a1dff22618f51470bde3e1b35f8be407029738c3bec50d4af597cbdc0cd6f4e"
+      },
+      {
+        "path": "subtitle-acceptance.mjs",
+        "sha256": "d1bea085284738e7a4184c30bf685dda7a5dee31ed8e8bd0d2350fd0077a58da"
+      },
+      {
+        "path": "subtitle-rules.mjs",
+        "sha256": "55d8024d3d330f5a38dd8437d90a7833713f017e1d704b8421db45d316b3bd54"
+      },
+      {
+        "path": "subtitle-sidecar.mjs",
+        "sha256": "642ef107d0357460be30ba8f217535a48cd6dedc24f48e45db7b753f09828ef2"
+      },
+      {
+        "path": "subtitle-worker.mjs",
+        "sha256": "66250749800652fe8963970e73f602ee48fe7225e73eebf74d82164d53f0f3a5"
+      },
+      {
+        "path": "tests/controller-sink.test.mjs",
+        "sha256": "ace482b75bfd0dd52ab06efb1b0452a4d6797d33c74c808d94b342c349f7fafb"
+      },
+      {
+        "path": "tests/scheduler.test.mjs",
+        "sha256": "294f90381b38d9a9519b01a45cf1ae2a64d9f1f3d111c5c19065cd198ea2fdfc"
+      },
+      {
+        "path": "tests/stream-audio.test.mjs",
+        "sha256": "8c2a996c17e55e60d3c6ca99c23c069491ae307f1950122f02c82806cd47f8b0"
+      },
+      {
+        "path": "tests/subtitle-rules.test.mjs",
+        "sha256": "1a5a0419a5927ecdea400919c3e6ca7f1b6faf2ef9b369708979d88db17d51c3"
+      },
+      {
+        "path": "tests/subtitle-sidecar.test.mjs",
+        "sha256": "ad8f05cbc91a7aa7d597640dffffbd8f43de854c5ff278bcf1726be0e59f0a7d"
+      }
+    ],
+    "sourceManifestAfter": [
+      {
+        "path": "browser-acceptance.cjs",
+        "sha256": "a9e1b52af33fa96c5ecd3a5791e0750763d6df8850338d58f3a90afa713cdba8"
+      },
+      {
+        "path": "browser-benchmark.cjs",
+        "sha256": "02284243573f739434592dc1939d0862af73291854f7e618b8c81836774a3746"
+      },
+      {
+        "path": "browser-subtitle-acceptance.cjs",
+        "sha256": "7931fe93b5bab9bb112fbb9131191fcef099891195530537359125344f6fd886"
+      },
+      {
+        "path": "CONTRACT.md",
+        "sha256": "5def07bccba74c476850195441221c74413e96cd875d0543895002b281e89f44"
+      },
+      {
+        "path": "controller-sink.mjs",
+        "sha256": "ae3223d8f33192d4fe5e9f3887a739acdb49986e6b53fa30c71c5be02b3a215b"
+      },
+      {
+        "path": "EXPERIMENTAL.md",
+        "sha256": "57be0e08f475ddfcc46d17c81f829f73a6b03ed18fda50430f15b260eb31dd3e"
+      },
+      {
+        "path": "lab/app.mjs",
+        "sha256": "d3a45eae4c4d33464645836570d42d4daacb6221aabda5ae679a174125947b22"
+      },
+      {
+        "path": "lab/index.html",
+        "sha256": "aab62da34a8c4145a203c44fa1720c661d6d5f2d93f1ae474685d5614e65f224"
+      },
+      {
+        "path": "lab/style.css",
+        "sha256": "f9e0f2faef2f21b7a6e40439825eb11c2161e5dfb6e58c8f449d5fd6bf00d4f9"
+      },
+      {
+        "path": "README.md",
+        "sha256": "d15ba27628e0d306f7fc3949aeb06ba00fa7bcac4d5bca57bdd3099be36f851a"
+      },
+      {
+        "path": "run-acceptance.mjs",
+        "sha256": "d0fbaae43ed49ed773d04e619b96b529e3d8b185560ed224e260557b997467d4"
+      },
+      {
+        "path": "scheduler.mjs",
+        "sha256": "09d094fa34d2eaeec41c90ebcce610cc4417e6e0c2d4cce675dd1fffb1b35e04"
+      },
+      {
+        "path": "serve.mjs",
+        "sha256": "75d8853864786bd8a2b7e9f71f9697a3dcb65325633c6d46d8cd6d38e62676c5"
+      },
+      {
+        "path": "stream-audio.mjs",
+        "sha256": "0a1dff22618f51470bde3e1b35f8be407029738c3bec50d4af597cbdc0cd6f4e"
+      },
+      {
+        "path": "subtitle-acceptance.mjs",
+        "sha256": "d1bea085284738e7a4184c30bf685dda7a5dee31ed8e8bd0d2350fd0077a58da"
+      },
+      {
+        "path": "subtitle-rules.mjs",
+        "sha256": "55d8024d3d330f5a38dd8437d90a7833713f017e1d704b8421db45d316b3bd54"
+      },
+      {
+        "path": "subtitle-sidecar.mjs",
+        "sha256": "642ef107d0357460be30ba8f217535a48cd6dedc24f48e45db7b753f09828ef2"
+      },
+      {
+        "path": "subtitle-worker.mjs",
+        "sha256": "66250749800652fe8963970e73f602ee48fe7225e73eebf74d82164d53f0f3a5"
+      },
+      {
+        "path": "tests/controller-sink.test.mjs",
+        "sha256": "ace482b75bfd0dd52ab06efb1b0452a4d6797d33c74c808d94b342c349f7fafb"
+      },
+      {
+        "path": "tests/scheduler.test.mjs",
+        "sha256": "294f90381b38d9a9519b01a45cf1ae2a64d9f1f3d111c5c19065cd198ea2fdfc"
+      },
+      {
+        "path": "tests/stream-audio.test.mjs",
+        "sha256": "8c2a996c17e55e60d3c6ca99c23c069491ae307f1950122f02c82806cd47f8b0"
+      },
+      {
+        "path": "tests/subtitle-rules.test.mjs",
+        "sha256": "1a5a0419a5927ecdea400919c3e6ca7f1b6faf2ef9b369708979d88db17d51c3"
+      },
+      {
+        "path": "tests/subtitle-sidecar.test.mjs",
+        "sha256": "ad8f05cbc91a7aa7d597640dffffbd8f43de854c5ff278bcf1726be0e59f0a7d"
+      }
+    ],
+    "evidence": {
+      "liveProviderCalled": false,
+      "realCredentialsLoaded": false,
+      "browserWorkerVerified": false,
+      "browserPlaybackVerified": false,
+      "physicalPlaybackVerified": false,
+      "avatarRenderingVerified": false,
+      "jointIntegrationVerified": false
+    },
+    "passed": true
+  },
+  "browser": {
+    "passed": true,
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "hardwareConcurrency": 32,
+      "viewport": {
+        "width": 1400,
+        "height": 1100,
+        "dpr": 1
+      },
+      "audioSampleRate": 44100
+    },
+    "assertions": 14,
+    "checks": [
+      {
+        "label": "未闭合的中文否定片段不抢先产生动作",
+        "passed": true
+      },
+      {
+        "label": "分片否定合并后不会误触发开心或招手",
+        "passed": true
+      },
+      {
+        "label": "真实Worker正常结果进入同轮调度器",
+        "passed": true
+      },
+      {
+        "label": "等待800ms Worker回包时PCM仍持续接收和播放",
+        "passed": true
+      },
+      {
+        "label": "慢结果保留句段原锚点并过期丢弃，不改成现在补演",
+        "passed": true
+      },
+      {
+        "label": "Worker不回包时PCM仍持续接收和播放",
+        "passed": true
+      },
+      {
+        "label": "Worker超时只停用旁路，音频继续推进",
+        "passed": true
+      },
+      {
+        "label": "打断同步清空音频、动作队列和旁路待处理输入",
+        "passed": true
+      },
+      {
+        "label": "替换后旧轮字幕拒绝，已取消的慢回包不产生旧动作",
+        "passed": true
+      },
+      {
+        "label": "1000次快速字幕输入受限，旁路状态和诊断记录有界",
+        "passed": true
+      },
+      {
+        "label": "旁路输入超限后音频仍继续",
+        "passed": true
+      },
+      {
+        "label": "超长无标点句段保守停用旁路，不截掉否定后继续推断",
+        "passed": true
+      },
+      {
+        "label": "相同PCM和字幕轨迹完成4对旁路开关成本对照",
+        "passed": true
+      },
+      {
+        "label": "浏览器验收无脚本错误和音频调度故障",
+        "passed": true
+      }
+    ],
+    "comparison": {
+      "appendP95Ms": {
+        "off": {
+          "samples": 4,
+          "mean": 0.2000000011175871,
+          "min": 0.19999999925494194,
+          "max": 0.20000000298023224,
+          "values": [
+            0.20000000298023224,
+            0.19999999925494194,
+            0.20000000298023224,
+            0.19999999925494194
+          ]
+        },
+        "on": {
+          "samples": 4,
+          "mean": 0.20000000018626451,
+          "min": 0.19999999925494194,
+          "max": 0.20000000298023224,
+          "values": [
+            0.20000000298023224,
+            0.19999999925494194,
+            0.19999999925494194,
+            0.19999999925494194
+          ]
+        },
+        "onMinusOff": {
+          "samples": 4,
+          "mean": -9.313225746154785E-10,
+          "min": -3.725290298461914E-09,
+          "max": 0,
+          "values": [
+            0,
+            0,
+            -3.725290298461914E-09,
+            0
+          ]
+        }
+      },
+      "subtitlePushP95Ms": {
+        "off": {
+          "samples": 4,
+          "mean": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "on": {
+          "samples": 4,
+          "mean": 0.10000000149011612,
+          "min": 0.10000000149011612,
+          "max": 0.10000000149011612,
+          "values": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "onMinusOff": {
+          "samples": 4,
+          "mean": 0.10000000149011612,
+          "min": 0.10000000149011612,
+          "max": 0.10000000149011612,
+          "values": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        }
+      },
+      "schedulerP95Ms": {
+        "off": {
+          "samples": 4,
+          "mean": 0.10000000149011612,
+          "min": 0.10000000149011612,
+          "max": 0.10000000149011612,
+          "values": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "on": {
+          "samples": 4,
+          "mean": 0.10000000149011612,
+          "min": 0.10000000149011612,
+          "max": 0.10000000149011612,
+          "values": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "onMinusOff": {
+          "samples": 4,
+          "mean": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "playingP95Ms": {
+        "off": {
+          "samples": 4,
+          "mean": 0.10000000149011612,
+          "min": 0.10000000149011612,
+          "max": 0.10000000149011612,
+          "values": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "on": {
+          "samples": 4,
+          "mean": 0.10000000149011612,
+          "min": 0.10000000149011612,
+          "max": 0.10000000149011612,
+          "values": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "onMinusOff": {
+          "samples": 4,
+          "mean": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "frameIntervalP95Ms": {
+        "off": {
+          "samples": 4,
+          "mean": 5.600000000000364,
+          "min": 3.5,
+          "max": 6.5,
+          "values": [
+            3.5,
+            6,
+            6.400000000001455,
+            6.5
+          ]
+        },
+        "on": {
+          "samples": 4,
+          "mean": 5.075000000000728,
+          "min": 3.7000000000007276,
+          "max": 6.400000000001455,
+          "values": [
+            3.7000000000007276,
+            6.400000000001455,
+            3.900000000001455,
+            6.299999999999272
+          ]
+        },
+        "onMinusOff": {
+          "samples": 4,
+          "mean": -0.5249999999996362,
+          "min": -2.5,
+          "max": 0.4000000000014552,
+          "values": [
+            0.2000000000007276,
+            0.4000000000014552,
+            -2.5,
+            -0.2000000000007276
+          ]
+        }
+      },
+      "observedFirstPlayingMs": {
+        "off": {
+          "samples": 4,
+          "mean": 43.75000000093132,
+          "min": 39.70000000298023,
+          "max": 49.80000000074506,
+          "values": [
+            49.80000000074506,
+            39.70000000298023,
+            43,
+            42.5
+          ]
+        },
+        "on": {
+          "samples": 4,
+          "mean": 38.70000000111759,
+          "min": 36.30000000074506,
+          "max": 43.20000000298023,
+          "values": [
+            43.20000000298023,
+            36.30000000074506,
+            36.399999998509884,
+            38.900000002235174
+          ]
+        },
+        "onMinusOff": {
+          "samples": 4,
+          "mean": -5.0499999998137355,
+          "min": -6.600000001490116,
+          "max": -3.400000002235174,
+          "values": [
+            -6.599999997764826,
+            -3.400000002235174,
+            -6.600000001490116,
+            -3.599999997764826
+          ]
+        }
+      }
+    },
+    "performanceScope": "Append and subtitle-push metrics measure their synchronous handlers. Scheduler benchmark measures synchronize() only, excluding DOM rendering and input handlers. First-playing latency is the first observed Web Audio context playing state. Comparison includes ordinary browser scheduling noise and is not a zero-overhead guarantee.",
+    "boundary": "Local PCM with independent test subtitles (not a transcription of that audio) and actual browser Worker/Web Audio context; subtitle semantics are rules. No cloud, microphone, avatar, physical speaker measurement or word-aligned synchronization. Slow/stalled modes delay/drop Worker replies; they do not stall the main thread.",
+    "sourceChangedDuringTest": [],
+    "interrupt": {
+      "epoch": 5,
+      "reason": "subtitle_acceptance_barge_in",
+      "handlerMs": 0,
+      "accepted": true,
+      "status": "cancelled",
+      "sourceCountAfter": 0,
+      "sourceActiveAfter": false,
+      "queueAfter": 0
+    },
+    "errors": []
+  },
+  "lifecycle": {
+    "passed": true,
+    "before": {
+      "workers": 1,
+      "audio": "ended"
+    },
+    "off": {
+      "workers": 0,
+      "sidecar": "off"
+    },
+    "on": {
+      "workers": 1,
+      "sidecar": "active"
+    },
+    "cancelled": {
+      "workers": 0,
+      "sidecar": "cancelled"
+    }
+  },
+  "limits": [
+    "No real provider or microphone",
+    "No avatar rendering or joint integration",
+    "No physical speaker latency measurement",
+    "Independent test subtitles are not sample audio transcription"
+  ]
+}
