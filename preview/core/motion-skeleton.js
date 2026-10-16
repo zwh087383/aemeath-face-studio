@@ -29,8 +29,24 @@ export function buildRig(skeleton, binding) {
   };
   const parentOf = name => skeleton.get(name)?.parent ?? null;
   const t = binding.torso;
-  const rig = { binding, skeleton, torso: {}, sides: {}, chain: [] };
+  const rig = { binding, skeleton, torso: {}, sides: {}, legs: {}, chain: [] };
   for (const key of ['spine', 'chest', 'upperChest', 'neck', 'head', 'eyes']) rig.torso[key] = { name: t[key], rest: pos(t[key]) };
+  // Optional support rig: older/custom skeletons keep upper-body motion. The two
+  // leg chains are solved here because the preview deliberately disables MMD IK.
+  const support = binding.support ?? { root: '腰', pelvis: '下半身' };
+  if (skeleton.has(support.root) && skeleton.has(support.pelvis)) {
+    rig.support = support;
+    for (const [side, prefix] of [['L', '左'], ['R', '右']]) {
+      const names = { hip: `${prefix}足`, knee: `${prefix}ひざ`, ankle: `${prefix}足首`, toe: `${prefix}つま先` };
+      if (!Object.values(names).every(name => skeleton.has(name))) continue;
+      const upper = sub(pos(names.knee), pos(names.hip)), lower = sub(pos(names.ankle), pos(names.knee));
+      rig.legs[side] = { names, upper: normalize(upper), lower: normalize(lower),
+        L1: len(upper), L2: len(lower), hinge: normalize(cross(upper, lower)),
+        pole: perpendicular(upper, normalize(sub(pos(names.ankle), pos(names.hip))), FORWARD),
+        target: pos(names.ankle) };
+    }
+    if (Object.keys(rig.legs).length !== 2) rig.support = null;
+  }
   for (const [sideKey, side] of Object.entries(binding.sides)) {
     const n = side.names;
     const S0 = pos(n.shoulder), A0 = pos(n.arm), E0 = pos(n.elbow), W0 = pos(n.wrist);
@@ -70,6 +86,7 @@ export function buildRig(skeleton, binding) {
   const wanted = new Set();
   const addPath = name => { for (let b = name; b; b = parentOf(b)) wanted.add(b); };
   for (const key of ['eyes']) addPath(t[key]);
+  for (const leg of Object.values(rig.legs)) addPath(leg.names.toe);
   for (const side of Object.values(rig.sides)) {
     for (const segs of Object.values(side.fingers)) for (const s of segs) addPath(s.name);
     for (const tip of Object.values(side.names.tips)) addPath(tip);
@@ -90,11 +107,40 @@ export function forwardKinematics(rig, locals, out = new Map()) {
     if (!entry) { entry = { position: [0, 0, 0], rotation: [0, 0, 0, 1] }; out.set(name, entry); }
     const p = parent && out.get(parent);
     if (!p) { qcopy(local, entry.rotation); entry.position.splice(0, 3, ...rig.pos(name)); continue; }
-    const offset = sub(rig.pos(name), rig.pos(parent));
+    const offset = add(sub(rig.pos(name), rig.pos(parent)), locals.translations?.get(name) ?? [0, 0, 0]);
     add(p.position, qrotate(p.rotation, offset), entry.position);
     qmul(p.rotation, local, entry.rotation);
   }
   return out;
+}
+
+/** Keep both feet planted while the pelvis shifts and counter-tilts. Rest ankle
+ * positions and rotations are the support constraints, not moving gesture targets.
+ * Standard leg bones feed the PMX's D-bone grants; no grant helper is double-driven. */
+export function solveSupport(rig, locals, fk = new Map()) {
+  if (!rig.support) return fk;
+  forwardKinematics(rig, locals, fk);
+  for (const leg of Object.values(rig.legs)) {
+    const { names, L1, L2 } = leg;
+    const parent = fk.get(rig.parentOf(names.hip));
+    const hip = fk.get(names.hip).position;
+    const ray = sub(leg.target, hip), distance = len(ray), direction = normalize(ray);
+    const reach = clamp(distance, Math.abs(L1 - L2) + 1e-5, L1 + L2 - 1e-5);
+    // Knees point forward. Preserve the small natural lateral cant of each leg.
+    const bendPlane = perpendicular(leg.pole, direction, FORWARD);
+    const cosA = clamp((L1 * L1 + reach * reach - L2 * L2) / (2 * L1 * reach), -1, 1);
+    const upperDir = normalize(add(scale(direction, cosA), scale(bendPlane, Math.sqrt(1 - cosA * cosA))));
+    const knee = add(hip, scale(upperDir, L1));
+    const lowerDir = normalize(sub(add(hip, scale(direction, reach)), knee));
+    const hinge = normalize(cross(upperDir, lowerDir));
+    const thighWorld = qfromFrames(leg.upper, leg.hinge, upperDir, hinge);
+    const shinWorld = qfromFrames(leg.lower, leg.hinge, lowerDir, hinge);
+    locals.set(names.hip, qnormalize(qmul(qconj(parent.rotation), thighWorld)));
+    locals.set(names.knee, qnormalize(qmul(qconj(thighWorld), shinWorld)));
+    locals.set(names.ankle, qconj(shinWorld));
+    leg.unreachable = Math.max(0, distance - reach);
+  }
+  return forwardKinematics(rig, locals, fk);
 }
 
 /** Shoulder girdle and two-bone arm chain (no hand) for a pose with model-space hand/pole. */

@@ -60,18 +60,21 @@ function fixture({ start = true, seed = 20261014 } = {}) {
     now: () => now, media: () => media, render };
 }
 
-test('avatar catalog keeps face/head timing and bounds stretched body motion at speed one', () => {
-  assert.deepEqual(Object.keys(AVATAR_CATALOG), Object.keys(DEFAULT_CATALOG));
+test('avatar catalog preserves legacy timing/order and exposes all public body gestures', () => {
+  const expectedKeys = [...new Set([...Object.keys(DEFAULT_CATALOG), ...GESTURE_IDS.map(id => `gesture:${id}`)])];
+  assert.deepEqual(Object.keys(AVATAR_CATALOG), expectedKeys);
+  assert.equal(AVATAR_CATALOG['gesture:beat'], undefined);
   const tail = Math.max(...Object.values(OVERLAP.enter)) + .02;
   for (const [key, actual] of Object.entries(AVATAR_CATALOG)) {
     const original = DEFAULT_CATALOG[key];
     assert.ok(Object.isFrozen(actual));
-    if (original.slot !== 'body') { assert.deepEqual(actual, original); continue; }
+    if (original && original.slot !== 'body') { assert.deepEqual(actual, original); continue; }
     const def = GESTURES[key.slice('gesture:'.length)], p = def.phases.prepare[1], r = def.phases.recover[0];
     const bound = (p * MOTION_DEFAULTS.maxStretch + r - p
       + (def.duration + tail - r) * MOTION_DEFAULTS.maxStretch) / .97;
     assert.ok(actual.duration >= bound && actual.duration < bound + .052, key);
-    assert.deepEqual({ ...actual, duration: original.duration }, original);
+    if (original) assert.deepEqual({ ...actual, duration: original.duration }, original);
+    else assert.deepEqual(actual, { duration: actual.duration, apex: def.apex, cooldown: def.cooldown, slot: 'body' });
   }
 });
 

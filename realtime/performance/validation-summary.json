@@ -1,0 +1,717 @@
+{
+  "date": "2026-10-16",
+  "experimental": true,
+  "node": {
+    "passed": 255,
+    "failed": 0
+  },
+  "browser": {
+    "passed": 23,
+    "checks": [
+      {
+        "name": "real_model_ready",
+        "passed": true,
+        "detail": {
+          "environment": {
+            "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+            "physics": false
+          },
+          "frame": 33,
+          "bindings": []
+        }
+      },
+      {
+        "name": "silent_laugh_pause_freezes_actual_morphs_and_bones",
+        "passed": true,
+        "detail": {
+          "beforeMouth": 0.12837235629558563,
+          "afterMouth": 0.12837235629558563,
+          "maxMouth": 0,
+          "maxBone": 0,
+          "maxRotation": 0,
+          "frames": 56,
+          "paused": true
+        }
+      },
+      {
+        "name": "silent_laugh_cancel_decays_without_instant_mouth_closure",
+        "passed": true,
+        "detail": {
+          "beforeMouth": 0.14372208714485168,
+          "first": {
+            "mouth": 0.15023788809776306,
+            "elapsedMs": 9.599999999627471
+          },
+          "maxStep": 0.00911787897348404,
+          "frames": 314,
+          "finishedAt": 1277.7000000001863,
+          "finalMouth": 0,
+          "remaining": 0
+        }
+      },
+      {
+        "name": "new_action_replaces_live_pose_continuously",
+        "passed": true,
+        "detail": {
+          "accepted": true,
+          "oldRetracting": true,
+          "newStarted": true,
+          "finite": true,
+          "maxWristStep": 0.08640881285179379,
+          "previousPhase": "stroke"
+        }
+      },
+      {
+        "name": "synthetic_speech_vowels_remain_owned_by_face_controller",
+        "passed": true,
+        "detail": {
+          "maxError": 0,
+          "peakMouth": 0.6623215044615023,
+          "peakSmileEyes": 0.7672424912452698,
+          "frames": 183
+        }
+      },
+      {
+        "name": "rendered_action_explain",
+        "passed": true,
+        "detail": {
+          "id": "explain",
+          "frames": 198,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.018435705655760352,
+          "maxHands": 3.543547020886917,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 2666.5999999996275
+        }
+      },
+      {
+        "name": "rendered_action_wave",
+        "passed": true,
+        "detail": {
+          "id": "wave",
+          "frames": 274,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.020265504954979228,
+          "maxHands": 7.025878945640237,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3866.5
+        }
+      },
+      {
+        "name": "rendered_action_shrug",
+        "passed": true,
+        "detail": {
+          "id": "shrug",
+          "frames": 121,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.022473267033763036,
+          "maxHands": 2.201908229604525,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 1676.3999999994412
+        }
+      },
+      {
+        "name": "rendered_action_chest",
+        "passed": true,
+        "detail": {
+          "id": "chest",
+          "frames": 240,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.027400062614624437,
+          "maxHands": 5.419486146995001,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3286.199999999255
+        }
+      },
+      {
+        "name": "rendered_action_bow_smile",
+        "passed": true,
+        "detail": {
+          "id": "bow_smile",
+          "frames": 283,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.14337795437538617,
+          "maxHands": 2.5073353212066065,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3926.7999999998137
+        }
+      },
+      {
+        "name": "rendered_action_laugh",
+        "passed": true,
+        "detail": {
+          "id": "laugh",
+          "frames": 274,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.0684695364808031,
+          "maxHands": 5.154077638068961,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3618.7999999998137
+        }
+      },
+      {
+        "name": "rendered_action_curious",
+        "passed": true,
+        "detail": {
+          "id": "curious",
+          "frames": 277,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.11271792217047326,
+          "maxHands": 3.129194401528623,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3697.899999999441
+        }
+      },
+      {
+        "name": "rendered_action_shy",
+        "passed": true,
+        "detail": {
+          "id": "shy",
+          "frames": 330,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.15195461886283926,
+          "maxHands": 4.7883183514342615,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4397
+        }
+      },
+      {
+        "name": "rendered_action_explain_firm",
+        "passed": true,
+        "detail": {
+          "id": "explain_firm",
+          "frames": 293,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.08604452654198486,
+          "maxHands": 3.6711402857839084,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3836.7000000001863
+        }
+      },
+      {
+        "name": "rendered_action_surprise",
+        "passed": true,
+        "detail": {
+          "id": "surprise",
+          "frames": 273,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.08850315012594463,
+          "maxHands": 4.127339000190176,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3776.2999999998137
+        }
+      },
+      {
+        "name": "rendered_action_think",
+        "passed": true,
+        "detail": {
+          "id": "think",
+          "frames": 311,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.10144035334870322,
+          "maxHands": 4.997374161527989,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4444.700000000186
+        }
+      },
+      {
+        "name": "rendered_action_greet",
+        "passed": true,
+        "detail": {
+          "id": "greet",
+          "frames": 294,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.04864496907823844,
+          "maxHands": 6.551352407817103,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3790.5
+        }
+      },
+      {
+        "name": "rendered_action_listen",
+        "passed": true,
+        "detail": {
+          "id": "listen",
+          "frames": 309,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.08911777031596152,
+          "maxHands": 2.5169965569641013,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4213.5
+        }
+      },
+      {
+        "name": "rendered_action_comfort",
+        "passed": true,
+        "detail": {
+          "id": "comfort",
+          "frames": 333,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.08413806516423347,
+          "maxHands": 4.58163974504508,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4287
+        }
+      },
+      {
+        "name": "rendered_action_look_up",
+        "passed": true,
+        "detail": {
+          "id": "look_up",
+          "frames": 311,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.13073335067163416,
+          "maxHands": 3.091034289956162,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3989.399999999441
+        }
+      },
+      {
+        "name": "rendered_action_agree",
+        "passed": true,
+        "detail": {
+          "id": "agree",
+          "frames": 218,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.09000723576637325,
+          "maxHands": 3.2510640548520735,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3159.4000000003725
+        }
+      },
+      {
+        "name": "all_public_actions_exercised",
+        "passed": true,
+        "detail": [
+          "explain",
+          "wave",
+          "shrug",
+          "chest",
+          "bow_smile",
+          "laugh",
+          "curious",
+          "shy",
+          "explain_firm",
+          "surprise",
+          "think",
+          "greet",
+          "listen",
+          "comfort",
+          "look_up",
+          "agree"
+        ]
+      },
+      {
+        "name": "no_browser_or_render_errors",
+        "passed": true,
+        "detail": []
+      }
+    ],
+    "errors": [],
+    "sourceHashes": {
+      "preview/core/controller.js": "c698a6019fb17ad1c180e310e14eb2dcf838d93e54ec79cb1ad1c9165d9020e5",
+      "preview/core/profile.js": "c9adb2b68ede19b18ebd827603fce3ceac6bf7fca0734d1c3b77bc24736b43a4",
+      "preview/core/motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+      "preview/core/motion-skeleton.js": "f9d9512498cd6edc59c159035565de119d9e1225d5308ba8e2ad43a6e94e878a",
+      "preview/core/motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985",
+      "preview/core/motion-profile.js": "598fc8885c12c2c03160796a270b76d5ef1ccb2e5a1a1af08fc2e9eaa715a436",
+      "preview/core/expression-choreography.js": "edd1dc0d25d77145f4701cbb21bda3c64d2b0168ad07e85269b85ac0cb21fcc0",
+      "preview/studio/motion-rig.js": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "realtime/qwen/scene.mjs": "97cde6f947859811e939779bbae862a75b935b23e94fe1224912e0fabb2da20a",
+      "realtime/performance/director.mjs": "3de2682a989f30d7d407ce13bdb2e3aa86a58d2be582bf254b94ce0f7916148f",
+      "realtime/performance/viewer.mjs": "1da609dfd9d006b3c9469f5126059cffb3b8a61fab69a4fb8cb1b4edeb2b01d6",
+      "realtime/browser-performance-acceptance.cjs": "a19e7da1e662101d62e058c75f3d9747f8cf6a96594c09dede19538f14b60efb"
+    },
+    "sourceChangedDuringRun": []
+  },
+  "speechSmoke": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "local_wav_started",
+        "passed": true,
+        "detail": true
+      },
+      {
+        "name": "laugh_cue_accepted",
+        "passed": true,
+        "detail": {
+          "accepted": true,
+          "reason": "queued",
+          "at": 0.08933333333333764
+        }
+      },
+      {
+        "name": "actual_wav_mouth_and_gesture",
+        "passed": true,
+        "detail": {
+          "mouth": 0.48422927036881447,
+          "audioTime": 0.5600000000000143,
+          "gestures": [
+            {
+              "id": "smoke-laugh",
+              "gesture": "laugh",
+              "name": "开心轻笑",
+              "clock": "audio",
+              "epoch": 1,
+              "age": 0.36448666197136764,
+              "strength": 1,
+              "expressionWeight": 1,
+              "stretch": 1.2149935584294629,
+              "recoverStretch": 1,
+              "retractSeconds": null,
+              "phase": "prepare",
+              "recovering": false,
+              "retractProgress": 0
+            }
+          ]
+        }
+      },
+      {
+        "name": "audio_pause_closes_mouth_and_expression_cannot_reopen",
+        "passed": true,
+        "detail": {
+          "pausedMouth": 1.8784785140724125e-06,
+          "heldMouth": 1.3128613954826089e-20,
+          "time": 0.6000000000000142,
+          "gestures": [
+            {
+              "id": "smoke-laugh",
+              "gesture": "laugh",
+              "name": "开心轻笑",
+              "clock": "audio",
+              "epoch": 1,
+              "age": 0.40546445237051404,
+              "strength": 1,
+              "expressionWeight": 1,
+              "stretch": 1.2149935584294629,
+              "recoverStretch": 1,
+              "retractSeconds": null,
+              "phase": "prepare",
+              "recovering": false,
+              "retractProgress": 0
+            }
+          ]
+        }
+      },
+      {
+        "name": "audio_cancel_closes_mouth_and_retracts_without_reopening",
+        "passed": true,
+        "detail": {
+          "beforeMouth": 0.45728564262390137,
+          "finalMouth": 3.4145769086235423e-32,
+          "interrupt": {
+            "epoch": 1,
+            "reason": "final_local_smoke",
+            "atWall": 27.037,
+            "audioTime": 0.6293333333333483,
+            "handlerMs": 0.7999999998133944,
+            "stageAtCancel": [
+              {
+                "id": "smoke-laugh",
+                "gesture": "laugh",
+                "phase": "prepare",
+                "age": 0.4227182588543667
+              }
+            ],
+            "mouthBefore": 0.45728564262390137,
+            "mouthClosedMs": 77.20000000018626,
+            "retractStartedMs": 19.59999999962747,
+            "retractCompleteMs": 920,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          }
+        }
+      },
+      {
+        "name": "existing_qwen_offline_9_checks",
+        "passed": true,
+        "detail": {
+          "passed": true,
+          "checks": 9,
+          "boundary": "FAKE PROVIDER ONLY. Actual PMX, actual WebAudio sine PCM, real subtitle Worker and renderer. Synthetic MediaStream tests lifecycle without opening hardware microphone. No cloud connection, provider latency, speech quality or physical speaker-stop measurement.",
+          "interruption": {
+            "responseId": "offline-response-1",
+            "atMs": 6194.399999999441,
+            "reason": "offline_voiced_interruption",
+            "mouthBefore": 0.6777858985587955,
+            "gesturesBefore": [
+              "wave"
+            ],
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "mouthClosedMs": 86.1000000005588,
+            "retractCompleteMs": 827.3000000007451,
+            "localCancelReturnMs": 5.5,
+            "sourcesRemain": 0,
+            "mouthAfter": 2.5255886057432438e-21
+          },
+          "evidenceGlobal": "__qwenOfflineResult (original page)"
+        }
+      },
+      {
+        "name": "no_native_socket_or_external_network_attempt",
+        "passed": true,
+        "detail": {
+          "sockets": [],
+          "external": []
+        }
+      },
+      {
+        "name": "no_page_errors",
+        "passed": true,
+        "detail": []
+      }
+    ],
+    "qwenSummary": {
+      "passed": true,
+      "checks": 9,
+      "boundary": "FAKE PROVIDER ONLY. Actual PMX, actual WebAudio sine PCM, real subtitle Worker and renderer. Synthetic MediaStream tests lifecycle without opening hardware microphone. No cloud connection, provider latency, speech quality or physical speaker-stop measurement.",
+      "interruption": {
+        "responseId": "offline-response-1",
+        "atMs": 6194.399999999441,
+        "reason": "offline_voiced_interruption",
+        "mouthBefore": 0.6777858985587955,
+        "gesturesBefore": [
+          "wave"
+        ],
+        "sourceCountAfter": 0,
+        "queuedAfter": 0,
+        "mouthClosedMs": 86.1000000005588,
+        "retractCompleteMs": 827.3000000007451,
+        "localCancelReturnMs": 5.5,
+        "sourcesRemain": 0,
+        "mouthAfter": 2.5255886057432438e-21
+      },
+      "evidenceGlobal": "__qwenOfflineResult (original page)"
+    },
+    "blockedExternal": [],
+    "nativeSockets": [],
+    "sourceChangedDuringRun": []
+  },
+  "performance": {
+    "generatedAt": "2026-10-16T12:08:11.152Z",
+    "environment": {
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "physics": false
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "ratio": 1
+    },
+    "frames": 1890,
+    "elapsedMs": 15003.800000000047,
+    "fps": 125.96808808435158,
+    "driverMs": {
+      "p50": 0.2999999998137355,
+      "p95": 0.599999999627471,
+      "max": 1.1000000005587935
+    },
+    "renderSubmissionMs": {
+      "p50": 6.599999999627471,
+      "p95": 7.900000000372529,
+      "max": 10.299999999813735
+    },
+    "frameIntervalMs": {
+      "p50": 6.700000000069849,
+      "p95": 10.099999999976717,
+      "max": 13.5
+    },
+    "allFinite": true,
+    "gestures": [
+      "explain",
+      "wave",
+      "shrug",
+      "chest",
+      "bow_smile",
+      "laugh",
+      "curious",
+      "shy"
+    ],
+    "error": null,
+    "boundary": "Local Headless Chrome 155 at 1440x1000; other test browsers closed; no screen recording, cloud, audio, microphone or clothing physics. Browser-frame rate and CPU submission timings, not physical display or GPU-finished latency."
+  },
+  "visual": {
+    "captures": 48,
+    "gestures": [
+      "agree",
+      "bow_smile",
+      "chest",
+      "comfort",
+      "curious",
+      "explain",
+      "explain_firm",
+      "greet",
+      "laugh",
+      "listen",
+      "look_up",
+      "shrug",
+      "shy",
+      "surprise",
+      "think",
+      "wave"
+    ],
+    "views": [
+      "angle",
+      "body",
+      "side"
+    ],
+    "manuallyReviewed": true,
+    "physics": false
+  },
+  "limitations": [
+    "Experimental local motion/expression work only",
+    "No new real Qwen or full WAI retrieval test",
+    "Clothing physics disabled; shoulder ribbon and side hair contact remains",
+    "Subtitle sidecar retains existing action selection rules"
+  ]
+}

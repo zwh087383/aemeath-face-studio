@@ -5,6 +5,7 @@ import { FaceController } from '/preview/core/controller.js';
 import { MotionController } from '/preview/core/motion-controller.js';
 import { AEMEATH_BINDINGS, VOWELS } from '/preview/core/profile.js';
 import { MotionRig, skeletonFromMesh } from '/preview/studio/motion-rig.js';
+import { ExpressionChoreographer, blendExpressionOverlay } from '/preview/core/expression-choreography.js';
 
 /** One composition point for the already delivered character controllers. */
 export async function createScene(stage, progress = () => {}) {
@@ -22,10 +23,13 @@ export async function createScene(stage, progress = () => {}) {
   const face = new FaceController(); face.headSway = false;
   const motion = new MotionController({ skeleton: skeletonFromMesh(mesh) }); motion.setOptions({ natural: true, intensity: 1, speed: 1 });
   const rig = new MotionRig(mesh), helper = new MMDAnimationHelper(); helper.add(mesh, { physics: false }); helper.enable('ik', false);
-  const rest = mesh.skeleton.bones.map(b => [b, b.quaternion.clone()]); mesh.frustumCulled = false; scene.add(mesh);
+  const rest = mesh.skeleton.bones.map(b => [b, b.quaternion.clone(), b.position.clone()]); mesh.frustumCulled = false; scene.add(mesh);
+  const expression = new ExpressionChoreographer();
+  let expressionEnabled = true;
+  const composedWeights = new Float32Array(face.weights.length);
   let view = 'body', frameCount = 0, rendered = null;
   const resize = () => {
-    const w = stage.clientWidth, h = stage.clientHeight, span = view === 'face' ? 5.1 : 12.4, y = view === 'face' ? 18.15 : 14.7, yaw = view === 'angle' ? .62 : 0;
+    const w = stage.clientWidth, h = stage.clientHeight, full = view === 'full', span = view === 'face' ? 6.1 : full ? 23.7 : 13.5, y = view === 'face' ? 17.4 : full ? 10.6 : 14.25, yaw = view === 'angle' ? .72 : view === 'side' ? 1.4 : 0;
     renderer.setSize(w, h); camera.left = -span * w / h / 2; camera.right = -camera.left; camera.top = span / 2; camera.bottom = -span / 2;
     camera.position.set(30 * Math.sin(yaw), y, 30 * Math.cos(yaw)); camera.lookAt(0, y, 0); camera.updateProjectionMatrix();
   };
@@ -35,21 +39,31 @@ export async function createScene(stage, progress = () => {}) {
   const environment = { renderer: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : 'unknown', userAgent: navigator.userAgent, physics: false };
   return {
     face, motion, environment,
-    setView(next) { if (['face', 'body', 'angle'].includes(next)) { view = next; resize(); } },
-    step(now, dt, lip) {
-      const start = performance.now(), weights = face.update(now / 1000, dt, lip, true);
+    setView(next) { if (['face', 'body', 'angle', 'side', 'full'].includes(next)) { view = next; resize(); } },
+    setExpressionEnabled(enabled) { expressionEnabled = !!enabled; },
+    step(now, dt, lip, { paused = false, idle = true, speechOwnsMouth = true } = {}) {
+      const start = performance.now(), baseWeights = face.update(now / 1000, dt, lip, idle);
       motion.update(now / 1000, dt, { face: face.head, actions: face.activeActions, speech: 0 });
+      const body = motion.snapshot();
+      const overlay = expression.update(now / 1000, expressionEnabled ? body.gestures : [], { paused });
+      const weights = blendExpressionOverlay(baseWeights, overlay, {
+        speechActivity: !!lip || (speechOwnsMouth && ['paused', 'cancelled', 'ended'].includes(face.status)),
+        closure: lip?.closure ?? 0, out: composedWeights });
       mesh.morphTargetInfluences.fill(0);
       for (let i = 0; i < AEMEATH_BINDINGS.length; i++) mesh.morphTargetInfluences[AEMEATH_BINDINGS[i][0]] = weights[i];
-      for (const [b, q] of rest) b.quaternion.copy(q);
+      for (const [b, q, p] of rest) { b.quaternion.copy(q); b.position.copy(p); }
       rig.apply(motion.locals); const assigned = performance.now();
       helper.update(dt); mesh.updateMatrixWorld(true); renderer.render(scene, camera); const submitted = performance.now();
-      const bones = {};
-      for (const [key, name] of [['head', '頭'], ['leftWrist', '左手首'], ['rightWrist', '右手首']]) {
-        const bone = mesh.skeleton.bones.find(b => b.name === name); bones[key] = bone.getWorldPosition(new THREE.Vector3()).toArray();
+      const bones = {}, rotations = {};
+      for (const [key, name] of [['head', '頭'], ['neck', '首'], ['spine', '上半身'], ['chest', '上半身2'], ['eyes', '両目'], ['pelvis', '腰'], ['leftWrist', '左手首'], ['rightWrist', '右手首'], ['leftAnkle', '左足首'], ['rightAnkle', '右足首']]) {
+        const bone = mesh.skeleton.bones.find(b => b.name === name);
+        if (!bone) continue;
+        bones[key] = bone.getWorldPosition(new THREE.Vector3()).toArray();
+        rotations[key] = bone.getWorldQuaternion(new THREE.Quaternion()).toArray();
       }
-      rendered = { frame: ++frameCount, mouthOpen: VOWELS.reduce((n, i) => n + weights[i], 0), weights: Array.from(weights), bones,
-        missingBindings: [...rig.missing], finite: [...weights, ...Object.values(bones).flat()].every(Number.isFinite),
+      rendered = { frame: ++frameCount, mouthOpen: VOWELS.reduce((n, i) => n + weights[i], 0), weights: Array.from(weights), bones, rotations,
+        expression: { enabled: expressionEnabled, overlay: Array.from(overlay) },
+        missingBindings: [...rig.missing], finite: [...weights, ...Object.values(bones).flat(), ...Object.values(rotations).flat()].every(Number.isFinite),
         driverMs: assigned - start, renderMs: submitted - assigned, view };
       if (!rendered.finite || rendered.missingBindings.length) throw new Error('Invalid avatar pose');
       return rendered;

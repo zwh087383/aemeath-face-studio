@@ -16,13 +16,14 @@ const bodyDuration = gesture => {
   return Math.ceil((longest / MIN_RATE + SAFETY_SECONDS) * 1000) / 1000;
 };
 
-/** Preserve face/head timing and gesture semantics; only body occupancy changes. */
-export const AVATAR_CATALOG = Object.freeze(Object.fromEntries(
-  Object.entries(DEFAULT_CATALOG).map(([key, definition]) => [key, Object.freeze({
-    ...definition,
-    ...(definition.slot === 'body' ? { duration: bodyDuration(GESTURES[key.slice('gesture:'.length)]) } : {}),
-  })]),
-));
+/** Preserve legacy entries/order, and expose every public authored gesture. */
+export const AVATAR_CATALOG = Object.freeze(Object.fromEntries([
+  ...Object.entries(DEFAULT_CATALOG),
+  ...Object.entries(GESTURES).filter(([, gesture]) => !gesture.internal).map(([id, gesture]) => [
+    `gesture:${id}`, Object.freeze({ duration: bodyDuration(gesture), apex: gesture.apex,
+      cooldown: gesture.cooldown, slot: 'body' }),
+  ]),
+]));
 
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 128;
 const validOwner = owner => owner && textId(owner.connectionId) && textId(owner.responseId)

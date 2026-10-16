@@ -2,7 +2,7 @@ import {
   add, clamp, cross, hash, mix, normalize, perpendicular, prng, qconj, qeuler, qfromFrames, qmul, qnormalize, qrotate,
   qslerp, smoother, sub,
 } from './motion-math.js';
-import { buildRig, forearmFrame, handRelative, solveArm, wristFromPalm } from './motion-skeleton.js';
+import { buildRig, forearmFrame, forwardKinematics, handRelative, solveArm, solveSupport, wristFromPalm } from './motion-skeleton.js';
 import { AEMEATH_MOTION_BINDING, GESTURES, MOTION_DEFAULTS, OVERLAP, POSTURES } from './motion-profile.js';
 
 // Flat arm parameter layout (model space, already mirrored per side).
@@ -11,7 +11,8 @@ const GROUP_INDEX = {
   position: [0, 1, 2, 3, 4, 5], orientation: [6, 7, 8, 9, 10, 11], shoulder: [12, 13], fingers: [14, 15, 16],
 };
 const GROUPS = Object.keys(GROUP_INDEX);
-const BODY = ['lean', 'twist', 'side', 'headPitch', 'headYaw', 'headRoll', 'neckForward', 'gazePitch'];
+const BODY = ['lean', 'twist', 'side', 'headPitch', 'headYaw', 'headRoll', 'neckForward', 'gazePitch',
+  'gazeYaw', 'pelvisPitch', 'pelvisRoll', 'hipShift'];
 const SIDES = ['L', 'R'];
 const AUTO_POSTURE = { idle: 'relaxed', playing: 'speaking', cancelled: 'listening', ended: 'listening' };
 const SETTLE_TO_RELAXED = 8;
@@ -169,6 +170,8 @@ export class MotionController {
     this.rig = buildRig(skeleton, binding);
     this.profile = compileProfile(this.rig);
     this.locals = new Map();
+    this.locals.translations = new Map();
+    this.fk = new Map();
     this.diag = { L: {}, R: {} };
     this.options = { intensity: 1, speed: 1, natural: true };
     this.mode = 'auto';
@@ -181,7 +184,8 @@ export class MotionController {
     this.micro = Array.from({ length: 6 }, () => this.random() * Math.PI * 2);
     const zero = () => ({ x: 0, v: 0 });
     this.springs = { gazeYaw: zero(), gazePitch: zero(), headPitch: zero(), headYaw: zero(), headRoll: zero(),
-      neckPitch: zero(), neckYaw: zero(), neckRoll: zero(), chestYaw: zero() };
+      neckPitch: zero(), neckYaw: zero(), neckRoll: zero(), chestYaw: zero(),
+      lean: zero(), twist: zero(), side: zero(), pelvisPitch: zero(), pelvisRoll: zero(), hipShift: zero() };
     const relaxed = this.profile.postures.relaxed;
     this.posture = { target: 'relaxed', start: -100, from: this.copyPosture(relaxed), current: this.copyPosture(relaxed) };
     this.work = { arm: { L: Float64Array.from(relaxed.L), R: Float64Array.from(relaxed.R) }, body: new Float64Array(BODY.length),
@@ -397,7 +401,9 @@ export class MotionController {
       : this.ageOf(g) < g.def.duration + REMOVE_AFTER);
     this.observeSpeech(now, dt, input.speech ?? 0);
 
-    const p = this.posture, k = smoother((now - p.start) / MOTION_DEFAULTS.postureTransition);
+    const p = this.posture;
+    if (this.status === 'paused' && !this.gestures.some(g => g.recovering)) p.start += dt;
+    const k = smoother((now - p.start) / MOTION_DEFAULTS.postureTransition);
     const target = this.profile.postures[p.target];
     for (const key of ['L', 'R', 'body']) {
       const current = p.current[key], from = p.from[key], to = target[key];
@@ -452,7 +458,7 @@ export class MotionController {
         : 1;
       if (track === 'body') {
         const w = weights.body * fade('position');
-        for (let i = 0; i < 6; i++) body[i] += values[i] * w;
+        for (let i = 0; i < BODY.length; i++) body[i] += values[i] * w;
         continue;
       }
       const arm = arms[track];
@@ -513,7 +519,8 @@ export class MotionController {
       pitch: D.micro.headPitch * (.6 * Math.sin(now * .29 + this.micro[2]) + .4 * Math.sin(now * 1.13 + this.micro[3])),
       side: D.micro.bodySide * Math.sin(now * .21 + this.micro[4]),
     } : { yaw: 0, pitch: 0, side: 0 };
-    const [lean, twist, side, bodyHeadPitch, bodyHeadYaw, bodyHeadRoll, neckForward, gazePitch] = body;
+    const [lean, twist, side, bodyHeadPitch, bodyHeadYaw, bodyHeadRoll, neckForward, gazePitch,
+      authoredGazeYaw, pelvisPitch, pelvisRoll, hipShift] = body;
     // Head, neck and gaze are combined and limited here, in one place.
     const face = this.lastInput.face, glance = this.lastInput.actions.includes('glance');
     const req = {
@@ -522,19 +529,45 @@ export class MotionController {
       roll: clamp(face.roll + bodyHeadRoll, ...D.head.roll),
     };
     const s = this.springs;
-    const gazeYaw = spring(s.gazeYaw, glance ? face.yaw * D.eyes.glanceLead : 0, D.springs.gaze, dt);
-    const gazeP = spring(s.gazePitch, gazePitch, D.springs.gaze, dt);
-    const hp = spring(s.headPitch, req.pitch, D.springs.head, dt), hy = spring(s.headYaw, req.yaw, D.springs.head, dt), hr = spring(s.headRoll, req.roll, D.springs.head, dt);
+    // An audio pause freezes the expression's physical follow-through as well as
+    // its keys. Retraction after cancellation still advances on the wall clock.
+    const step = this.status === 'paused' && !this.gestures.some(g => g.recovering) ? 0 : dt;
+    const returning = this.gestures.some(g => g.recovering || this.ageOf(g) >= g.def.recoverStart);
+    const gazeTarget = authoredGazeYaw + bodyHeadYaw + (glance ? face.yaw * D.eyes.glanceLead : 0);
+    const gazeYaw = spring(s.gazeYaw, gazeTarget, D.springs.gaze, step);
+    const gazeP = spring(s.gazePitch, gazePitch + bodyHeadPitch, D.springs.gaze, step);
+    const headOmega = returning ? 24 : D.springs.head;
+    const hp = spring(s.headPitch, req.pitch, headOmega, step), hy = spring(s.headYaw, req.yaw, headOmega, step), hr = spring(s.headRoll, req.roll, headOmega, step);
     const share = D.head.neckShare;
-    const np = spring(s.neckPitch, hp * share, D.springs.neck, dt), ny = spring(s.neckYaw, hy * share, D.springs.neck, dt), nr = spring(s.neckRoll, hr * share, D.springs.neck, dt);
-    const chestFollow = spring(s.chestYaw, hy * D.head.chestYawShare, D.springs.chest, dt);
-    // Torso distribution; breathing lifts the upper chest slightly backwards.
-    const torsoPitch = lean, torsoYaw = twist + chestFollow, torsoRoll = side + micro.side;
-    locals.set(this.rig.torso.spine.name, qeuler(torsoPitch * .45, twist * .4, torsoRoll * .4, locals.get(this.rig.torso.spine.name)));
-    locals.set(this.rig.torso.chest.name, qeuler(torsoPitch * .35 - breath * D.breath.chest * .5, twist * .35 + chestFollow * .5, torsoRoll * .35, locals.get(this.rig.torso.chest.name)));
-    locals.set(this.rig.torso.upperChest.name, qeuler(torsoPitch * .2 - breath * D.breath.upperChest, twist * .25 + chestFollow * .5, torsoRoll * .25, locals.get(this.rig.torso.upperChest.name)));
-    // Keep the face oriented to the user while the torso leans or breathes.
-    const compPitch = (torsoPitch - breath * (D.breath.chest * .5 + D.breath.upperChest)) * .85, compYaw = torsoYaw * .85, compRoll = torsoRoll * .85;
+    const neckOmega = returning ? 22 : D.springs.neck;
+    const np = spring(s.neckPitch, hp * share, neckOmega, step), ny = spring(s.neckYaw, hy * share, neckOmega, step), nr = spring(s.neckRoll, hr * share, neckOmega, step);
+    const chestFollow = spring(s.chestYaw, hy * D.head.chestYawShare, returning ? 22 : D.springs.chest, step);
+    // Keep velocity across cue replacement/retraction. This is purposeful weight
+    // transfer, not oscillating noise: gaze leads, chest follows, pelvis settles last.
+    const settling = returning || (!this.inspection && !this.gestures.length);
+    const bodyOmega = settling ? 30 : 16, supportOmega = settling ? 26 : 13;
+    const torsoPitch = spring(s.lean, clamp(lean, -.38, .58), bodyOmega, step);
+    const torsoTwist = spring(s.twist, clamp(twist, -.42, .42), bodyOmega, step);
+    const torsoRoll = spring(s.side, clamp(side + micro.side, -.24, .24), bodyOmega, step);
+    const torsoYaw = torsoTwist + chestFollow;
+    const hipPitch = spring(s.pelvisPitch, clamp(pelvisPitch - torsoPitch * .10, -.12, .12), supportOmega, step);
+    const hipRoll = spring(s.pelvisRoll, clamp(pelvisRoll - torsoRoll * .18, -.10, .10), supportOmega, step);
+    const shift = spring(s.hipShift, clamp(hipShift - torsoRoll * .65, -.28, .28), supportOmega, step);
+    if (this.rig.support) {
+      const { root, pelvis } = this.rig.support;
+      locals.set(pelvis, qeuler(hipPitch, 0, hipRoll, locals.get(pelvis)));
+      // Lower the centre only enough to make both ankle constraints reachable;
+      // opposite horizontal travel balances the mass carried forward by the bow.
+      locals.translations.set(root, [shift, -Math.abs(hipRoll) * 1.15 - Math.abs(hipPitch) * .45 - shift * shift * .22,
+        -Math.max(0, torsoPitch) * .7]);
+    }
+    locals.set(this.rig.torso.spine.name, qeuler(torsoPitch * .56, torsoTwist * .4, torsoRoll * .42, locals.get(this.rig.torso.spine.name)));
+    locals.set(this.rig.torso.chest.name, qeuler(torsoPitch * .29 - breath * D.breath.chest * .5, torsoTwist * .35 + chestFollow * .5, torsoRoll * .34, locals.get(this.rig.torso.chest.name)));
+    locals.set(this.rig.torso.upperChest.name, qeuler(torsoPitch * .15 - breath * D.breath.upperChest, torsoTwist * .25 + chestFollow * .5, torsoRoll * .24, locals.get(this.rig.torso.upperChest.name)));
+    // Partial visual fixation: the head participates in a bow or lean, while an
+    // authored headPitch can lift the chin independently. Full inverse compensation
+    // made every body expression look like a stationary head on a moving neck.
+    const compPitch = (torsoPitch - breath * (D.breath.chest * .5 + D.breath.upperChest)) * .45, compYaw = torsoYaw * .55, compRoll = torsoRoll * .45;
     locals.set(this.rig.torso.neck.name, qeuler(np + neckForward - compPitch * .4, ny - compYaw * .4, nr - compRoll * .4, locals.get(this.rig.torso.neck.name)));
     locals.set(this.rig.torso.head.name, qeuler(hp - np - neckForward - compPitch * .6, hy - ny - compYaw * .6, hr - nr - compRoll * .6, locals.get(this.rig.torso.head.name)));
     const glanceGain = glance ? 1 : D.eyes.vor;
@@ -542,27 +575,35 @@ export class MotionController {
     const eyesPitch = clamp((gazeP - hp) * D.eyes.vor, -D.eyes.pitch, D.eyes.pitch);
     locals.set(this.rig.torso.eyes.name, qeuler(eyesPitch, eyesYaw, 0, locals.get(this.rig.torso.eyes.name)));
     Object.assign(this.head, { pitch: hp, yaw: hy, roll: hr, eyesYaw, eyesPitch });
-    // Chest frame for the arms: FK over spine -> chest -> upper chest.
-    const t = this.rig.torso, spineRot = locals.get(t.spine.name);
-    const chestRot = qmul(spineRot, locals.get(t.chest.name));
-    const chestPos = add(t.spine.rest, qrotate(spineRot, sub(t.chest.rest, t.spine.rest)));
-    const rot = qnormalize(qmul(chestRot, locals.get(t.upperChest.name)));
-    const pos = add(chestPos, qrotate(chestRot, sub(t.upperChest.rest, t.chest.rest)));
+    // Read the actual hierarchy, including the pelvis translation, rather than
+    // assuming the spine is a fixed world root. Wrists and poles ride with the torso.
+    if (this.rig.support) solveSupport(this.rig, locals, this.fk);
+    else forwardKinematics(this.rig, locals, this.fk);
+    const chest = this.fk.get(this.rig.torso.upperChest.name), rot = chest.rotation, pos = chest.position;
     for (const sideKey of SIDES) {
       const a = arms[sideKey];
+      const sign = this.rig.sides[sideKey].sign;
+      // Small inertial drag is tied to torso velocity and asymmetrical shoulder
+      // response. The hand stays chest-relative, so large bows cannot strand it.
+      const drag = clamp(s.twist.v * .045, -.065, .065);
       const pose = {
-        hand: [a[0], a[1], a[2]], pole: [a[3], a[4], a[5]], palm: [a[6], a[7], a[8]], point: [a[9], a[10], a[11]],
-        shrug: a[SHRUG] + breath * D.breath.shoulder, protract: a[PROTRACT], curl: a[CURL], thumb: a[THUMB], spread: a[SPREAD],
+        hand: [a[0] - drag, a[1], a[2]], pole: [a[3], a[4], a[5]], palm: [a[6], a[7], a[8]], point: [a[9], a[10], a[11]],
+        shrug: a[SHRUG] + breath * D.breath.shoulder - sign * torsoRoll * .075,
+        protract: a[PROTRACT] - sign * torsoTwist * .08, curl: a[CURL], thumb: a[THUMB], spread: a[SPREAD],
       };
       solveArm(this.rig, sideKey, pose, rot, pos, locals, this.diag[sideKey]);
     }
     this.breath = breath;
+    this.bodyState = { lean: torsoPitch, twist: torsoTwist, side: torsoRoll, pelvisPitch: hipPitch, pelvisRoll: hipRoll, hipShift: shift };
+    this.gaze = { yaw: gazeYaw, pitch: gazeP, targetYaw: gazeTarget, targetPitch: gazePitch + bodyHeadPitch };
   }
 
   snapshot() {
     const gestures = this.gestures.map(g => {
       const age = g.recovering ? (g.frozen?.age ?? 0) : this.ageOf(g);
       return { id: g.id, gesture: g.gesture, name: g.def.name, clock: g.clock, epoch: g.epoch, age,
+        strength: g.strength, expressionWeight: g.strength * this.options.intensity * (g.recovering
+          ? 1 - smoother((this.now - g.recoverStart) / g.recoverDuration) : 1),
         stretch: g.stretch ?? 1, recoverStretch: g.recoverStretch ?? 1, retractSeconds: g.recovering ? g.recoverDuration : null,
         phase: g.recovering ? 'retract' : phaseOf(g.def, age), recovering: g.recovering,
         retractProgress: g.recovering ? clamp((this.now - g.recoverStart) / g.recoverDuration) : 0 };
@@ -572,7 +613,10 @@ export class MotionController {
       epoch: this.epoch, active: this.active, status: this.status, time: this.time,
       gestures, queued: this.pending.length, rejected: this.rejected, beats: this.beats,
       recovering: gestures.some(g => g.recovering), options: { ...this.options },
-      head: { ...this.head }, reach: { L: this.diag.L.reach, R: this.diag.R.reach } };
+      head: { ...this.head }, body: { ...this.bodyState }, gaze: { ...this.gaze },
+      bodyVelocity: Object.fromEntries(['lean', 'twist', 'side', 'pelvisPitch', 'pelvisRoll', 'hipShift'].map(key => [key, this.springs[key].v])),
+      support: { planted: !!this.rig.support, error: Math.max(0, ...Object.values(this.rig.legs).map(leg => leg.unreachable ?? 0)) },
+      reach: { L: this.diag.L.reach, R: this.diag.R.reach } };
   }
 }
 

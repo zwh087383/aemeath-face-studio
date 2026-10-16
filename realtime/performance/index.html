@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>爱弥斯 · 动作与表情</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+</head>
+<body>
+  <header><a href="/avatar/" class="brand">AEMEATH <span>动作与表情</span></a><span class="local"><i></i>本地实时预览</span></header>
+  <main>
+    <section class="theatre">
+      <div id="stage" aria-label="人物动作预览">
+        <div id="loading"><strong>正在准备人物</strong><span id="load-note">读取模型与贴图…</span></div>
+        <div class="stage-top"><span id="phase">准备中</span><nav id="views" aria-label="人物视角"></nav></div>
+        <div class="caption"><span id="category">一个完整的表达</span><h1 id="title">俯身，抬眼，微笑。</h1><p id="description">让视线、腰背、肩颈、手臂和表情一起说话。</p></div>
+        <div class="stage-footer"><span id="fps">— FPS</span><span id="driver">— ms</span><span>衣发物理关闭</span></div>
+      </div>
+      <div class="transport"><button id="hero" class="primary" disabled>俯身抬眼微笑</button><button id="pause" disabled>暂停</button><button id="stop" class="stop" disabled>打断 · 收势</button><label><input id="loop" type="checkbox" checked> 连播循环</label></div>
+      <p id="status" role="status">动作会从当前姿态接续；可以随时切换或打断。</p>
+    </section>
+    <aside>
+      <section><div class="section-title"><span>01</span><h2>连续表达</h2></div><p class="hint">看动作怎样接起来，而不只是一个姿势。</p><div id="stories" class="stories"></div></section>
+      <section><div class="section-title"><span>02</span><h2>动作库 <small id="count"></small></h2></div><div id="gestures" class="gestures"></div></section>
+      <section><div class="section-title"><span>03</span><h2>观察与对比</h2></div>
+        <label class="control">动作力度 <input id="intensity" type="range" min="0.35" max="1" step="0.05" value="1"><output id="intensity-value">100%</output></label>
+        <label class="control">动作速度 <input id="speed" type="range" min="0.6" max="1.4" step="0.05" value="1"><output id="speed-value">1.00×</output></label>
+        <div class="checks"><label><input id="expression" type="checkbox" checked> 表情随动作变化</label><label><input id="natural" type="checkbox" checked> 呼吸与微动</label><label><input id="speech" type="checkbox"> 叠加测试口型</label></div>
+        <p class="hint">测试口型用于观察微笑与张嘴能否共存，不播放声音。</p>
+        <details><summary>运行状态</summary><pre id="diagnostics"></pre></details>
+      </section>
+      <footer>独立动作预览 · 不连接模型、不采集麦克风<br>可以切侧面检查姿态、手的位置和衣物接触。</footer>
+    </aside>
+  </main>
+  <script type="module" src="./viewer.mjs"></script>
+</body>
+</html>

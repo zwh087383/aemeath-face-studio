@@ -17,12 +17,25 @@ export function skeletonFromMesh(mesh) {
  * the MMDAnimationHelper update that follows. */
 export class MotionRig {
   constructor(mesh) {
-    this.byName = new Map(mesh.skeleton.bones.map(bone => [bone.name, { bone, rest: bone.quaternion.clone() }]));
+    this.byName = new Map(mesh.skeleton.bones.map(bone => [bone.name, { bone, rest: bone.quaternion.clone(), position: bone.position.clone() }]));
     this.scratch = new THREE.Quaternion();
     this.missing = new Set();
+    this.translated = new Set();
   }
 
   apply(locals) {
+    for (const name of this.translated) {
+      const entry = this.byName.get(name);
+      if (entry) entry.bone.position.copy(entry.position);
+    }
+    this.translated.clear();
+    for (const [name, offset] of locals.translations ?? []) {
+      const entry = this.byName.get(name);
+      if (!entry) { this.missing.add(name); continue; }
+      entry.bone.position.copy(entry.position);
+      entry.bone.position.x += offset[0]; entry.bone.position.y += offset[1]; entry.bone.position.z += offset[2];
+      this.translated.add(name);
+    }
     for (const [name, q] of locals) {
       const entry = this.byName.get(name);
       if (!entry) { this.missing.add(name); continue; }

@@ -8,12 +8,15 @@ import { MotionController } from '/preview/core/motion-controller.js';
 import { GESTURES, GESTURE_IDS } from '/preview/core/motion-profile.js';
 import { MotionRig, skeletonFromMesh } from '/preview/studio/motion-rig.js';
 import { AvatarSession } from './session.mjs';
+import { ExpressionChoreographer, blendExpressionOverlay } from '/preview/core/expression-choreography.js';
 
 const $ = id => document.getElementById(id);
 const wall = () => performance.now() / 1000;
 const bounded = (a, value, limit = 4000) => { a.push(value); if (a.length > limit) a.splice(0, a.length - limit); };
 const percentile = (a, p) => { if (!a.length) return 0; const sorted = [...a].sort((x, y) => x - y); return sorted[Math.floor((sorted.length - 1) * p)]; };
 const face = new FaceController(); face.headSway = false;
+const expression = new ExpressionChoreographer();
+const composedWeights = new Float32Array(face.weights.length);
 const stage = $('stage');
 const VIEWS = { face: { height: 5.1, y: 18.15, yaw: 0 }, body: { height: 12.4, y: 14.7, yaw: 0 }, angle: { height: 12.4, y: 14.7, yaw: .62 } };
 const PHASES = { prepare: '准备', stroke: '重点', hold: '保持', recover: '收回', retract: '收势', done: '结束' };
@@ -166,10 +169,14 @@ function frame(now) {
     const started = performance.now(), audio = session.sync(), synced = performance.now();
     if (audio.status === 'ended') stopSubtitles();
     const lip = audio.status === 'playing' ? lips.sample(audio.time) : null;
-    const weights = face.update(now / 1000, dt, lip, $('idle').checked), faced = performance.now();
+    const baseWeights = face.update(now / 1000, dt, lip, $('idle').checked), faced = performance.now();
     // The semantic scheduler owns all large gestures. Keep breathing/micro-motion
     // but do not also generate the controller's independent energy-triggered beat.
     motion.update(now / 1000, dt, { face: face.head, actions: face.activeActions, speech: 0 });
+    const overlay = expression.update(now / 1000, motion.snapshot().gestures, { paused: audio.status === 'paused' });
+    const weights = blendExpressionOverlay(baseWeights, overlay, {
+      speechActivity: !!lip || ['paused', 'cancelled', 'ended'].includes(face.status),
+      closure: lip?.closure ?? 0, out: composedWeights });
     const moved = performance.now();
     mesh.morphTargetInfluences.fill(0);
     for (let i = 0; i < AEMEATH_BINDINGS.length; i++) mesh.morphTargetInfluences[AEMEATH_BINDINGS[i][0]] = weights[i];
