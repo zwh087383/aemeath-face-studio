@@ -5,6 +5,12 @@ import { selectSubtitleCues } from '../subtitle-rules.mjs';
 const ids = result => result.cues.map(cue => `${cue.kind}:${cue.preset || cue.action || cue.gesture}`);
 const motion = result => result.cues.find(cue => cue.kind !== 'expression');
 
+test('actual Qwen colloquial praise retains negation and actor guards', () => {
+  for(const text of ['太棒啦！','太棒了！']) assert.ok(ids(selectSubtitleCues(text)).includes('expression:happy'));
+  for(const text of ['不觉得太棒啦。','太棒啦才怪。','他觉得太棒啦。','如果我觉得太棒啦。','我昨天觉得太棒啦。','“太棒啦！”'])
+    assert.ok(!ids(selectSubtitleCues(text)).includes('expression:happy'),text);
+});
+
 test('ordinary speech selects supported emotions and short gestures', () => {
   for (const [text, expected] of [
     ['太好了，我很开心！', 'expression:happy'],

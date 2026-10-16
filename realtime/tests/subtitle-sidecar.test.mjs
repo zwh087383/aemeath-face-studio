@@ -38,6 +38,17 @@ function harness(options = {}, selector = semantic) {
   };
 }
 
+test('actual Qwen praise split across deltas emits one happy cue at the sentence boundary', () => {
+  const h = harness({}, selectSubtitleCues); h.start();
+  for(const [sequence,text] of ['太','棒','啦'].entries()) {h.push(sequence,text);h.flush();}
+  assert.equal(h.sidecar.snapshot().counts.queuedCues,0);
+  h.push(3,'！');h.flush();
+  assert.equal(h.sidecar.snapshot().counts.queuedCues,1);
+  h.time(.1);h.play(.1);h.scheduler.tick();
+  assert.equal(h.cues().filter(c=>c.cue.kind==='expression' && c.cue.preset==='happy').length,1);
+  h.close();
+});
+
 test('host must explicitly begin after scheduler, with complete owner and bounded context', () => {
   const h = harness();
   assert.equal(h.sidecar.begin(A), false);
