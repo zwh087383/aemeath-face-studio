@@ -1,5 +1,7 @@
 # 实时动作调度与打断验收
 
+> **新增人物联调入口**：`codex/experimental-avatar-integration-20261015` 已将 Claude 的自然身体动作、八种表情、现有口型曲线与字幕旁路接在一起。运行 `node realtime/avatar-server.mjs --port 18768`，打开 `/avatar/`。本轮说明与验证见 [avatar/README.md](avatar/README.md)。下面的独立调度验收台及其历史证据仍保留。
+
 > **实验性分支** `codex/experimental-subtitle-sidecar-20261015`：现已增加流式字幕 Worker 旁路，依据本地中文规则选择表情和动作，直接接入本目录调度器，语音路径不等待分析结果。分支特点、接口与已知限制见 [EXPERIMENTAL.md](EXPERIMENTAL.md)，验证证据见 [VALIDATION.md](VALIDATION.md)。尚未接入真实 Qwen 服务或人物执行画面。
 
 这是一套独立的本地调度器、PCM 流式播放器和验收台。它负责把完整动作提示对齐到实际播放时间，并在插话、回复替换或执行失败时撤销旧动作和音频。所有新增代码位于 `face/realtime/`，没有接管 Claude 正在修改的角色工作室。

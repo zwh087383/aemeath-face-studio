@@ -1,0 +1,915 @@
+{
+  "experimental": true,
+  "branch": "codex/experimental-avatar-integration-20261015",
+  "localDate": "2026-10-15",
+  "generatedAt": "2026-10-16T00:53:05.3448146Z",
+  "boundary": "Actual PMX rendering, existing precomputed lip track for the bundled local WAV, streamed PCM and browser Web Audio context. No new speech-to-face inference, live provider, microphone, physical speaker stop measurement or GPU-completion timing.",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "hardwareConcurrency": 32,
+    "sampleRate": 48000,
+    "webglRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "renderer": "WebGPURenderer forceWebGL",
+    "physics": false
+  },
+  "node": {
+    "command": "node --test realtime/tests/*.test.mjs tests/controller.test.mjs tests/motion.test.mjs",
+    "failed": 0,
+    "skipped": 0,
+    "passed": 166
+  },
+  "browser": {
+    "visual": [
+      {
+        "part": "faces",
+        "captures": [
+          {
+            "intended": {
+              "preset": "neutral",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-neutral"
+          },
+          {
+            "intended": {
+              "preset": "smile",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-smile"
+          },
+          {
+            "intended": {
+              "preset": "happy",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-happy"
+          },
+          {
+            "intended": {
+              "preset": "curious",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-curious"
+          },
+          {
+            "intended": {
+              "preset": "focus",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-focus"
+          },
+          {
+            "intended": {
+              "preset": "surprise",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-surprise"
+          },
+          {
+            "intended": {
+              "preset": "shy",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-shy"
+          },
+          {
+            "intended": {
+              "preset": "playful",
+              "view": "face",
+              "actualAudioRunning": true
+            },
+            "name": "avatar-face-playful"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "part": "body",
+        "captures": [
+          {
+            "intended": {
+              "gesture": "explain",
+              "id": "visual-body-explain-22",
+              "phase": "hold",
+              "view": "body",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-body-explain"
+          },
+          {
+            "intended": {
+              "gesture": "wave",
+              "id": "visual-body-wave-23",
+              "phase": "stroke",
+              "view": "body",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-body-wave"
+          },
+          {
+            "intended": {
+              "gesture": "shrug",
+              "id": "visual-body-shrug-24",
+              "phase": "hold",
+              "view": "body",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-body-shrug"
+          },
+          {
+            "intended": {
+              "gesture": "chest",
+              "id": "visual-body-chest-25",
+              "phase": "hold",
+              "view": "body",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-body-chest"
+          },
+          {
+            "intended": {
+              "gesture": "explain",
+              "id": "visual-angle-explain-26",
+              "phase": "hold",
+              "view": "angle",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-angle-explain"
+          },
+          {
+            "intended": {
+              "gesture": "wave",
+              "id": "visual-angle-wave-27",
+              "phase": "stroke",
+              "view": "angle",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-angle-wave"
+          },
+          {
+            "intended": {
+              "gesture": "shrug",
+              "id": "visual-angle-shrug-28",
+              "phase": "hold",
+              "view": "angle",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-angle-shrug"
+          },
+          {
+            "intended": {
+              "gesture": "chest",
+              "id": "visual-angle-chest-29",
+              "phase": "hold",
+              "view": "angle",
+              "timingBoundary": "Captured during live playback, not a frozen authored key. Before/after phases document any phase transition while the screenshot was taken."
+            },
+            "name": "avatar-angle-chest"
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "performance": {
+      "passed": true,
+      "checks": [
+        {
+          "name": "30秒真实模型与流式音频性能窗口有足够活跃样本",
+          "passed": true,
+          "detail": {
+            "performance": {
+              "samples": 2482,
+              "driverP95Ms": 0.6000000000931323,
+              "motionP95Ms": 0.20000000018626451,
+              "faceP95Ms": 0.10000000009313226,
+              "syncP95Ms": 0.10000000009313226,
+              "rigP95Ms": 0.40000000037252903,
+              "renderSubmitP95Ms": 12.200000000186265,
+              "frameP95Ms": 20,
+              "fps": 82.72147658835566,
+              "longFrames": 0,
+              "viewport": {
+                "width": 757,
+                "height": 648,
+                "dpr": 1,
+                "view": "body"
+              },
+              "naturalMotion": true,
+              "physics": false,
+              "automaticSpeechBeat": false,
+              "boundary": "CPU driver includes sync, lip sampling, face, motion and rig writes; render submission excludes GPU completion; RAF cadence is not an acoustic measurement.",
+              "seconds": 30.00299999999963
+            },
+            "observationSamples": 300,
+            "playingSamples": 300
+          }
+        },
+        {
+          "name": "持续播放与回复替换期间模型、动作和音频均无故障",
+          "passed": true,
+          "detail": {
+            "failures": [],
+            "seenGestures": [
+              "explain",
+              "wave",
+              "chest"
+            ],
+            "errors": []
+          }
+        }
+      ]
+    },
+    "sidecar": [
+      {
+        "part": "semantic",
+        "checks": [
+          {
+            "name": "真实Worker保留未闭合否定片段，不抢先驱动角色",
+            "passed": true
+          },
+          {
+            "name": "合并后的否定句在真实角色链路中不触发摇头",
+            "passed": true
+          },
+          {
+            "name": "字幕经过Worker、调度器和实际执行端，同时产生开心表情与挥手",
+            "passed": true
+          },
+          {
+            "name": "真实字幕联合场景结束无绑定、音频或调度故障",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "part": "starve",
+        "checks": [
+          {
+            "name": "断供前由真实字幕Worker启动胸前手势",
+            "passed": true
+          },
+          {
+            "name": "受控断供期间媒体时间与语音动作冻结，真实嘴型关闭",
+            "passed": true
+          },
+          {
+            "name": "续包在同一代次继续原手势，字幕动作不重新派发",
+            "passed": true
+          },
+          {
+            "name": "续包后真实发音口型恢复",
+            "passed": true
+          },
+          {
+            "name": "真实字幕联合场景结束无绑定、音频或调度故障",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "part": "autopause",
+        "checks": [
+          {
+            "name": "自动测试字幕在暂停的三个供给周期内不推进",
+            "passed": true
+          },
+          {
+            "name": "恢复后自动字幕与媒体时间在同一回复继续",
+            "passed": true
+          },
+          {
+            "name": "真实字幕联合场景结束无绑定、音频或调度故障",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "part": "ended_cancel",
+        "checks": [
+          {
+            "name": "快速收完PCM后角色仍沿实际播放时钟说话",
+            "passed": true
+          },
+          {
+            "name": "临近自然结束时字幕Worker产生真实挥手",
+            "passed": true
+          },
+          {
+            "name": "自然播完后保留真实身体动作尾部，并转为本地时钟",
+            "passed": true
+          },
+          {
+            "name": "自然结束后的明确取消仍收回身体尾部",
+            "passed": true
+          },
+          {
+            "name": "尾部收回后旧字幕与resume不能复活已结束回复",
+            "passed": true
+          },
+          {
+            "name": "真实字幕联合场景结束无绑定、音频或调度故障",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "part": "ended_replace",
+        "checks": [
+          {
+            "name": "快速收完PCM后角色仍沿实际播放时钟说话",
+            "passed": true
+          },
+          {
+            "name": "临近自然结束时字幕Worker产生真实挥手",
+            "passed": true
+          },
+          {
+            "name": "自然播完后保留真实身体动作尾部，并转为本地时钟",
+            "passed": true
+          },
+          {
+            "name": "自然结束后的换轮会收回旧尾部，并统一新回复代次",
+            "passed": true
+          },
+          {
+            "name": "新轮字幕Worker恢复驱动，旧尾部消失且旧字幕被拒绝",
+            "passed": true
+          },
+          {
+            "name": "真实字幕联合场景结束无绑定、音频或调度故障",
+            "passed": true
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "core": {
+      "passed": true,
+      "phaseTrials": [
+        {
+          "requestedPhase": "prepare",
+          "gesture": "wave",
+          "id": "phase-prepare-3",
+          "observed": {
+            "id": "phase-prepare-3",
+            "gesture": "wave",
+            "name": "挥手",
+            "clock": "audio",
+            "epoch": 3,
+            "age": 0,
+            "stretch": 1.8525594162194021,
+            "recoverStretch": 1.3018062630381149,
+            "retractSeconds": null,
+            "phase": "prepare",
+            "recovering": false,
+            "retractProgress": 0
+          },
+          "mouthAtCancel": 2.4540368435224265E-32,
+          "voicedAtCancel": false,
+          "mediaTime": 0.19999999999999957,
+          "owner": {
+            "connectionId": "avatar-session-1",
+            "responseId": "reply-3",
+            "epoch": 3
+          },
+          "immediatelyAfter": {
+            "epoch": 3,
+            "reason": "avatar_phase_prepare",
+            "atWall": 7.839600000000093,
+            "audioTime": 0.19999999999999957,
+            "handlerMs": 0.30000000027907703,
+            "stageAtCancel": [
+              {
+                "id": "phase-prepare-3",
+                "gesture": "wave",
+                "phase": "prepare",
+                "age": 0
+              }
+            ],
+            "mouthBefore": 2.4540368435224265E-32,
+            "mouthClosedMs": null,
+            "retractStartedMs": null,
+            "retractCompleteMs": null,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          },
+          "completed": {
+            "epoch": 3,
+            "reason": "avatar_phase_prepare",
+            "atWall": 7.839600000000093,
+            "audioTime": 0.19999999999999957,
+            "handlerMs": 0.30000000027907703,
+            "stageAtCancel": [
+              {
+                "id": "phase-prepare-3",
+                "gesture": "wave",
+                "phase": "prepare",
+                "age": 0
+              }
+            ],
+            "mouthBefore": 2.4540368435224265E-32,
+            "mouthClosedMs": 10.200000000186265,
+            "retractStartedMs": 10.200000000186265,
+            "retractCompleteMs": 818.8000000002794,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          }
+        },
+        {
+          "requestedPhase": "stroke",
+          "gesture": "shrug",
+          "id": "phase-stroke-4",
+          "observed": {
+            "id": "phase-stroke-4",
+            "gesture": "shrug",
+            "name": "轻耸肩",
+            "clock": "audio",
+            "epoch": 4,
+            "age": 0.3669126098804172,
+            "stretch": 1,
+            "recoverStretch": 1,
+            "retractSeconds": null,
+            "phase": "stroke",
+            "recovering": false,
+            "retractProgress": 0
+          },
+          "mouthAtCancel": 0.5793550983071327,
+          "voicedAtCancel": true,
+          "mediaTime": 0.5679999999999992,
+          "owner": {
+            "connectionId": "avatar-session-1",
+            "responseId": "reply-4",
+            "epoch": 4
+          },
+          "immediatelyAfter": {
+            "epoch": 4,
+            "reason": "avatar_phase_stroke",
+            "atWall": 9.3345,
+            "audioTime": 0.5679999999999992,
+            "handlerMs": 0.20000000018605135,
+            "stageAtCancel": [
+              {
+                "id": "phase-stroke-4",
+                "gesture": "shrug",
+                "phase": "stroke",
+                "age": 0.3669126098804172
+              }
+            ],
+            "mouthBefore": 0.5793550983071327,
+            "mouthClosedMs": null,
+            "retractStartedMs": null,
+            "retractCompleteMs": null,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          },
+          "completed": {
+            "epoch": 4,
+            "reason": "avatar_phase_stroke",
+            "atWall": 9.3345,
+            "audioTime": 0.5679999999999992,
+            "handlerMs": 0.20000000018605135,
+            "stageAtCancel": [
+              {
+                "id": "phase-stroke-4",
+                "gesture": "shrug",
+                "phase": "stroke",
+                "age": 0.3669126098804172
+              }
+            ],
+            "mouthBefore": 0.5793550983071327,
+            "mouthClosedMs": 79.60000000009313,
+            "retractStartedMs": 10.600000000093132,
+            "retractCompleteMs": 663.9000000003725,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          }
+        },
+        {
+          "requestedPhase": "recover",
+          "gesture": "chest",
+          "id": "phase-recover-5",
+          "observed": {
+            "id": "phase-recover-5",
+            "gesture": "chest",
+            "name": "手放胸前",
+            "clock": "audio",
+            "epoch": 5,
+            "age": 2.0238922335834606,
+            "stretch": 1,
+            "recoverStretch": 1,
+            "retractSeconds": null,
+            "phase": "recover",
+            "recovering": false,
+            "retractProgress": 0
+          },
+          "mouthAtCancel": 0.0006937679046264966,
+          "voicedAtCancel": false,
+          "mediaTime": 2.1893333333333795,
+          "owner": {
+            "connectionId": "avatar-session-1",
+            "responseId": "reply-5",
+            "epoch": 5
+          },
+          "immediatelyAfter": {
+            "epoch": 5,
+            "reason": "avatar_phase_recover",
+            "atWall": 12.294900000000373,
+            "audioTime": 2.1893333333333795,
+            "handlerMs": 0.29999999981278336,
+            "stageAtCancel": [
+              {
+                "id": "phase-recover-5",
+                "gesture": "chest",
+                "phase": "recover",
+                "age": 2.0238922335834606
+              }
+            ],
+            "mouthBefore": 0.0006937679046264966,
+            "mouthClosedMs": null,
+            "retractStartedMs": null,
+            "retractCompleteMs": null,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          },
+          "completed": {
+            "epoch": 5,
+            "reason": "avatar_phase_recover",
+            "atWall": 12.294900000000373,
+            "audioTime": 2.1893333333333795,
+            "handlerMs": 0.29999999981278336,
+            "stageAtCancel": [
+              {
+                "id": "phase-recover-5",
+                "gesture": "chest",
+                "phase": "recover",
+                "age": 2.0238922335834606
+              }
+            ],
+            "mouthBefore": 0.0006937679046264966,
+            "mouthClosedMs": 10,
+            "retractStartedMs": 10,
+            "retractCompleteMs": 862.5,
+            "sourceCountAfter": 0,
+            "queuedAfter": 0,
+            "bodyQueuedAfter": 0,
+            "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "name": "真实模型已渲染，口型和骨骼绑定完整",
+          "passed": true
+        },
+        {
+          "name": "音频、面部和身体绑定同一回复代次",
+          "passed": true
+        },
+        {
+          "name": "表情、短动作与身体手势都通过统一调度入口",
+          "passed": true
+        },
+        {
+          "name": "统一提示改变了真实人物骨骼，语音仍在推进",
+          "passed": true
+        },
+        {
+          "name": "暂停冻结媒体时间并关闭真实口型",
+          "passed": true
+        },
+        {
+          "name": "暂停保留同一个手势，动作年龄不推进",
+          "passed": true
+        },
+        {
+          "name": "恢复同一回复且手势不重新起播",
+          "passed": true
+        },
+        {
+          "name": "打断前确实存在未来表情和动作",
+          "passed": true
+        },
+        {
+          "name": "发声状态下打断会停音频、清队列并在180ms内收口",
+          "passed": true
+        },
+        {
+          "name": "已取消手势按本地时钟完成收势并进入倾听",
+          "passed": true
+        },
+        {
+          "name": "新回复拒绝旧动作和旧字幕，旧轮不复活",
+          "passed": true
+        },
+        {
+          "name": "真实prepare阶段打断、完成收势且旧代次无法恢复",
+          "passed": true
+        },
+        {
+          "name": "真实stroke阶段打断、完成收势且旧代次无法恢复",
+          "passed": true
+        },
+        {
+          "name": "真实recover阶段打断、完成收势且旧代次无法恢复",
+          "passed": true
+        },
+        {
+          "name": "nod短动作在真实人物上生效",
+          "passed": true
+        },
+        {
+          "name": "shake短动作在真实人物上生效",
+          "passed": true
+        },
+        {
+          "name": "tilt短动作在真实人物上生效",
+          "passed": true
+        },
+        {
+          "name": "glance短动作在真实人物上生效",
+          "passed": true
+        },
+        {
+          "name": "blink短动作在真实人物上生效",
+          "passed": true
+        },
+        {
+          "name": "核心联合验收结束无绑定、渲染或调度故障",
+          "passed": true
+        }
+      ],
+      "voicedInterrupt": {
+        "beforeMouth": 0.08907097950577736,
+        "interrupt": {
+          "epoch": 1,
+          "reason": "avatar_voiced_acceptance",
+          "atWall": 6.4192000000001865,
+          "audioTime": 0.5279999999999997,
+          "handlerMs": 0.4999999999997229,
+          "stageAtCancel": [
+            {
+              "id": "avatar-1-explain",
+              "gesture": "explain",
+              "phase": "prepare",
+              "age": 0.30159539333222596
+            }
+          ],
+          "mouthBefore": 0.08907097950577736,
+          "mouthClosedMs": 45.60000000009313,
+          "retractStartedMs": 16.899999999906868,
+          "retractCompleteMs": null,
+          "sourceCountAfter": 0,
+          "queuedAfter": 0,
+          "bodyQueuedAfter": 0,
+          "boundary": "Morph and gesture state after submitted renders; not measured acoustic silence or photographed pixel timing."
+        },
+        "mouthOpen": 0.003838144679320976,
+        "audio": {
+          "epoch": 1,
+          "status": "cancelled",
+          "time": 0.5279999999999997,
+          "receivedDuration": 0.64,
+          "queuedSeconds": 0,
+          "retainedSeconds": 0,
+          "sourceActive": false,
+          "sourceCount": 0,
+          "context": "running",
+          "finished": true,
+          "nextSequence": 32,
+          "sampleRate": 48000,
+          "volume": 0.12,
+          "fault": null,
+          "lastError": null
+        },
+        "queues": {
+          "scheduler": 0,
+          "face": 0,
+          "motion": 0
+        }
+      }
+    }
+  },
+  "sourceBefore": [
+    {
+      "path": "preview\\core\\controller.js",
+      "sha256": "C698A6019FB17AD1C180E310E14EB2DCF838D93E54EC79CB1AD1C9165D9020E5"
+    },
+    {
+      "path": "preview\\core\\lip-track.js",
+      "sha256": "5710E12919C86049F908F128DC16F537AAE18401473FD16C662C9737651C4A3E"
+    },
+    {
+      "path": "preview\\core\\motion-controller.js",
+      "sha256": "15A62F4D884B936646DA6E7ACF4C2CC4E5FC45DA5B3B4093B6A172D451296C58"
+    },
+    {
+      "path": "preview\\core\\motion-math.js",
+      "sha256": "68ED394A8ED4BD863084C45364A10DADAEE472E518086D8A48D747EB070B7985"
+    },
+    {
+      "path": "preview\\core\\motion-profile.js",
+      "sha256": "27D0F6A2D50D12571A778C3E685D231ACB4F6241A58C88E48EA4844C7480D1DF"
+    },
+    {
+      "path": "preview\\core\\motion-skeleton.js",
+      "sha256": "18D168E2BACFA11319F80AC56A1EF0152249BEB441E3EBACEA91CE38F625CDDB"
+    },
+    {
+      "path": "preview\\core\\profile.js",
+      "sha256": "C9ADB2B68EDE19B18EBD827603FCE3CEAC6BF7FCA0734D1C3B77BC24736B43A4"
+    },
+    {
+      "path": "preview\\studio\\motion-rig.js",
+      "sha256": "AD4BB8F774BB28F62EDFB9EE2688B8EC4E500AB60A91528480D19E621415D485"
+    },
+    {
+      "path": "realtime\\avatar-server.mjs",
+      "sha256": "2B0FCA6E3948D266B97FBCAF429E163FD0379A75206023A0B4FC6294787E70EC"
+    },
+    {
+      "path": "realtime\\avatar\\controller-bridge.mjs",
+      "sha256": "ECA307F52D62B7A6C55111AF7ABBFC6C8F7C349B73C8FCC017C9A6DAF81C845C"
+    },
+    {
+      "path": "realtime\\avatar\\index.html",
+      "sha256": "41883A3CD48E5E94D57774C2B56F494E967828CC899089A296C28422897D7BC2"
+    },
+    {
+      "path": "realtime\\avatar\\session.mjs",
+      "sha256": "3BCA4AF51037AFDD3A7799382C291A17B3E6E5AA79DFEBD716AE7A62BE159586"
+    },
+    {
+      "path": "realtime\\avatar\\style.css",
+      "sha256": "544DBF9ECE6078A62DC4A5D0A0406B9D1690EA68B4BD07FC50D0004303253949"
+    },
+    {
+      "path": "realtime\\avatar\\viewer.mjs",
+      "sha256": "29C0195CC1045F106E1F26C584484CA8FF26915DA91D9164E32D1CCD51DF6C97"
+    },
+    {
+      "path": "realtime\\controller-sink.mjs",
+      "sha256": "AE3223D8F33192D4FE5E9F3887A739ACDB49986E6B53FA30C71C5BE02B3A215B"
+    },
+    {
+      "path": "realtime\\lab\\app.mjs",
+      "sha256": "D3A45EAE4C4D33464645836570D42D4DAACB6221AABDA5AE679A174125947B22"
+    },
+    {
+      "path": "realtime\\run-acceptance.mjs",
+      "sha256": "D0FBAAE43ED49ED773D04E619B96B529E3D8B185560ED224E260557B997467D4"
+    },
+    {
+      "path": "realtime\\scheduler.mjs",
+      "sha256": "09D094FA34D2EAEEC41C90EBCCE610CC4417E6E0C2D4CCE675DD1FFFB1B35E04"
+    },
+    {
+      "path": "realtime\\serve.mjs",
+      "sha256": "75D8853864786BD8A2B7E9F71F9697A3DCB65325633C6D46D8CD6D38E62676C5"
+    },
+    {
+      "path": "realtime\\stream-audio.mjs",
+      "sha256": "0A1DFF22618F51470BDE3E1B35F8BE407029738C3BEC50D4AF597CBDC0CD6F4E"
+    },
+    {
+      "path": "realtime\\subtitle-acceptance.mjs",
+      "sha256": "D1BEA085284738E7A4184C30BF685DDA7A5DEE31ED8E8BD0D2350FD0077A58DA"
+    },
+    {
+      "path": "realtime\\subtitle-rules.mjs",
+      "sha256": "55D8024D3D330F5A38DD8437D90A7833713F017E1D704B8421DB45D316B3BD54"
+    },
+    {
+      "path": "realtime\\subtitle-sidecar.mjs",
+      "sha256": "642EF107D0357460BE30BA8F217535A48CD6DEDC24F48E45DB7B753F09828EF2"
+    },
+    {
+      "path": "realtime\\subtitle-worker.mjs",
+      "sha256": "66250749800652FE8963970E73F602EE48FE7225E73EEBF74D82164D53F0F3A5"
+    }
+  ],
+  "sourceAfter": [
+    {
+      "sha256": "C698A6019FB17AD1C180E310E14EB2DCF838D93E54EC79CB1AD1C9165D9020E5",
+      "path": "preview\\core\\controller.js"
+    },
+    {
+      "sha256": "5710E12919C86049F908F128DC16F537AAE18401473FD16C662C9737651C4A3E",
+      "path": "preview\\core\\lip-track.js"
+    },
+    {
+      "sha256": "15A62F4D884B936646DA6E7ACF4C2CC4E5FC45DA5B3B4093B6A172D451296C58",
+      "path": "preview\\core\\motion-controller.js"
+    },
+    {
+      "sha256": "68ED394A8ED4BD863084C45364A10DADAEE472E518086D8A48D747EB070B7985",
+      "path": "preview\\core\\motion-math.js"
+    },
+    {
+      "sha256": "27D0F6A2D50D12571A778C3E685D231ACB4F6241A58C88E48EA4844C7480D1DF",
+      "path": "preview\\core\\motion-profile.js"
+    },
+    {
+      "sha256": "18D168E2BACFA11319F80AC56A1EF0152249BEB441E3EBACEA91CE38F625CDDB",
+      "path": "preview\\core\\motion-skeleton.js"
+    },
+    {
+      "sha256": "C9ADB2B68EDE19B18EBD827603FCE3CEAC6BF7FCA0734D1C3B77BC24736B43A4",
+      "path": "preview\\core\\profile.js"
+    },
+    {
+      "sha256": "AD4BB8F774BB28F62EDFB9EE2688B8EC4E500AB60A91528480D19E621415D485",
+      "path": "preview\\studio\\motion-rig.js"
+    },
+    {
+      "sha256": "2B0FCA6E3948D266B97FBCAF429E163FD0379A75206023A0B4FC6294787E70EC",
+      "path": "realtime\\avatar-server.mjs"
+    },
+    {
+      "sha256": "ECA307F52D62B7A6C55111AF7ABBFC6C8F7C349B73C8FCC017C9A6DAF81C845C",
+      "path": "realtime\\avatar\\controller-bridge.mjs"
+    },
+    {
+      "sha256": "41883A3CD48E5E94D57774C2B56F494E967828CC899089A296C28422897D7BC2",
+      "path": "realtime\\avatar\\index.html"
+    },
+    {
+      "sha256": "3BCA4AF51037AFDD3A7799382C291A17B3E6E5AA79DFEBD716AE7A62BE159586",
+      "path": "realtime\\avatar\\session.mjs"
+    },
+    {
+      "sha256": "544DBF9ECE6078A62DC4A5D0A0406B9D1690EA68B4BD07FC50D0004303253949",
+      "path": "realtime\\avatar\\style.css"
+    },
+    {
+      "sha256": "29C0195CC1045F106E1F26C584484CA8FF26915DA91D9164E32D1CCD51DF6C97",
+      "path": "realtime\\avatar\\viewer.mjs"
+    },
+    {
+      "sha256": "AE3223D8F33192D4FE5E9F3887A739ACDB49986E6B53FA30C71C5BE02B3A215B",
+      "path": "realtime\\controller-sink.mjs"
+    },
+    {
+      "sha256": "D3A45EAE4C4D33464645836570D42D4DAACB6221AABDA5AE679A174125947B22",
+      "path": "realtime\\lab\\app.mjs"
+    },
+    {
+      "sha256": "D0FBAAE43ED49ED773D04E619B96B529E3D8B185560ED224E260557B997467D4",
+      "path": "realtime\\run-acceptance.mjs"
+    },
+    {
+      "sha256": "09D094FA34D2EAEEC41C90EBCCE610CC4417E6E0C2D4CCE675DD1FFFB1B35E04",
+      "path": "realtime\\scheduler.mjs"
+    },
+    {
+      "sha256": "75D8853864786BD8A2B7E9F71F9697A3DCB65325633C6D46D8CD6D38E62676C5",
+      "path": "realtime\\serve.mjs"
+    },
+    {
+      "sha256": "0A1DFF22618F51470BDE3E1B35F8BE407029738C3BEC50D4AF597CBDC0CD6F4E",
+      "path": "realtime\\stream-audio.mjs"
+    },
+    {
+      "sha256": "D1BEA085284738E7A4184C30BF685DDA7A5DEE31ED8E8BD0D2350FD0077A58DA",
+      "path": "realtime\\subtitle-acceptance.mjs"
+    },
+    {
+      "sha256": "55D8024D3D330F5A38DD8437D90A7833713F017E1D704B8421DB45D316B3BD54",
+      "path": "realtime\\subtitle-rules.mjs"
+    },
+    {
+      "sha256": "642EF107D0357460BE30BA8F217535A48CD6DEDC24F48E45DB7B753F09828EF2",
+      "path": "realtime\\subtitle-sidecar.mjs"
+    },
+    {
+      "sha256": "66250749800652FE8963970E73F602EE48FE7225E73EEBF74D82164D53F0F3A5",
+      "path": "realtime\\subtitle-worker.mjs"
+    }
+  ],
+  "rawEvidenceRoot": "outputs/avatar-integration-20261015",
+  "physicalPlaybackVerified": false,
+  "liveProviderVerified": false,
+  "newAudioLipInferenceVerified": false,
+  "clothingPhysicsEnabled": false,
+  "sourceChangedDuringTest": []
+}

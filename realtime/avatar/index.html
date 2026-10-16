@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>爱弥斯 · 实时表情与动作联调</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+</head>
+<body>
+  <header><div><span class="eyebrow">AEMEATH / EXPERIMENTAL INTEGRATION</span><h1>听她说话，看她回应。</h1></div><p>Claude 自然动作 × 字幕旁路 × 同一播放时钟</p></header>
+  <main>
+    <section class="theatre">
+      <div id="stage" aria-label="实时人物画面"><div id="loading"><strong>正在准备人物…</strong><span id="load-note">读取本地模型与口型曲线</span></div><div class="stage-top"><span id="state">准备中</span><div id="views"></div></div><div class="caption"><span id="expression-name">自然</span><p id="gesture-name">放松 · 呼吸</p></div><span class="watermark">爱弥斯 / 01</span></div>
+      <div class="playback"><div class="buttons"><button id="start" class="primary" disabled>开始字幕联动</button><button id="pause" disabled>暂停</button><button id="resume" disabled>恢复</button><button id="cancel" class="danger" disabled>打断 · 倾听</button><button id="replace" disabled>换一轮回复</button></div><div class="progress"><progress id="progress" max="1" value="0"></progress><output id="time">0.00 s</output></div><p id="message" role="status">加载后点击开始。音频与口型使用同一段本地样例。</p></div>
+      <div class="stats"><div><strong id="fps">—</strong><span>实际画面 FPS</span></div><div><strong id="driver">—</strong><span>驱动 p95 / ms</span></div><div><strong id="mouth">—</strong><span>实际嘴型开度</span></div><div><strong id="epoch">—</strong><span>播放代次</span></div></div>
+      <div class="panel"><h2>刚刚收到的字幕</h2><p id="live-subtitle">等待开始…</p><div class="badges"><span id="sidecar-state">旁路 idle</span><span id="motion-phase">尚无语义动作</span></div></div>
+    </section>
+    <aside>
+      <section class="panel"><h2>字幕联动实验</h2><p class="hint">下面是独立动作测试台词，与播放的样例音频内容不同；用于检查字幕选动作与打断链路。</p><textarea id="subtitle-input" rows="4" maxlength="1024">你好，很高兴见到你！我轻轻挥挥手。让我仔细想想，我来解释。太好了，我明白了。其实我有点害羞。我喜欢你。</textarea><div class="options"><label>表现 <select id="profile"><option value="gentle">克制</option><option value="balanced" selected>适中</option><option value="lively">活泼</option></select></label><label><input id="sidecar" type="checkbox" checked> 字幕旁路</label></div><div class="buttons"><button id="send" disabled>投递测试字幕</button><button id="scripted" disabled>四种手势巡览</button></div></section>
+      <section class="panel"><h2>表情与动作</h2><p class="hint">播放时可点选，全部交给统一调度器；忙碌或迟到的动作会跳过。</p><div id="presets" class="grid"></div><div id="actions" class="grid small"></div><div id="gestures" class="grid small"></div></section>
+      <section class="panel"><h2>播放设置</h2><div class="options"><label><input id="starve" type="checkbox"> 模拟短暂断流</label><label><input id="natural" type="checkbox" checked> 呼吸与微动</label><label><input id="idle" type="checkbox" checked> 自然眨眼</label></div><label class="volume">音量 <input id="volume" type="range" min="0" max="0.5" step="0.01" value="0.12"></label><p class="hint">嘴型按实际播放进度采样；暂停和打断时收口，手臂按本地时间自然收回。衣发物理关闭。</p></section>
+      <section class="panel"><h2>运行观察</h2><div class="buttons"><button id="measure" disabled>测量 30 秒</button><button id="export">导出记录</button></div><p id="interrupt-result" class="hint">尚未打断</p><details><summary>调度记录与测量边界</summary><pre id="diagnostics"></pre><ol id="events"></ol></details></section>
+      <footer>实验性本地接线 · 未连接 Qwen 或麦克风<br>沿用该 WAV 对应的离线 Audio2Face 曲线</footer>
+    </aside>
+  </main>
+  <script type="module" src="./viewer.mjs"></script>
+</body>
+</html>
