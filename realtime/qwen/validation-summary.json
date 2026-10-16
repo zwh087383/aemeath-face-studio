@@ -1,0 +1,509 @@
+{
+  "date": "2026-10-15",
+  "experimental": true,
+  "model": "qwen-audio-3.1-realtime-plus",
+  "voice": "longanqian_v3.1",
+  "status": "live_streaming_and_playback_interruption_verified_with_limits",
+  "responses": {
+    "created": 7,
+    "completed": 5,
+    "cancelled": 2,
+    "unknownUsage": 2
+  },
+  "reportedUsageCompletedOnly": {
+    "input_tokens": 1005,
+    "output_tokens": 531,
+    "total_tokens": 1536
+  },
+  "outputSecondsCompleted": 33.84,
+  "checks": {
+    "nodePassed": 196,
+    "pythonBridgePassed": 33,
+    "affectedSubtitleRegressionPassed": 43,
+    "subtitleRegressionIsOverlappingSubset": true,
+    "completedBrowserCaseAssertionsPassed": 35,
+    "failedVadCaseAssertionsPassed": 2,
+    "failedVadCaseAssertionsFailed": 1,
+    "playbackInterruptionBrowserAssertionsPassed": 4,
+    "offlineActualBrowserAssertionsPassed": 9
+  },
+  "exampleGeneratedTranscript": "你好，很高兴见到你！太好了，我们成功了。",
+  "environment": {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "physics": false
+  },
+  "audioContext": {
+    "sampleRate": 24000,
+    "baseLatency": 0.01,
+    "outputLatency": 0.04,
+    "state": "running"
+  },
+  "manualConnectionMs": 311.9,
+  "firstConnectToPlaybackMs": 1099.0,
+  "trials": [
+    {
+      "case": "01-text-cold",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/01-text-cold.json",
+      "status": "completed",
+      "sidecar": true,
+      "inputKind": "text",
+      "reference": "text_submit",
+      "validEndToEndSample": true,
+      "latencyMs": {
+        "responseCreatedAt": 123.8,
+        "firstSubtitleAt": 137.0,
+        "firstPcmAt": 705.7,
+        "firstPlaybackAt": 755.2,
+        "firstMouthAt": 861.3,
+        "firstCueAt": 813.5,
+        "firstExpressionRenderedAt": 898.4,
+        "firstGestureRenderedAt": 843.0,
+        "providerDoneAt": 1332.9,
+        "playbackEndedAt": 9255.7
+      },
+      "firstPcmToPlaybackMs": 49.5,
+      "firstPcmToMouthMs": 155.6,
+      "firstSubtitleToCueMs": 676.5,
+      "firstSubtitleToExpressionMs": 761.4,
+      "firstSubtitleToGestureMs": 706,
+      "outputSeconds": 8.48,
+      "outputPcmFrames": 203520,
+      "usage": {
+        "total_tokens": 228,
+        "input_tokens": 91,
+        "output_tokens": 137,
+        "input_tokens_details": {
+          "text_tokens": 91
+        },
+        "output_tokens_details": {
+          "text_tokens": 30,
+          "audio_tokens": 106
+        }
+      },
+      "usageStatus": "reported",
+      "performance": {
+        "frames": 657,
+        "fps": 70.94,
+        "driverP95Ms": 1,
+        "renderP95Ms": 26.3,
+        "frameP95Ms": 30.2,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 7,
+      "checksFailed": 0
+    },
+    {
+      "case": "02-text-warm",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/02-text-warm.json",
+      "status": "completed",
+      "sidecar": true,
+      "inputKind": "text",
+      "reference": "text_submit",
+      "validEndToEndSample": true,
+      "latencyMs": {
+        "responseCreatedAt": 329.0,
+        "firstSubtitleAt": 344.1,
+        "firstPcmAt": 856.1,
+        "firstPlaybackAt": 904.2,
+        "firstMouthAt": 1012.4,
+        "firstCueAt": 971.4,
+        "firstExpressionRenderedAt": 1052.9,
+        "firstGestureRenderedAt": 999.2,
+        "providerDoneAt": 1509.5,
+        "playbackEndedAt": 4665.9
+      },
+      "firstPcmToPlaybackMs": 48.1,
+      "firstPcmToMouthMs": 156.3,
+      "firstSubtitleToCueMs": 627.3,
+      "firstSubtitleToExpressionMs": 708.8,
+      "firstSubtitleToGestureMs": 655.1,
+      "outputSeconds": 3.76,
+      "outputPcmFrames": 90240,
+      "usage": {
+        "total_tokens": 206,
+        "input_tokens": 146,
+        "output_tokens": 60,
+        "input_tokens_details": {
+          "text_tokens": 146
+        },
+        "output_tokens_details": {
+          "text_tokens": 12,
+          "audio_tokens": 47
+        }
+      },
+      "usageStatus": "reported",
+      "performance": {
+        "frames": 341,
+        "fps": 72.75,
+        "driverP95Ms": 0.6,
+        "renderP95Ms": 14,
+        "frameP95Ms": 16.8,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 7,
+      "checksFailed": 0
+    },
+    {
+      "case": "03-audio-manual",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/03-audio-manual.json",
+      "status": "completed",
+      "sidecar": true,
+      "inputKind": "audio-fixture",
+      "reference": "last_100ms_packet_above_rms_threshold",
+      "validEndToEndSample": true,
+      "latencyMs": {
+        "responseCreatedAt": 1829.9,
+        "firstSubtitleAt": 1850.7,
+        "firstPcmAt": 2342.8,
+        "firstPlaybackAt": 2405.1,
+        "firstMouthAt": 2924.5,
+        "firstCueAt": 2620.9,
+        "firstExpressionRenderedAt": null,
+        "firstGestureRenderedAt": 2637.6,
+        "providerDoneAt": 3055.1,
+        "playbackEndedAt": 10735.6
+      },
+      "firstPcmToPlaybackMs": 62.3,
+      "firstPcmToMouthMs": 581.7,
+      "firstSubtitleToCueMs": 770.2,
+      "firstSubtitleToExpressionMs": null,
+      "firstSubtitleToGestureMs": 786.9,
+      "outputSeconds": 8.16,
+      "outputPcmFrames": 195840,
+      "usage": {
+        "total_tokens": 409,
+        "input_tokens": 282,
+        "output_tokens": 127,
+        "input_tokens_details": {
+          "text_tokens": 169,
+          "audio_tokens": 113
+        },
+        "output_tokens_details": {
+          "text_tokens": 24,
+          "audio_tokens": 102
+        }
+      },
+      "usageStatus": "reported",
+      "performance": {
+        "frames": 1220,
+        "fps": 66.5,
+        "driverP95Ms": 0.6,
+        "renderP95Ms": 16.6,
+        "frameP95Ms": 20.3,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 7,
+      "checksFailed": 0,
+      "manualCommitReferenceMs": {
+        "firstSubtitleAt": 281.8,
+        "firstPcmAt": 773.9,
+        "firstPlaybackAt": 836.2,
+        "firstMouthAt": 1355.6,
+        "firstGestureRenderedAt": 1068.7
+      },
+      "lastVoicedPacketToCommitMs": 1568.9
+    },
+    {
+      "case": "04-sidecar-off",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/04-sidecar-off.json",
+      "status": "completed",
+      "sidecar": false,
+      "inputKind": "text",
+      "reference": "text_submit",
+      "validEndToEndSample": true,
+      "latencyMs": {
+        "responseCreatedAt": 214.3,
+        "firstSubtitleAt": 229.7,
+        "firstPcmAt": 678.5,
+        "firstPlaybackAt": 754.3,
+        "firstMouthAt": 1130.2,
+        "firstCueAt": null,
+        "firstExpressionRenderedAt": null,
+        "firstGestureRenderedAt": null,
+        "providerDoneAt": 983.6,
+        "playbackEndedAt": 5165.4
+      },
+      "firstPcmToPlaybackMs": 75.8,
+      "firstPcmToMouthMs": 451.7,
+      "firstSubtitleToCueMs": null,
+      "firstSubtitleToExpressionMs": null,
+      "firstSubtitleToGestureMs": null,
+      "outputSeconds": 4.24,
+      "outputPcmFrames": 101760,
+      "usage": {
+        "total_tokens": 397,
+        "input_tokens": 331,
+        "output_tokens": 66,
+        "input_tokens_details": {
+          "text_tokens": 218,
+          "audio_tokens": 113
+        },
+        "output_tokens_details": {
+          "text_tokens": 12,
+          "audio_tokens": 53
+        }
+      },
+      "usageStatus": "reported",
+      "performance": {
+        "frames": 436,
+        "fps": 84.09,
+        "driverP95Ms": 0.6,
+        "renderP95Ms": 14.3,
+        "frameP95Ms": 16.7,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 7,
+      "checksFailed": 0
+    },
+    {
+      "case": "05-audio-vad",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/05-audio-vad.json",
+      "status": "cancelled",
+      "sidecar": true,
+      "inputKind": "audio-fixture",
+      "reference": "last_100ms_packet_above_rms_threshold",
+      "validEndToEndSample": false,
+      "latencyMs": null,
+      "firstPcmToPlaybackMs": null,
+      "firstPcmToMouthMs": null,
+      "firstSubtitleToCueMs": null,
+      "firstSubtitleToExpressionMs": null,
+      "firstSubtitleToGestureMs": null,
+      "outputSeconds": 0.0,
+      "outputPcmFrames": 0,
+      "usage": null,
+      "usageStatus": "unknown",
+      "performance": {
+        "frames": 126,
+        "fps": 68.05,
+        "driverP95Ms": 0.6,
+        "renderP95Ms": 16.7,
+        "frameP95Ms": 20.2,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 2,
+      "checksFailed": 1,
+      "failure": {
+        "code": "usage_unknown_admission_blocked",
+        "vadSilenceMs": 500,
+        "prematureTurn": true,
+        "audibleOutputInterruptionVerified": false,
+        "rawPrematureSubtitleRelativeToLastVoicedPacketMs": -147.6,
+        "generatedTextBeforeAudio": true,
+        "recordedOutputFrames": 0
+      }
+    },
+    {
+      "case": "06-audio-vad-retest",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/06-audio-vad-retest.json",
+      "status": "completed",
+      "sidecar": true,
+      "inputKind": "audio-fixture",
+      "reference": "last_100ms_packet_above_rms_threshold",
+      "validEndToEndSample": true,
+      "latencyMs": {
+        "responseCreatedAt": 1156.5,
+        "firstSubtitleAt": 1159.2,
+        "firstPcmAt": 1174.4,
+        "firstPlaybackAt": 1233.8,
+        "firstMouthAt": 1581.9,
+        "firstCueAt": 1290.0,
+        "firstExpressionRenderedAt": 1353.6,
+        "firstGestureRenderedAt": null,
+        "providerDoneAt": 1780.0,
+        "playbackEndedAt": 10428.3
+      },
+      "firstPcmToPlaybackMs": 59.4,
+      "firstPcmToMouthMs": 407.5,
+      "firstSubtitleToCueMs": 130.8,
+      "firstSubtitleToExpressionMs": 194.4,
+      "firstSubtitleToGestureMs": null,
+      "outputSeconds": 9.2,
+      "outputPcmFrames": 220800,
+      "usage": {
+        "total_tokens": 296,
+        "input_tokens": 155,
+        "output_tokens": 141,
+        "input_tokens_details": {
+          "text_tokens": 86,
+          "audio_tokens": 69
+        },
+        "output_tokens_details": {
+          "text_tokens": 25,
+          "audio_tokens": 115
+        }
+      },
+      "usageStatus": "reported",
+      "performance": {
+        "frames": 1504,
+        "fps": 95.22,
+        "driverP95Ms": 0.6,
+        "renderP95Ms": 11.5,
+        "frameP95Ms": 13.5,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 7,
+      "checksFailed": 0,
+      "vadSilenceMs": 1000,
+      "fixtureSeconds": 6.975,
+      "expressionRendered": "happy",
+      "validatedInputScope": "continuous_single_sentence_only"
+    },
+    {
+      "case": "07-audible-interrupt",
+      "evidenceFile": "outputs/qwen-live-avatar-20261015/07-audible-interrupt.json",
+      "status": "cancelled",
+      "sidecar": true,
+      "inputKind": "text",
+      "reference": "text_submit",
+      "validEndToEndSample": true,
+      "latencyMs": {
+        "responseCreatedAt": 87.5,
+        "firstSubtitleAt": 99.7,
+        "firstPcmAt": 369.7,
+        "firstPlaybackAt": 418.9,
+        "firstMouthAt": 520.4,
+        "firstCueAt": 478.8,
+        "firstExpressionRenderedAt": 542.8,
+        "firstGestureRenderedAt": 512.4,
+        "providerDoneAt": 677.1,
+        "playbackEndedAt": null
+      },
+      "firstPcmToPlaybackMs": 49.2,
+      "firstPcmToMouthMs": 150.7,
+      "firstSubtitleToCueMs": 379.1,
+      "firstSubtitleToExpressionMs": 443.1,
+      "firstSubtitleToGestureMs": 412.7,
+      "outputSeconds": 2.0,
+      "outputPcmFrames": 48000,
+      "usage": null,
+      "usageStatus": "unknown",
+      "performance": {
+        "frames": 156,
+        "fps": 103.57,
+        "driverP95Ms": 0.7,
+        "renderP95Ms": 10.9,
+        "frameP95Ms": 16.3,
+        "stage": {
+          "width": 757,
+          "height": 598,
+          "dpr": 1
+        }
+      },
+      "checksPassed": 4,
+      "checksFailed": 0,
+      "outputSecondsMeaning": "PCM accepted by browser before cancellation, not physical played duration",
+      "serverOutputPcmFramesIncludingTail": 57600,
+      "interruption": {
+        "trigger": "local_rms_on_synthetic_interrupt_fixture_realtime_100ms_packets",
+        "inputLeadingSilenceTrimMs": 340,
+        "preSnapshotSourceActive": true,
+        "preSnapshotGesturePhase": "prepare",
+        "mouthAtCancellation": 0.7055,
+        "localCancelReturnMs": 0.8,
+        "sourcesAfterReturn": 0,
+        "queuedAfterReturn": 0,
+        "mouthClosedMs": 69.4,
+        "retractCompleteMs": 811.8,
+        "bridgeCancelAckMs": 11.4,
+        "remoteCancelledDoneMs": 53.7,
+        "remoteCancelNeeded": true,
+        "sourcesRemain": 0,
+        "physicalAcousticTest": false
+      }
+    }
+  ],
+  "sourceAfterLiveRun": {
+    "vadSilenceMs": 1000,
+    "vad1000CloudValidated": true,
+    "vad1000ValidatedScope": "continuous_single_sentence_only",
+    "originalMultiSentenceFixtureAt1000Validated": false,
+    "happyPhraseExpansion": "太棒[了啦]",
+    "happyPhraseExpansionCloudValidatedVariants": [
+      "太棒了"
+    ],
+    "happyPhraseExpansionOfflineOnlyVariants": [
+      "太棒啦"
+    ],
+    "continuousFixtureSeconds": 6.975,
+    "continuousFixtureCloudValidated": true
+  },
+  "limitsOfEvidence": [
+    "Browser WebAudio and morph/bone observation, not physical acoustic latency.",
+    "Synthetic realtime PCM fixtures, not live microphone speech.",
+    "One active WebAudio playback cancellation verified with a locally detected synthetic speech trigger in manual mode; not sustained duplex acceptance.",
+    "500 ms multi-sentence VAD failed; 1000 ms continuous single sentence passed; same multi-sentence fixture at 1000 ms remains untested.",
+    "One on/off pair has different accumulated context and output audio; no causal or statistical overhead conclusion.",
+    "Two cancelled responses have unknown usage; neither is zero cost or a verified invoice.",
+    "Both batches stopped on unknown usage; second explicitly authorized batch exhausted its two-response limit.",
+    "Offline browser synthetic PCM timings are separate from real-cloud timings."
+  ],
+  "scope": "two_authorized_bounded_batches",
+  "batches": [
+    {
+      "name": "initial",
+      "responses": 5,
+      "completed": 4,
+      "cancelledUnknownUsage": 1,
+      "stoppedOnUnknownUsage": true
+    },
+    {
+      "name": "explicitly_authorized_retest",
+      "responseLimit": 2,
+      "responses": 2,
+      "completed": 1,
+      "cancelledUnknownUsage": 1,
+      "stoppedOnUnknownUsage": true,
+      "responseLimitExhausted": true
+    }
+  ],
+  "offlineBrowser": {
+    "evidenceFile": "outputs/qwen-live-avatar-20261015/08-offline-browser.json",
+    "checksPassed": 9,
+    "checksFailed": 0,
+    "provider": "fake-in-page",
+    "realPmxAndWebAudio": true,
+    "cloudCalls": 0,
+    "inputPcmCommands": 0,
+    "mouthClosedMs": 78.9,
+    "retractCompleteMs": 816.0,
+    "coverage": [
+      "actual PCM mouth/expression/gesture",
+      "synchronous source and queue cleanup",
+      "late microphone permission stream cleanup",
+      "permission denial recovery"
+    ],
+    "mustNotMergeWithCloudTimings": true
+  },
+  "timingDefinition": {
+    "latencyMs": "All values are deltas from the per-trial reference despite field names ending in At.",
+    "audioReferenceResolutionMs": 100,
+    "playbackObservation": "RAF observes WebAudio source in playback interval; no acoustic loopback.",
+    "validEndToEndSample": "Software chain timing only, not microphone-to-speaker acoustic end-to-end."
+  }
+}
