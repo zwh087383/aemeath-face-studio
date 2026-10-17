@@ -54,6 +54,9 @@ export const POSTURES = Object.freeze({
 
 // Gestures. Keys are [time, pose] on the gesture's own clock; `stop` marks keys where
 // motion intentionally pauses (zero velocity). Other keys pass through with velocity.
+// Body tracks carry weight and unwind during the hold; they are not cyclic sway.
+// Peaks are checked in real PMX FK (tests/body-expression.test.mjs), including
+// distinct front/back/turn intent and readable spatial travel at the head.
 // Phases document the prepare/stroke/hold/recover structure; `apex` is the stressed
 // moment to align with speech; `recover` is the interrupt retraction time.
 const LEGACY_GESTURES = Object.freeze({
@@ -68,20 +71,25 @@ const LEGACY_GESTURES = Object.freeze({
         [1.2, arm({ hand: [2.47, 13.8, 2.15], pole: [.5, -.6, -1], palm: [-.1, 1, .22], point: [.55, .1, 1], curl: .15, spread: .34, thumb: .02, shrug: .012 })],
         [1.7, arm({ hand: [2.42, 13.74, 2.08], pole: [.5, -.6, -1], palm: [-.16, 1, .2], point: [.5, .08, 1], curl: .17, spread: .3, thumb: .04 }), 'stop'],
       ],
+      // Keep the low supporting sleeve ahead of the braid as the torso leans.
       L: [
         [0, arm({ hand: [2.2, 12.6, 1.3], pole: [.7, -.5, -.55], palm: [-.8, .45, .05], point: [-.1, -.1, 1], curl: .3 })],
-        [.62, arm({ hand: [2.42, 12.9, 1.42], pole: [.7, -.55, -.5], palm: [-.55, .75, .12], point: [.1, -.05, 1], curl: .24, spread: .2, thumb: .12 }), 'stop'],
-        [1.7, arm({ hand: [2.38, 12.84, 1.38], pole: [.7, -.55, -.5], palm: [-.6, .7, .1], point: [.08, -.06, 1], curl: .25, spread: .18, thumb: .14 }), 'stop'],
+        [.62, arm({ hand: [2.42, 12.9, 1.62], pole: [.7, -.55, -.5], palm: [-.55, .75, .12], point: [.1, -.05, 1], curl: .24, spread: .2, thumb: .12 }), 'stop'],
+        [1.7, arm({ hand: [2.38, 12.84, 1.58], pole: [.7, -.55, -.5], palm: [-.6, .7, .1], point: [.08, -.06, 1], curl: .25, spread: .18, thumb: .14 }), 'stop'],
       ],
       body: [
-        [0, { lean: 0, twist: 0, side: 0, headPitch: 0, headYaw: 0, headRoll: 0 }],
-        [.66, { lean: .022, twist: -.025, side: -.006, headPitch: -.01, headYaw: -.015, headRoll: .03 }, 'stop'],
-        [1.7, { lean: .018, twist: -.02, side: -.005, headPitch: -.008, headYaw: -.012, headRoll: .028 }, 'stop'],
-      ],
+      [0,{}],
+      [0.2,{lean: -0.045,twist: 0.025,headPitch: -0.02,gazeYaw: -0.055}],
+      [0.52,{lean: 0.1,twist: -0.07,side: -0.018,pelvisPitch: -0.025,hipShift: -0.07,headYaw: -0.025}],
+      [0.8,{lean: 0.17,twist: -0.105,side: -0.025,pelvisPitch: -0.04,hipShift: -0.12,headPitch: 0.025,headYaw: -0.045,headRoll: 0.035,neckForward: 0.025}, 'stop'],
+      [1.22,{lean: 0.125,twist: -0.07,side: -0.015,pelvisPitch: -0.03,hipShift: -0.085,headPitch: -0.015,headYaw: -0.025,headRoll: 0.025}],
+      [1.7,{lean: 0.075,twist: -0.04,side: -0.01,pelvisPitch: -0.018,hipShift: -0.04,headPitch: 0.02,headRoll: 0.015}],
+      [2.15,{lean: 0.035,twist: -0.018,headPitch: 0.008}]
+    ],
     },
   },
   wave: {
-    name: '挥手', tracks: ['R', 'body'], duration: 2.65, apex: .82, recover: .6, cooldown: 1.5,
+    name: '挥手', tracks: ['R', 'L', 'body'], duration: 2.65, apex: .82, recover: .6, cooldown: 1.5,
     // Raising the hand overhead folds the elbow first instead of swinging a straight arm out.
     arc: { tuck: .3, out: .55 },
     phases: { prepare: [0, .56], stroke: [.56, 1.72], hold: [1.72, 1.95], recover: [1.95, 2.65] },
@@ -102,12 +110,24 @@ const LEGACY_GESTURES = Object.freeze({
         // Lowering retraces the raise path while the weight fades.
         [2.35, arm({ hand: [3.4, 15.4, 1.3], pole: [.9, -.6, .2], palm: [-.4, .2, .9], point: [.1, .85, .5], curl: .22, spread: .2, shrug: .02 }), 'stop'],
       ],
-      body: [
-        [0, { lean: 0, twist: 0, side: 0, headPitch: 0, headYaw: 0, headRoll: 0 }],
-        [.56, { lean: .01, twist: -.02, side: .014, headPitch: -.012, headYaw: -.02, headRoll: -.035 }],
-        [1.72, { lean: .01, twist: -.018, side: .012, headPitch: -.01, headYaw: -.018, headRoll: -.032 }, 'stop'],
-        [1.95, { lean: .008, twist: -.015, side: .01, headPitch: -.008, headYaw: -.015, headRoll: -.028 }, 'stop'],
+      // The supporting hand moves forward before the shoulder turn; leaving it
+      // planted beside the skirt would drag its fingertips through the fabric.
+      L: [
+        [0, POSTURES.relaxed.L],
+        [.5, arm({ ...POSTURES.relaxed.L, hand: [3.1, 11.8, 1.3], curl: .28, protract: .035 })],
+        [.94, arm({ ...POSTURES.relaxed.L, hand: [3.2, 12.0, 1.15], curl: .21, spread: .14, protract: .045 }), 'stop'],
+        [1.6, arm({ ...POSTURES.relaxed.L, hand: [3.15, 11.95, 1.1], curl: .23, protract: .035 })],
+        [1.95, arm({ ...POSTURES.relaxed.L, hand: [3.1, 11.85, .95], curl: .26, protract: .025 })],
       ],
+      body: [
+      [0,{}],
+      [0.2,{lean: -0.035,twist: 0.04,side: 0.025,hipShift: 0.04,gazeYaw: -0.1}],
+      [0.56,{lean: 0.045,twist: -0.08,side: -0.055,pelvisRoll: 0.025,hipShift: -0.13,headYaw: -0.035,headRoll: 0.045}],
+      [0.94,{lean: 0.08,twist: -0.125,side: -0.09,pelvisRoll: 0.035,hipShift: -0.22,headPitch: -0.035,headYaw: -0.035,headRoll: 0.065}, 'stop'],
+      [1.4,{lean: 0.065,twist: -0.09,side: -0.065,pelvisRoll: 0.028,hipShift: -0.17,headPitch: 0.02,headYaw: -0.015,headRoll: 0.035}],
+      [1.95,{lean: 0.035,twist: -0.055,side: -0.035,pelvisRoll: 0.018,hipShift: -0.1,headPitch: 0,headRoll: 0.02}],
+      [2.38,{lean: 0.015,twist: -0.015,side: -0.012,hipShift: -0.03}]
+    ],
     },
   },
   shrug: {
@@ -122,10 +142,13 @@ const LEGACY_GESTURES = Object.freeze({
       ]])),
       // The head tilts slightly but is not carried up with the shoulders.
       body: [
-        [0, { lean: 0, twist: 0, side: 0, headPitch: 0, headYaw: 0, headRoll: 0 }],
-        [.44, { lean: -.012, twist: 0, side: 0, headPitch: -.012, headYaw: .01, headRoll: .045 }, 'stop'],
-        [.86, { lean: -.008, twist: 0, side: 0, headPitch: -.006, headYaw: .008, headRoll: .038 }, 'stop'],
-      ],
+      [0,{}],
+      [0.16,{lean: 0.035,headPitch: 0.025,gazePitch: 0.02}],
+      [0.44,{lean: -0.14,twist: 0.035,side: 0.04,pelvisPitch: 0.035,hipShift: 0.06,headPitch: -0.055,headYaw: 0.035,headRoll: 0.065}, 'stop'],
+      [0.7,{lean: -0.085,twist: 0.025,side: 0.027,pelvisPitch: 0.02,hipShift: 0.04,headPitch: -0.025,headRoll: 0.045}],
+      [0.94,{lean: 0.045,twist: 0.005,side: 0.01,pelvisPitch: -0.012,headPitch: 0.025,headRoll: 0.025}],
+      [1.3,{lean: 0.02,headPitch: 0.01,headRoll: 0.01}]
+    ],
     },
   },
   chest: {
@@ -141,10 +164,14 @@ const LEGACY_GESTURES = Object.freeze({
         [2.02, arm({ hand: [-.06, 15.68, 1.5], anchor: 'palm', pole: [.9, -.7, .35], palm: [.02, -.08, -1], point: [-1, .55, -.02], curl: .12, thumb: .16, spread: -.22 }), 'stop'],
       ],
       body: [
-        [0, { lean: 0, twist: 0, side: 0, headPitch: 0, headYaw: 0, headRoll: 0 }],
-        [.72, { lean: .02, twist: .02, side: 0, headPitch: .035, headYaw: .01, headRoll: .025 }, 'stop'],
-        [2.02, { lean: .018, twist: .018, side: 0, headPitch: .03, headYaw: .008, headRoll: .022 }, 'stop'],
-      ],
+      [0,{}],
+      [0.24,{lean: -0.035,twist: -0.025,headPitch: -0.025,gazePitch: 0.02}],
+      [0.66,{lean: 0.12,twist: 0.055,side: 0.018,pelvisPitch: -0.03,hipShift: 0.055,headPitch: 0.025,headRoll: 0.035,neckForward: 0.025}],
+      [0.95,{lean: 0.21,twist: 0.085,side: 0.03,pelvisPitch: -0.05,hipShift: 0.085,headPitch: 0.075,headYaw: 0.025,headRoll: 0.045,neckForward: 0.045}, 'stop'],
+      [1.5,{lean: 0.16,twist: 0.065,side: 0.022,pelvisPitch: -0.035,hipShift: 0.065,headPitch: 0.025,headYaw: 0.015,headRoll: 0.035}],
+      [2.02,{lean: 0.11,twist: 0.04,side: 0.012,pelvisPitch: -0.025,hipShift: 0.035,headPitch: 0,headRoll: 0.022}],
+      [2.48,{lean: 0.045,twist: 0.012,headPitch: 0.015}]
+    ],
     },
   },
   // Small speech beat on top of the speaking posture; additive offsets only.
@@ -223,85 +250,155 @@ const performance = (name, note, duration, apex, endHold, keys, expression, extr
 });
 const EXPRESSIVE_GESTURES = {
   bow_smile: performance('俯身抬眼微笑', '腰背先俯近，抬眼看你，笑意随后展开', 3.8, 1.05, 2.65, {
-    body: [[0, {}], [.22, { lean: -.025, headPitch: .025, gazePitch: -.07 }],
-      [.72, { lean: .25, pelvisPitch: -.055, headPitch: .035, neckForward: .045, hipShift: -.07 }],
-      [1.15, { lean: .34, pelvisPitch: -.07, headPitch: -.11, headRoll: .045, gazePitch: -.1, neckForward: .07 }, 'stop'],
-      [2.35, { lean: .29, pelvisPitch: -.06, headPitch: -.075, headRoll: .035, gazePitch: -.06 }, 'stop'],
-      [3.1, { lean: .12, headPitch: -.03, headRoll: .015 }]],
+    body: [
+      [0,{}],
+      [0.22,{lean: -0.035,headPitch: 0.025,gazePitch: -0.07,hipShift: 0.025}],
+      [0.72,{lean: 0.25,pelvisPitch: -0.055,headPitch: 0.035,neckForward: 0.045,hipShift: -0.07,twist: 0.02}],
+      [1.15,{lean: 0.34,pelvisPitch: -0.07,headPitch: -0.11,headRoll: 0.045,gazePitch: -0.1,neckForward: 0.07,hipShift: -0.055,twist: 0.035}, 'stop'],
+      [1.95,{lean: 0.31,pelvisPitch: -0.065,headPitch: -0.09,headRoll: 0.04,gazePitch: -0.075,neckForward: 0.055,hipShift: -0.035,twist: 0.025}],
+      [2.65,{lean: 0.235,pelvisPitch: -0.045,headPitch: -0.06,headRoll: 0.03,gazePitch: -0.045,neckForward: 0.025,hipShift: -0.02,twist: 0.012}],
+      [3.1,{lean: 0.12,headPitch: -0.03,headRoll: 0.015}]
+    ],
     R: [[0, lowR], [.75, pose(lowR, { hand: [2.05, 12.42, 2.1], curl: .38, protract: .1 })], [1.3, pose(lowR, { hand: [2.15, 12.5, 2.2], curl: .25, spread: .14 }), 'stop'], [2.65, pose(lowR, { hand: [2.1, 12.42, 2.15], curl: .29 }), 'stop']],
-    L: [[0, lowL], [.9, pose(lowL, { hand: [2.15, 12.22, 2.1], curl: .4, protract: .075 })], [1.5, pose(lowL, { hand: [2.2, 12.3, 2.2], curl: .3, thumb: .24 }), 'stop'], [2.65, lowL, 'stop']],
+    L: [[0, lowL], [.9, pose(lowL, { hand: [2.15, 12.22, 2.25], curl: .4, protract: .075 })], [1.5, pose(lowL, { hand: [2.2, 12.3, 2.35], curl: .3, thumb: .24 }), 'stop'], [2.65, pose(lowL, { hand: [1.55, 12.2, 1.6] }), 'stop']],
   }, [[.45, { browSmile: .14 }], [1.18, { browSmile: .36, eyeSmile: .32, smile: .62 }], [2.45, { browSmile: .28, eyeSmile: .26, smile: .5 }]]),
   laugh: performance('开心轻笑', '吸气抬胸，眼睛先弯，一次轻笑带动肩背', 3.4, .98, 2.35, {
-    body: [[0, {}], [.3, { lean: -.065, headPitch: -.045, pelvisPitch: .025 }], [.82, { lean: .075, headPitch: .055, side: -.035, headRoll: .045 }],
-      [1.18, { lean: .12, headPitch: .075, side: -.045, headRoll: .06 }, 'stop'], [1.62, { lean: .025, headPitch: -.04, side: -.02 }],
-      [2.35, { lean: .035, headPitch: -.01, headRoll: .02 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.3,{lean: -0.09,headPitch: -0.045,pelvisPitch: 0.025,side: 0.025}],
+      [0.82,{lean: 0.095,headPitch: 0.055,side: -0.05,twist: 0.025,headRoll: 0.045,hipShift: -0.07}],
+      [1.18,{lean: 0.17,headPitch: 0.075,side: -0.075,twist: 0.04,headRoll: 0.06,pelvisPitch: -0.025,hipShift: -0.12}, 'stop'],
+      [1.62,{lean: 0.035,headPitch: -0.04,side: -0.035,twist: 0.015,hipShift: -0.055}],
+      [2.05,{lean: 0.07,headPitch: 0.015,side: -0.025,headRoll: 0.03,hipShift: -0.025}],
+      [2.35,{lean: 0.035,headPitch: -0.01,headRoll: 0.02}]
+    ],
     R: [[0, lowR], [.7, pose(heart, { hand: [.32, 15.28, 1.78], curl: .24, spread: -.08, shrug: .055 })], [1.22, pose(heart, { hand: [.24, 15.45, 1.8], curl: .2, shrug: .075 }), 'stop'], [2.35, pose(heart, { hand: [.4, 15.2, 1.8], curl: .26, shrug: .01 }), 'stop']],
     L: [[0, lowL], [.9, pose(lowL, { hand: [1.8, 12.65, 1.8], shrug: .065, curl: .4 })], [1.4, pose(lowL, { hand: [1.9, 12.5, 1.75], shrug: .035, curl: .3 })], [2.35, lowL, 'stop']],
   }, [[.38, { browSmile: .3, eyeSmile: .35, smile: .25 }], [.95, { browSmile: .58, smileEyes: .78, smile: .8, a: .22 }], [1.55, { browSmile: .5, smileEyes: .6, smile: .7, a: .12 }], [2.4, { browSmile: .25, eyeSmile: .25, smile: .45 }]]),
   curious: performance('好奇探身', '目光先发现，侧头探近，掌心迟一点打开', 3.65, 1.12, 2.6, {
-    body: [[0, {}], [.2, { gazeYaw: -.12, gazePitch: -.04 }], [.52, { headYaw: -.09, headRoll: -.09, lean: .055 }],
-      [1.12, { lean: .24, twist: -.055, side: -.035, headYaw: -.08, headRoll: -.13, neckForward: .075, gazeYaw: -.1, pelvisPitch: -.05 }, 'stop'],
-      [2.1, { lean: .21, twist: -.035, headYaw: -.035, headRoll: -.09, gazeYaw: 0, neckForward: .06 }], [2.6, { lean: .17, headRoll: -.055 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.2,{gazeYaw: -0.12,gazePitch: -0.04,lean: -0.02}],
+      [0.52,{headYaw: -0.09,headRoll: -0.09,lean: 0.055,twist: -0.035,hipShift: -0.035}],
+      [1.12,{lean: 0.26,twist: -0.09,side: -0.045,headYaw: -0.08,headRoll: -0.13,neckForward: 0.075,gazeYaw: -0.1,pelvisPitch: -0.05,hipShift: -0.1}, 'stop'],
+      [1.7,{lean: 0.245,twist: -0.075,side: -0.035,headYaw: -0.055,headRoll: -0.11,neckForward: 0.065,gazeYaw: -0.03,pelvisPitch: -0.045,hipShift: -0.085}],
+      [2.1,{lean: 0.21,twist: -0.05,side: -0.025,headYaw: -0.035,headRoll: -0.09,gazeYaw: 0,neckForward: 0.045,pelvisPitch: -0.035,hipShift: -0.05}],
+      [2.6,{lean: 0.14,twist: -0.025,headRoll: -0.055,pelvisPitch: -0.02,hipShift: -0.025}]
+    ],
     R: [[0, lowR], [.8, pose(openR, { hand: [2.15, 13.5, 2.05], curl: .24, spread: .15 })], [1.4, pose(openR, { hand: [2.4, 13.75, 2.25], curl: .16, spread: .27 }), 'stop'], [2.6, pose(openR, { hand: [2.28, 13.5, 2.05], curl: .24 }), 'stop']],
     L: [[0, lowL], [.6, pose(lowL, { hand: [1.78, 12.35, 1.7], curl: .42 })], [1.3, pose(lowL, { hand: [1.9, 12.5, 1.8], curl: .32, shrug: .035 }), 'stop'], [2.6, lowL, 'stop']],
   }, [[.22, { browUp: .24, eyeWide: .18 }], [.95, { browUp: .4, browAsym: .28, eyeWide: .3, smile: .16, o: .08 }], [2.4, { browAsym: .2, eyeWide: .12, smile: .28 }]]),
   shy: performance('害羞回望', '缩肩低眼躲开，停一拍，再偷看回来', 4.3, 1.12, 3.25, {
-    body: [[0, {}], [.22, { gazeYaw: .17, gazePitch: .075 }], [.7, { lean: -.045, twist: .065, headYaw: .15, headPitch: .11, headRoll: -.075, pelvisRoll: -.025, hipShift: -.12 }],
-      [1.12, { lean: .045, twist: .08, headYaw: .2, headPitch: .13, headRoll: -.1, gazeYaw: .13, gazePitch: .08 }, 'stop'],
-      [2.2, { lean: .035, twist: .065, headYaw: .16, headPitch: .1, headRoll: -.08, gazeYaw: -.11 }],
-      [2.75, { lean: .08, twist: .025, headYaw: .025, headPitch: .025, headRoll: -.055, gazeYaw: 0 }, 'stop'], [3.25, { lean: .065, headRoll: -.04 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.22,{gazeYaw: 0.17,gazePitch: 0.075,lean: -0.025}],
+      [0.7,{lean: -0.065,twist: 0.105,side: 0.04,headYaw: 0.15,headPitch: 0.11,headRoll: -0.075,pelvisRoll: -0.03,hipShift: -0.16}],
+      [1.12,{lean: 0.035,twist: 0.16,side: 0.055,headYaw: 0.2,headPitch: 0.13,headRoll: -0.1,gazeYaw: 0.13,gazePitch: 0.08,pelvisRoll: -0.035,hipShift: -0.2}, 'stop'],
+      [2.2,{lean: 0.045,twist: 0.125,side: 0.04,headYaw: 0.16,headPitch: 0.1,headRoll: -0.08,gazeYaw: -0.11,pelvisRoll: -0.025,hipShift: -0.15}],
+      [2.75,{lean: 0.115,twist: 0.055,side: 0.015,headYaw: 0.025,headPitch: 0.025,headRoll: -0.055,gazeYaw: 0,pelvisPitch: -0.025,hipShift: -0.06}, 'stop'],
+      [3.25,{lean: 0.075,twist: 0.025,headRoll: -0.04,pelvisPitch: -0.015,hipShift: -0.025}]
+    ],
     R: [[0, lowR], [.85, pose(heart, { hand: [.75, 14.8, 1.95], curl: .38, thumb: .3, spread: -.16, shrug: .055 })], [1.4, pose(heart, { hand: [.68, 15, 1.95], curl: .35, shrug: .055 }), 'stop'], [3.25, pose(heart, { hand: [.9, 14.6, 2], curl: .27, shrug: .02 }), 'stop']],
     L: [[0, lowL], [1.05, pose(lowL, { hand: [1.55, 12.65, 1.8], curl: .49, thumb: .38, shrug: .065 }), 'stop'], [2.65, pose(lowL, { hand: [1.7, 12.5, 1.75], curl: .35, shrug: .015 })], [3.25, lowL, 'stop']],
   }, [[.4, { browSad: .2, eyeDroop: .18, smile: .22, blush: .2 }], [1.2, { browSad: .32, eyeHalf: .25, eyeDroop: .22, smile: .38, blush: .7 }], [2.4, { browSad: .18, eyeSmile: .2, smile: .43, blush: .62 }], [3.25, { browSmile: .22, eyeSmile: .25, smile: .5, blush: .4 }]]),
   explain_firm: performance('郑重点明', '先收势思量，打开双手，点头落在重点上', 3.65, 1.12, 2.55, {
-    body: [[0, {}], [.28, { lean: -.025, headPitch: -.035, gazePitch: -.025 }], [.8, { lean: .085, twist: -.045, headPitch: -.035, pelvisPitch: -.025 }],
-      [1.14, { lean: .13, twist: -.06, headPitch: .13, gazePitch: 0 }, 'stop'], [1.6, { lean: .09, twist: -.035, headPitch: -.025 }], [2.55, { lean: .065, headPitch: .015 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.28,{lean: -0.055,twist: 0.025,headPitch: -0.035,gazePitch: -0.025}],
+      [0.8,{lean: 0.12,twist: -0.065,side: -0.02,headPitch: -0.035,pelvisPitch: -0.025,hipShift: -0.055}],
+      [1.14,{lean: 0.2,twist: -0.09,side: -0.035,headPitch: 0.13,gazePitch: 0,pelvisPitch: -0.045,hipShift: -0.1}, 'stop'],
+      [1.6,{lean: 0.14,twist: -0.065,side: -0.02,headPitch: -0.025,pelvisPitch: -0.03,hipShift: -0.065}],
+      [2.05,{lean: 0.11,twist: -0.04,headPitch: 0.025,pelvisPitch: -0.025,hipShift: -0.035}],
+      [2.55,{lean: 0.075,twist: -0.02,headPitch: 0.015,pelvisPitch: -0.012}]
+    ],
     R: [[0, lowR], [.6, pose(openR, { hand: [2.05, 13.4, 2], curl: .25, spread: .12 })], [1.15, pose(openR, { hand: [2.65, 14.15, 2.4], curl: .13, spread: .28 }), 'stop'], [2.55, pose(openR, { hand: [2.5, 13.8, 2.2], curl: .19 }), 'stop']],
     L: [[0, lowL], [.85, pose(openL, { hand: [2.1, 13.2, 1.9], curl: .24 })], [1.35, pose(openL, { hand: [2.5, 13.55, 2], curl: .18, spread: .22 }), 'stop'], [2.55, pose(openL, { hand: [2.3, 13.3, 1.8], curl: .25 }), 'stop']],
   }, [[.4, { browFocus: .26 }], [1.1, { browFocus: .42, eyeSharp: .18, mouthFlat: .14 }], [1.85, { browFocus: .24, browSmile: .12, smile: .25 }], [2.6, { browSmile: .18, eyeSmile: .12, smile: .3 }]]),
   surprise: performance('惊讶回神', '眼睛先睁大，胸肩后撤，呼气后重新靠近', 3.55, .72, 2.5, {
-    body: [[0, {}], [.18, { gazePitch: -.04, headPitch: -.025 }], [.72, { lean: -.13, headPitch: -.11, headRoll: .04, pelvisPitch: .045, neckForward: -.025 }, 'stop'],
-      [1.5, { lean: -.055, headPitch: -.025 }], [2.15, { lean: .085, headPitch: .035, neckForward: .035 }, 'stop'], [2.5, { lean: .055, headPitch: .01 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.18,{gazePitch: -0.04,headPitch: -0.025,lean: 0.02}],
+      [0.72,{lean: -0.18,twist: 0.025,side: 0.025,headPitch: -0.11,headRoll: 0.04,pelvisPitch: 0.045,neckForward: -0.025,hipShift: 0.065}, 'stop'],
+      [1.2,{lean: -0.13,twist: 0.018,side: 0.015,headPitch: -0.07,pelvisPitch: 0.03,hipShift: 0.045}],
+      [1.5,{lean: -0.055,headPitch: -0.025,pelvisPitch: 0.015}],
+      [2.15,{lean: 0.11,headPitch: 0.035,neckForward: 0.035,pelvisPitch: -0.025,hipShift: -0.025}, 'stop'],
+      [2.5,{lean: 0.065,headPitch: 0.01,pelvisPitch: -0.015}]
+    ],
     R: [[0, lowR], [.7, pose(openR, { hand: [2.35, 14.5, 2.2], curl: .12, spread: .3, shrug: .09 }), 'stop'], [1.6, pose(openR, { hand: [2.5, 13.8, 2.1], curl: .22, shrug: .02 })], [2.5, pose(openR, { hand: [2.2, 13.4, 1.95], curl: .28 }), 'stop']],
     L: [[0, lowL], [.82, pose(openL, { hand: [2.45, 13.6, 1.9], curl: .14, spread: .28, shrug: .075 }), 'stop'], [1.8, pose(openL, { hand: [2.2, 13.1, 1.8], curl: .26 })], [2.5, lowL, 'stop']],
   }, [[.24, { browUp: .65, eyeWide: .68, o: .24 }], [.75, { browUp: .7, eyeWide: .72, pupilSmall: .12, o: .28 }], [1.65, { browUp: .26, eyeWide: .2, smile: .13 }], [2.5, { browSmile: .2, eyeSmile: .2, smile: .32 }]]),
   think: performance('凝神思考', '视线飘向上方，手收近胸，想明白后回到你', 4.2, 1.3, 3.1, {
-    body: [[0, {}], [.22, { gazeYaw: -.14, gazePitch: -.11 }], [.72, { headYaw: -.1, headPitch: -.07, headRoll: .07, side: .025 }],
-      [1.3, { lean: -.025, twist: -.04, headYaw: -.13, headPitch: -.09, headRoll: .09, gazeYaw: -.1, gazePitch: -.1, hipShift: .12 }, 'stop'],
-      [2.5, { lean: 0, twist: -.025, headYaw: -.08, headPitch: -.045, headRoll: .06, gazeYaw: 0, gazePitch: 0 }], [3.1, { lean: .065, headPitch: .035, headRoll: .02 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.22,{gazeYaw: -0.14,gazePitch: -0.11,lean: 0.02}],
+      [0.72,{headYaw: -0.1,headPitch: -0.07,headRoll: 0.07,lean: -0.045,twist: -0.055,side: 0.035,hipShift: 0.075}],
+      [1.3,{lean: -0.1,twist: -0.115,side: 0.055,headYaw: -0.13,headPitch: -0.09,headRoll: 0.09,gazeYaw: -0.1,gazePitch: -0.1,pelvisRoll: -0.025,hipShift: 0.18}, 'stop'],
+      [2.15,{lean: -0.08,twist: -0.09,side: 0.04,headYaw: -0.1,headPitch: -0.065,headRoll: 0.075,gazeYaw: -0.03,gazePitch: -0.035,hipShift: 0.14}],
+      [2.5,{lean: -0.025,twist: -0.055,side: 0.025,headYaw: -0.08,headPitch: -0.045,headRoll: 0.06,gazeYaw: 0,gazePitch: 0,hipShift: 0.075}],
+      [3.1,{lean: 0.095,twist: -0.015,headPitch: 0.035,headRoll: 0.02,pelvisPitch: -0.02,hipShift: 0.02}, 'stop']
+    ],
     R: [[0, lowR], [.95, pose(heart, { hand: [.75, 15.1, 2.05], curl: .36, thumb: .25, spread: -.12 })], [1.5, pose(heart, { hand: [.65, 15.3, 2.05], curl: .29 }), 'stop'], [3.1, pose(heart, { hand: [.9, 14.9, 2.05], curl: .24 }), 'stop']],
     L: [[0, lowL], [1.12, pose(openL, { hand: [1.7, 12.85, 1.9], curl: .42, shrug: -.025 }), 'stop'], [2.8, pose(openL, { hand: [1.8, 12.7, 1.85], curl: .3 })], [3.1, lowL, 'stop']],
   }, [[.28, { browFocus: .22, browAsym: .2, eyeHalf: .1 }], [1.3, { browFocus: .33, browAsym: .3, eyeHalf: .15, mouthFlat: .12 }], [2.6, { browUp: .14, browSmile: .17, smile: .24 }], [3.2, { browSmile: .25, eyeSmile: .19, smile: .36 }]]),
   greet: performance('轻快招呼', '先认出你，微微前迎，掌心打开只挥一回', 3.25, .95, 2.25, {
-    body: [[0, {}], [.18, { gazeYaw: -.1, gazePitch: -.035 }], [.55, { lean: .055, headYaw: -.055, headRoll: -.04, side: .025 }],
-      [.95, { lean: .11, twist: -.045, headPitch: -.035, headYaw: -.02, headRoll: -.075, pelvisRoll: -.025, hipShift: -.09 }, 'stop'], [1.6, { lean: .075, headPitch: .045, headRoll: -.045 }], [2.25, { lean: .04, headRoll: -.025 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.18,{gazeYaw: -0.1,gazePitch: -0.035,lean: -0.035,side: -0.02}],
+      [0.55,{lean: 0.075,twist: -0.04,headYaw: -0.055,headRoll: -0.04,side: 0.04,hipShift: -0.075}],
+      [0.95,{lean: 0.16,twist: -0.085,side: 0.075,headPitch: -0.035,headYaw: -0.02,headRoll: -0.075,pelvisRoll: -0.035,hipShift: -0.17}, 'stop'],
+      [1.6,{lean: 0.105,twist: -0.05,side: 0.045,headPitch: 0.045,headRoll: -0.045,pelvisRoll: -0.02,hipShift: -0.1}],
+      [2.25,{lean: 0.055,twist: -0.02,side: 0.015,headRoll: -0.025,hipShift: -0.035}]
+    ],
     R: [[0, lowR], [.5, LEGACY_GESTURES.wave.keys.R[1][1]], [.95, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.75, 17.65, 1.3], shrug: .045 }), 'stop'], [1.35, pose(LEGACY_GESTURES.wave.keys.R[3][1], { hand: [4.05, 17.6, 1.3], shrug: .04 })], [1.75, pose(LEGACY_GESTURES.wave.keys.R[4][1], { hand: [3.65, 17.65, 1.3], shrug: .035 }), 'stop'], [2.25, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.75, 17.55, 1.3], shrug: .025 }), 'stop'], [2.9, LEGACY_GESTURES.wave.keys.R[1][1], 'stop']],
-    L: [[0, lowL], [.8, pose(openL, { hand: [2.2, 12.95, 1.7], curl: .24, spread: .2 })], [1.35, pose(openL, { hand: [2.4, 13.15, 1.85], curl: .19, spread: .24 }), 'stop'], [2.25, lowL, 'stop']],
+    L: [[0, lowL], [.8, pose(openL, { hand: [2.2, 12.95, 1.85], curl: .24, spread: .2 })], [1.35, pose(openL, { hand: [2.4, 13.15, 2.0], curl: .19, spread: .24 }), 'stop'], [2.25, pose(lowL, { hand: [1.55, 12.2, 1.6] }), 'stop']],
   }, [[.28, { browUp: .18, browSmile: .2, smile: .25 }], [.95, { browSmile: .5, eyeSmile: .4, smile: .74 }], [1.8, { browSmile: .4, eyeSmile: .3, smile: .62 }], [2.3, { browSmile: .25, eyeSmile: .2, smile: .4 }]], { arc: { tuck: .25, out: .5 } }),
   listen: performance('认真倾听', '收住手，向你靠近，慢慢点一次头', 4, 1.1, 2.95, {
-    body: [[0, {}], [.24, { gazePitch: -.025 }], [.65, { lean: .09, headRoll: .055, neckForward: .03 }],
-      [1.1, { lean: .18, headRoll: .09, headPitch: -.035, neckForward: .06, pelvisPitch: -.035 }, 'stop'],
-      [1.9, { lean: .18, headRoll: .075, headPitch: .07, neckForward: .055 }, 'stop'], [2.45, { lean: .15, headRoll: .065, headPitch: -.015 }], [2.95, { lean: .13, headRoll: .055 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.24,{gazePitch: -0.025,lean: -0.025}],
+      [0.65,{lean: 0.09,side: 0.015,headRoll: 0.055,neckForward: 0.03,hipShift: 0.025}],
+      [1.1,{lean: 0.205,side: 0.03,headRoll: 0.09,headPitch: -0.035,neckForward: 0.06,pelvisPitch: -0.035,hipShift: 0.055}, 'stop'],
+      [1.9,{lean: 0.19,side: 0.025,headRoll: 0.075,headPitch: 0.07,neckForward: 0.055,pelvisPitch: -0.03,hipShift: 0.04}, 'stop'],
+      [2.45,{lean: 0.15,side: 0.015,headRoll: 0.065,headPitch: -0.015,pelvisPitch: -0.025,hipShift: 0.025}],
+      [2.95,{lean: 0.115,headRoll: 0.055,pelvisPitch: -0.015}]
+    ],
     R: [[0, lowR], [.85, pose(lowR, { hand: [1.6, 12.35, 1.78], curl: .36, shrug: -.035 })], [1.5, pose(lowR, { hand: [1.6, 12.42, 1.85], curl: .27, thumb: .22 }), 'stop'], [2.95, pose(lowR, { hand: [1.6, 12.35, 1.8], curl: .31 }), 'stop']],
     L: [[0, lowL], [1.1, pose(lowL, { hand: [1.72, 12.25, 1.75], curl: .4, shrug: -.04 }), 'stop'], [2, pose(lowL, { hand: [1.7, 12.3, 1.8], curl: .31 })], [2.95, lowL, 'stop']],
   }, [[.4, { browSad: .12, eyeSmile: .08 }], [1.2, { browSad: .18, eyeSmile: .16, smile: .22 }], [2.35, { browSmile: .2, eyeSmile: .22, smile: .34 }], [3, { browSmile: .13, smile: .2 }]]),
   comfort: performance('温柔安慰', '先放低肩膀，缓慢伸出掌心，再点头回应', 4.1, 1.35, 3.05, {
-    body: [[0, {}], [.38, { headPitch: .045, headRoll: -.035, gazePitch: .025 }], [.9, { lean: .11, headRoll: -.075, twist: -.025 }],
-      [1.35, { lean: .2, headPitch: -.02, headRoll: -.095, neckForward: .045, pelvisPitch: -.045 }, 'stop'],
-      [2.25, { lean: .18, headPitch: .055, headRoll: -.075 }, 'stop'], [3.05, { lean: .13, headPitch: 0, headRoll: -.05 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.38,{headPitch: 0.045,headRoll: -0.035,gazePitch: 0.025,lean: -0.025}],
+      [0.9,{lean: 0.11,headRoll: -0.075,twist: -0.025,side: -0.018,hipShift: -0.025}],
+      [1.35,{lean: 0.23,twist: -0.05,side: -0.035,headPitch: -0.02,headRoll: -0.095,neckForward: 0.045,pelvisPitch: -0.045,hipShift: -0.065}, 'stop'],
+      [2.25,{lean: 0.2,twist: -0.035,side: -0.025,headPitch: 0.055,headRoll: -0.075,pelvisPitch: -0.035,hipShift: -0.045}],
+      [3.05,{lean: 0.135,twist: -0.015,headPitch: 0,headRoll: -0.05,pelvisPitch: -0.02,hipShift: -0.02}]
+    ],
     R: [[0, lowR], [.85, pose(openR, { hand: [2.2, 13.35, 2.15], curl: .25, spread: .1, shrug: -.02 })], [1.5, pose(openR, { hand: [2.25, 13.55, 2.75], curl: .17, spread: .19, shrug: -.025 }), 'stop'], [3.05, pose(openR, { hand: [2.2, 13.4, 2.55], curl: .24 }), 'stop']],
     L: [[0, lowL], [1.05, pose(heart, { hand: [.75, 14.75, 1.95], curl: .23, shrug: -.015 })], [1.7, pose(heart, { hand: [.6, 14.95, 1.95], curl: .18, spread: -.18 }), 'stop'], [3.05, pose(heart, { hand: [.85, 14.65, 2], curl: .28 }), 'stop']],
   }, [[.45, { browSad: .27, eyeDroop: .13 }], [1.25, { browSad: .24, eyeSmile: .19, smile: .28 }], [2.3, { browSad: .13, browSmile: .2, eyeSmile: .28, smile: .46 }], [3.1, { browSmile: .16, eyeSmile: .17, smile: .31 }]]),
   look_up: performance('仰头舒展', '视线向上，胸口打开，仰头后带笑回望', 3.95, 1.2, 2.85, {
-    body: [[0, {}], [.2, { gazePitch: -.13 }], [.55, { lean: -.035, headPitch: -.085, neckForward: -.025 }],
-      [1.2, { lean: -.12, headPitch: -.2, headRoll: .025, pelvisPitch: .04, neckForward: -.04, gazePitch: -.12 }, 'stop'],
-      [2.15, { lean: -.07, headPitch: -.13, gazePitch: -.02 }], [2.85, { lean: .045, headPitch: -.015, headRoll: .035 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.2,{gazePitch: -0.13,lean: 0.025}],
+      [0.55,{lean: -0.05,headPitch: -0.085,neckForward: -0.025,twist: 0.015}],
+      [1.2,{lean: -0.17,twist: 0.04,side: 0.025,headPitch: -0.2,headRoll: 0.025,pelvisPitch: 0.04,neckForward: -0.04,gazePitch: -0.12,hipShift: 0.06}, 'stop'],
+      [1.8,{lean: -0.145,twist: 0.035,side: 0.02,headPitch: -0.17,gazePitch: -0.08,pelvisPitch: 0.03,hipShift: 0.045}],
+      [2.15,{lean: -0.09,twist: 0.02,headPitch: -0.13,gazePitch: -0.02,pelvisPitch: 0.02,hipShift: 0.025}],
+      [2.85,{lean: 0.065,headPitch: -0.015,headRoll: 0.035,pelvisPitch: -0.012}, 'stop']
+    ],
     R: [[0, lowR], [.9, pose(openR, { hand: [2.65, 13.2, 1.8], curl: .24, spread: .2, protract: -.06 })], [1.45, pose(openR, { hand: [2.95, 13.4, 1.85], curl: .15, spread: .3, protract: -.075 }), 'stop'], [2.85, pose(openR, { hand: [2.45, 13.25, 1.9], curl: .25 }), 'stop']],
     L: [[0, lowL], [1.05, pose(openL, { hand: [2.55, 12.95, 1.65], curl: .25, protract: -.045 })], [1.55, pose(openL, { hand: [2.8, 13.1, 1.75], curl: .18, spread: .22, protract: -.065 }), 'stop'], [2.85, lowL, 'stop']],
   }, [[.4, { browUp: .18, eyeWide: .12 }], [1.3, { browSmile: .2, eyeHalf: .18, smile: .34 }], [2.25, { browSmile: .3, eyeSmile: .26, smile: .5 }], [2.9, { browSmile: .2, eyeSmile: .18, smile: .38 }]]),
   agree: performance('会意点头', '眼神确认，胸肩随点头前送，手指轻轻打开', 3.05, .95, 2.05, {
-    body: [[0, {}], [.22, { gazePitch: -.035, headPitch: -.045 }], [.65, { lean: .065, headPitch: .025, headRoll: .025 }],
-      [.95, { lean: .12, headPitch: .14, headRoll: .035, pelvisPitch: -.025 }, 'stop'], [1.4, { lean: .075, headPitch: -.035, headRoll: .02 }], [2.05, { lean: .055, headPitch: .015, headRoll: .015 }, 'stop']],
+    body: [
+      [0,{}],
+      [0.22,{gazePitch: -0.035,headPitch: -0.045,lean: -0.04}],
+      [0.65,{lean: 0.08,headPitch: 0.025,headRoll: 0.025,twist: 0.015,hipShift: 0.025}],
+      [0.95,{lean: 0.16,twist: 0.035,side: 0.02,headPitch: 0.14,headRoll: 0.035,pelvisPitch: -0.03,hipShift: 0.055}, 'stop'],
+      [1.4,{lean: 0.09,twist: 0.025,side: 0.012,headPitch: -0.035,headRoll: 0.02,pelvisPitch: -0.02,hipShift: 0.035}],
+      [2.05,{lean: 0.055,twist: 0.01,headPitch: 0.015,headRoll: 0.015,pelvisPitch: -0.01}]
+    ],
     R: [[0, lowR], [.7, pose(openR, { hand: [2.05, 13.4, 1.95], curl: .26, spread: .12 })], [1.08, pose(openR, { hand: [2.3, 13.6, 2.15], curl: .14, spread: .27 }), 'stop'], [2.05, pose(openR, { hand: [2.15, 13.35, 1.95], curl: .22 }), 'stop']],
     L: [[0, lowL], [.9, pose(lowL, { hand: [1.8, 12.45, 1.75], curl: .4 })], [1.3, pose(lowL, { hand: [1.85, 12.55, 1.8], curl: .26 }), 'stop'], [2.05, lowL, 'stop']],
   }, [[.3, { browUp: .12, eyeWide: .08 }], [.95, { browSmile: .3, eyeSmile: .24, smile: .44 }], [1.65, { browSmile: .25, eyeSmile: .2, smile: .4 }], [2.1, { browSmile: .16, smile: .28 }]]),

@@ -1,6 +1,7 @@
 import { GESTURES, GESTURE_IDS } from '../../preview/core/motion-profile.js';
 
 export const STORIES = Object.freeze({
+  coordination: { name: '身体联动', description: '解释、挥手、耸肩、抚胸，再俯身和仰头。留意肘部、胸肩与重心怎样配合。', gestures: ['explain', 'wave', 'shrug', 'chest', 'bow_smile', 'look_up'] },
   greeting: { name: '见到你', description: '先招呼，再靠近，笑着回应。', gestures: ['greet', 'bow_smile', 'laugh', 'agree'] },
   conversation: { name: '听你说', description: '倾听、好奇、思考，再认真解释。', gestures: ['listen', 'curious', 'think', 'explain_firm', 'agree'] },
   affection: { name: '轻声陪伴', description: '目光移开又回来，动作放轻，温柔回应。', gestures: ['shy', 'comfort', 'chest', 'bow_smile'] },

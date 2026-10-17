@@ -55,7 +55,7 @@ export async function createScene(stage, progress = () => {}) {
       rig.apply(motion.locals); const assigned = performance.now();
       helper.update(dt); mesh.updateMatrixWorld(true); renderer.render(scene, camera); const submitted = performance.now();
       const bones = {}, rotations = {};
-      for (const [key, name] of [['head', '頭'], ['neck', '首'], ['spine', '上半身'], ['chest', '上半身2'], ['eyes', '両目'], ['pelvis', '腰'], ['leftWrist', '左手首'], ['rightWrist', '右手首'], ['leftAnkle', '左足首'], ['rightAnkle', '右足首']]) {
+      for (const [key, name] of [['head', '頭'], ['neck', '首'], ['spine', '上半身'], ['chest', '上半身2'], ['upperChest', '上半身1'], ['eyes', '両目'], ['pelvis', '腰'], ['hip', '下半身'], ['leftShoulder', '左腕'], ['rightShoulder', '右腕'], ['leftElbow', '左ひじ'], ['rightElbow', '右ひじ'], ['leftWrist', '左手首'], ['rightWrist', '右手首'], ['leftAnkle', '左足首'], ['rightAnkle', '右足首']]) {
         const bone = mesh.skeleton.bones.find(b => b.name === name);
         if (!bone) continue;
         bones[key] = bone.getWorldPosition(new THREE.Vector3()).toArray();

@@ -1,0 +1,835 @@
+{
+  "experimental": true,
+  "branch": "codex/natural-elbows-body-20261016",
+  "baselineRevision": "63199b1fdf06c33de21f448f3c2bc66cf7ffb2a2",
+  "boundary": "Local silent motion and PMX browser test; physics disabled. No new Qwen, microphone, physical audio or full WAI memory/reply test. No isolated FPS benchmark in this batch.",
+  "nodeTests": {
+    "passed": 90,
+    "failed": 0,
+    "log": "outputs/body-elbows-20261016/independent-tests.log"
+  },
+  "browser": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "real_model_ready",
+        "passed": true,
+        "detail": {
+          "environment": {
+            "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+            "physics": false
+          },
+          "frame": 44,
+          "bindings": []
+        }
+      },
+      {
+        "name": "silent_laugh_pause_freezes_actual_morphs_and_bones",
+        "passed": true,
+        "detail": {
+          "beforeMouth": 0.1238618865609169,
+          "afterMouth": 0.1238618865609169,
+          "maxMouth": 0,
+          "maxBone": 0,
+          "maxRotation": 0,
+          "frames": 31,
+          "paused": true
+        }
+      },
+      {
+        "name": "silent_laugh_cancel_decays_without_instant_mouth_closure",
+        "passed": true,
+        "detail": {
+          "beforeMouth": 0.14935778081417084,
+          "first": {
+            "mouth": 0.15811516344547272,
+            "elapsedMs": 19.800000000046566
+          },
+          "maxStep": 0.00875738263130188,
+          "frames": 228,
+          "finishedAt": 1288.4000000000233,
+          "finalMouth": 0,
+          "remaining": 0
+        }
+      },
+      {
+        "name": "new_action_replaces_live_pose_continuously",
+        "passed": true,
+        "detail": {
+          "accepted": true,
+          "oldRetracting": true,
+          "newStarted": true,
+          "finite": true,
+          "maxWristStep": 0.07609068735234505,
+          "previousPhase": "stroke"
+        }
+      },
+      {
+        "name": "synthetic_speech_vowels_remain_owned_by_face_controller",
+        "passed": true,
+        "detail": {
+          "maxError": 0,
+          "peakMouth": 0.6623177515654106,
+          "peakSmileEyes": 0.7677019238471985,
+          "frames": 132
+        }
+      },
+      {
+        "name": "rendered_action_explain",
+        "passed": true,
+        "detail": {
+          "id": "explain",
+          "frames": 120,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.07996001391924333,
+          "maxHands": 3.3633301825075392,
+          "chestDegrees": 11.170957879183876,
+          "holdDegrees": 4.517710837196909,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 2657.4000000000233
+        }
+      },
+      {
+        "name": "rendered_action_wave",
+        "passed": true,
+        "detail": {
+          "id": "wave",
+          "frames": 213,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.06586193583206437,
+          "maxHands": 7.197361620794243,
+          "chestDegrees": 9.798664059209226,
+          "holdDegrees": 1.2801003639871347,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3871.8000000000466
+        }
+      },
+      {
+        "name": "rendered_action_shrug",
+        "passed": true,
+        "detail": {
+          "id": "shrug",
+          "frames": 91,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.06754006763293181,
+          "maxHands": 2.259610523980078,
+          "chestDegrees": 7.530068341749689,
+          "holdDegrees": 3.6057953944840264,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 1677.6000000000931
+        }
+      },
+      {
+        "name": "rendered_action_chest",
+        "passed": true,
+        "detail": {
+          "id": "chest",
+          "frames": 187,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.09827465480429792,
+          "maxHands": 5.382510703460023,
+          "chestDegrees": 12.7192910654133,
+          "holdDegrees": 2.7842121846259036,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3279.0999999999767
+        }
+      },
+      {
+        "name": "rendered_action_bow_smile",
+        "passed": true,
+        "detail": {
+          "id": "bow_smile",
+          "frames": 230,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.14412004630720085,
+          "maxHands": 2.531673587914465,
+          "chestDegrees": 19.468312579481594,
+          "holdDegrees": 4.878829193353639,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3928.6999999999534
+        }
+      },
+      {
+        "name": "rendered_action_laugh",
+        "passed": true,
+        "detail": {
+          "id": "laugh",
+          "frames": 192,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.07999446493474495,
+          "maxHands": 5.143651644518544,
+          "chestDegrees": 10.43889172620482,
+          "holdDegrees": 7.522036073472332,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3633.0999999999767
+        }
+      },
+      {
+        "name": "rendered_action_curious",
+        "passed": true,
+        "detail": {
+          "id": "curious",
+          "frames": 195,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.12046236107643599,
+          "maxHands": 3.0354061540931436,
+          "chestDegrees": 15.924744397493082,
+          "holdDegrees": 7.4027851763974395,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3700.4000000000233
+        }
+      },
+      {
+        "name": "rendered_action_shy",
+        "passed": true,
+        "detail": {
+          "id": "shy",
+          "frames": 206,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.16188478148640476,
+          "maxHands": 4.668305488054562,
+          "chestDegrees": 10.779658171029425,
+          "holdDegrees": 8.898136402531941,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4415.5
+        }
+      },
+      {
+        "name": "rendered_action_explain_firm",
+        "passed": true,
+        "detail": {
+          "id": "explain_firm",
+          "frames": 199,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.10566803831109672,
+          "maxHands": 3.5786023744367865,
+          "chestDegrees": 12.32760826331866,
+          "holdDegrees": 7.61249082237677,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3834.5
+        }
+      },
+      {
+        "name": "rendered_action_surprise",
+        "passed": true,
+        "detail": {
+          "id": "surprise",
+          "frames": 206,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.10278204440075767,
+          "maxHands": 4.135679181267747,
+          "chestDegrees": 10.148124118137783,
+          "holdDegrees": 16.011810188551372,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3784.5999999999767
+        }
+      },
+      {
+        "name": "rendered_action_think",
+        "passed": true,
+        "detail": {
+          "id": "think",
+          "frames": 243,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.13087175831558523,
+          "maxHands": 4.813668339779303,
+          "chestDegrees": 9.692258761955927,
+          "holdDegrees": 12.22717992064267,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4455.800000000047
+        }
+      },
+      {
+        "name": "rendered_action_greet",
+        "passed": true,
+        "detail": {
+          "id": "greet",
+          "frames": 185,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.07919681383068934,
+          "maxHands": 6.403540644621057,
+          "chestDegrees": 11.125409377341008,
+          "holdDegrees": 7.366125920971052,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3791.20000000007
+        }
+      },
+      {
+        "name": "rendered_action_listen",
+        "passed": true,
+        "detail": {
+          "id": "listen",
+          "frames": 180,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.09466374250787722,
+          "maxHands": 2.5149250284379416,
+          "chestDegrees": 11.746382809494525,
+          "holdDegrees": 4.9974841090305935,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4215.199999999953
+        }
+      },
+      {
+        "name": "rendered_action_comfort",
+        "passed": true,
+        "detail": {
+          "id": "comfort",
+          "frames": 228,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.0993301723004246,
+          "maxHands": 4.572923060857622,
+          "chestDegrees": 13.489510597665824,
+          "holdDegrees": 5.668970498819755,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 4290.900000000023
+        }
+      },
+      {
+        "name": "rendered_action_look_up",
+        "passed": true,
+        "detail": {
+          "id": "look_up",
+          "frames": 209,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.14520405857228605,
+          "maxHands": 3.145018029218196,
+          "chestDegrees": 10.001163057899614,
+          "holdDegrees": 12.825779648706758,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3995.70000000007
+        }
+      },
+      {
+        "name": "rendered_action_agree",
+        "passed": true,
+        "detail": {
+          "id": "agree",
+          "frames": 167,
+          "seen": true,
+          "finite": true,
+          "bound": true,
+          "maxBody": 0.10129192093637124,
+          "maxHands": 3.2336496213811574,
+          "chestDegrees": 8.979265696289147,
+          "holdDegrees": 5.435313349614058,
+          "phases": [
+            "prepare",
+            "stroke",
+            "hold",
+            "recover",
+            "done"
+          ],
+          "remaining": 0,
+          "elapsedMs": 3181.5999999999767
+        }
+      },
+      {
+        "name": "all_public_actions_exercised",
+        "passed": true,
+        "detail": [
+          "explain",
+          "wave",
+          "shrug",
+          "chest",
+          "bow_smile",
+          "laugh",
+          "curious",
+          "shy",
+          "explain_firm",
+          "surprise",
+          "think",
+          "greet",
+          "listen",
+          "comfort",
+          "look_up",
+          "agree"
+        ]
+      },
+      {
+        "name": "no_browser_or_render_errors",
+        "passed": true,
+        "detail": []
+      }
+    ],
+    "sourceHashes": {
+      "preview/core/controller.js": "c698a6019fb17ad1c180e310e14eb2dcf838d93e54ec79cb1ad1c9165d9020e5",
+      "preview/core/profile.js": "c9adb2b68ede19b18ebd827603fce3ceac6bf7fca0734d1c3b77bc24736b43a4",
+      "preview/core/motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+      "preview/core/motion-skeleton.js": "81894038fed748f1a3302600dbf0ceb32452dfebaa5017eaa4d2d09daf170d4e",
+      "preview/core/motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985",
+      "preview/core/motion-profile.js": "21406acb568c4497551e73a52344a80fb5cbb0fb7386ddc2149c76a9b1fe568e",
+      "preview/core/expression-choreography.js": "edd1dc0d25d77145f4701cbb21bda3c64d2b0168ad07e85269b85ac0cb21fcc0",
+      "preview/studio/motion-rig.js": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "realtime/qwen/scene.mjs": "7e1ec87e772dcb472876bbad5afc046e1c52ed6dc1e01147679e8b1893a33a14",
+      "realtime/performance/director.mjs": "aa6689c5c6aee49977faf5217e8102b86bfb76601544a8f1ce65be1a815dee56",
+      "realtime/performance/viewer.mjs": "7fc23e7f3b6b3ea644d2c2bab276bb4974ae1381c5171ca7545dcf2e197a932f",
+      "realtime/browser-performance-acceptance.cjs": "68ba6c3162bf45df6fd8a64c299230e8de8ead99f90b0613e3fa95039976266b"
+    },
+    "sourceChangedDuringRun": []
+  },
+  "visual": {
+    "beforeActions": 16,
+    "afterActions": 16,
+    "screenshots": 64,
+    "views": [
+      "body",
+      "angle"
+    ],
+    "allActionsFiniteAndCompleted": true,
+    "currentSourceHashes": {
+      "preview/core/motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+      "preview/core/motion-profile.js": "21406acb568c4497551e73a52344a80fb5cbb0fb7386ddc2149c76a9b1fe568e",
+      "preview/core/motion-skeleton.js": "81894038fed748f1a3302600dbf0ceb32452dfebaa5017eaa4d2d09daf170d4e",
+      "preview/core/motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985",
+      "preview/studio/motion-rig.js": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "realtime/qwen/scene.mjs": "7e1ec87e772dcb472876bbad5afc046e1c52ed6dc1e01147679e8b1893a33a14",
+      "realtime/performance/director.mjs": "aa6689c5c6aee49977faf5217e8102b86bfb76601544a8f1ce65be1a815dee56",
+      "realtime/performance/viewer.mjs": "7fc23e7f3b6b3ea644d2c2bab276bb4974ae1381c5171ca7545dcf2e197a932f"
+    },
+    "sourceChangedDuringRun": [],
+    "review": "Before/after contact sheets inspected. Elbow silhouette improves in shy, think, comfort and explain; holds and body motion also measured through the live rendered trajectories. Not a claim of perfect naturalness or all-view clearance."
+  },
+  "elbows": [
+    {
+      "gesture": "explain",
+      "side": "L",
+      "before": {
+        "restLateral": 0.9780316319520563,
+        "peakLateral": 1.6546775297237486,
+        "expressiveLateral": 1.6546775297237486,
+        "meanExpressiveLateral": 1.6443323254201376,
+        "peakAbductionDeg": 36.92191384474505,
+        "peakElevationDeg": 36.92280244451372
+      },
+      "after": {
+        "restLateral": 0.9780316319520563,
+        "peakLateral": 1.372319212999164,
+        "expressiveLateral": 1.230935955713211,
+        "meanExpressiveLateral": 1.2268239520961182,
+        "peakAbductionDeg": 26.54418600610832,
+        "peakElevationDeg": 26.546216541026265
+      },
+      "lateralReductionPercent": 25.608710241039056
+    },
+    {
+      "gesture": "shy",
+      "side": "R",
+      "before": {
+        "restLateral": 1.0139890755686705,
+        "peakLateral": 1.9660948273283654,
+        "expressiveLateral": 1.7966831277501627,
+        "meanExpressiveLateral": 1.7511733658419826,
+        "peakAbductionDeg": 40.71366526622913,
+        "peakElevationDeg": 52.121629973164445
+      },
+      "after": {
+        "restLateral": 1.0128765351623623,
+        "peakLateral": 1.4767142329614362,
+        "expressiveLateral": 1.3368892847449008,
+        "meanExpressiveLateral": 1.287809691469598,
+        "peakAbductionDeg": 29.03558550373676,
+        "peakElevationDeg": 35.980586271804675
+      },
+      "lateralReductionPercent": 25.591259577364855
+    },
+    {
+      "gesture": "think",
+      "side": "R",
+      "before": {
+        "restLateral": 1.0139890755686705,
+        "peakLateral": 1.9854974733068778,
+        "expressiveLateral": 1.763254643259055,
+        "meanExpressiveLateral": 1.6813462522316343,
+        "peakAbductionDeg": 39.80249204392154,
+        "peakElevationDeg": 53.983185669553635
+      },
+      "after": {
+        "restLateral": 1.0128765351623623,
+        "peakLateral": 1.4867740559612288,
+        "expressiveLateral": 1.2896427954627758,
+        "meanExpressiveLateral": 1.211404695054486,
+        "peakAbductionDeg": 27.917522804770336,
+        "peakElevationDeg": 39.58020870493158
+      },
+      "lateralReductionPercent": 26.86009361194104
+    },
+    {
+      "gesture": "comfort",
+      "side": "L",
+      "before": {
+        "restLateral": 0.9780316319520563,
+        "peakLateral": 1.9668314620216918,
+        "expressiveLateral": 1.7807297324741957,
+        "meanExpressiveLateral": 1.723197772749867,
+        "peakAbductionDeg": 40.277402664409166,
+        "peakElevationDeg": 51.88957571665679
+      },
+      "after": {
+        "restLateral": 0.9780316319520563,
+        "peakLateral": 1.4812665246116865,
+        "expressiveLateral": 1.3204903402331978,
+        "meanExpressiveLateral": 1.2665260150572022,
+        "peakAbductionDeg": 28.64624290330524,
+        "peakElevationDeg": 36.32905031224788
+      },
+      "lateralReductionPercent": 25.845549936515543
+    },
+    {
+      "gesture": "explain_firm",
+      "side": "L",
+      "before": {
+        "restLateral": 0.9780316319520563,
+        "peakLateral": 1.7396699342334123,
+        "expressiveLateral": 1.7396699342334123,
+        "meanExpressiveLateral": 1.679592556143646,
+        "peakAbductionDeg": 39.166957726444856,
+        "peakElevationDeg": 40.39025501515022
+      },
+      "after": {
+        "restLateral": 0.9780316319520563,
+        "peakLateral": 1.4172296466942493,
+        "expressiveLateral": 1.2988522177251483,
+        "meanExpressiveLateral": 1.243203875285056,
+        "peakAbductionDeg": 28.134610189338613,
+        "peakElevationDeg": 28.946977509061593
+      },
+      "lateralReductionPercent": 25.33915818361895
+    }
+  ],
+  "motionComparison": [
+    {
+      "action": "explain",
+      "elbow L/R units": "1.65 → 1.23 / 1.45 → 1.10",
+      "abduction L/R deg": "36.9 → 26.5 / 31.7 → 23.6",
+      "chest peak deg": "1.9 → 11.2",
+      "head travel": "0.09 → 0.69",
+      "waist travel": "0.02 → 0.15",
+      "hold chest range deg": "0.3 → 5.4"
+    },
+    {
+      "action": "wave",
+      "elbow L/R units": "0.98 → 1.24 / 2.38 → 2.38",
+      "abduction L/R deg": "20.8 → 26.7 / 59.6 → 59.6",
+      "chest peak deg": "1.6 → 9.8",
+      "head travel": "0.06 → 0.44",
+      "waist travel": "0.01 → 0.18",
+      "hold chest range deg": "0.1 → 1.3"
+    },
+    {
+      "action": "shrug",
+      "elbow L/R units": "1.28 → 1.11 / 1.29 → 1.11",
+      "abduction L/R deg": "27.7 → 23.8 / 27.8 → 23.8",
+      "chest peak deg": "0.6 → 7.6",
+      "head travel": "0.06 → 0.61",
+      "waist travel": "0.00 → 0.04",
+      "hold chest range deg": "0.1 → 3.7"
+    },
+    {
+      "action": "chest",
+      "elbow L/R units": "0.98 → 0.98 / 1.23 → 1.23",
+      "abduction L/R deg": "20.8 → 20.8 / 26.4 → 26.6",
+      "chest peak deg": "1.6 → 12.7",
+      "head travel": "0.09 → 0.88",
+      "waist travel": "0.01 → 0.16",
+      "hold chest range deg": "0.1 → 5.1"
+    },
+    {
+      "action": "bow_smile",
+      "elbow L/R units": "1.23 → 1.04 / 1.29 → 1.15",
+      "abduction L/R deg": "26.6 → 22.3 / 28.0 → 24.8",
+      "chest peak deg": "19.3 → 19.5",
+      "head travel": "1.41 → 1.42",
+      "waist travel": "0.24 → 0.25",
+      "hold chest range deg": "4.2 → 5.0"
+    },
+    {
+      "action": "laugh",
+      "elbow L/R units": "1.37 → 1.19 / 1.60 → 1.45",
+      "abduction L/R deg": "29.8 → 25.6 / 35.5 → 31.8",
+      "chest peak deg": "7.1 → 10.5",
+      "head travel": "0.52 → 0.70",
+      "waist travel": "0.09 → 0.14",
+      "hold chest range deg": "5.3 → 7.9"
+    },
+    {
+      "action": "curious",
+      "elbow L/R units": "1.36 → 1.18 / 1.38 → 1.06",
+      "abduction L/R deg": "29.6 → 25.4 / 30.2 → 22.7",
+      "chest peak deg": "14.2 → 15.9",
+      "head travel": "1.06 → 1.13",
+      "waist travel": "0.17 → 0.20",
+      "hold chest range deg": "4.9 → 7.4"
+    },
+    {
+      "action": "shy",
+      "elbow L/R units": "1.32 → 1.14 / 1.80 → 1.34",
+      "abduction L/R deg": "28.6 → 24.5 / 40.7 → 29.0",
+      "chest peak deg": "6.2 → 10.8",
+      "head travel": "0.33 → 0.57",
+      "waist travel": "0.11 → 0.24",
+      "hold chest range deg": "5.2 → 8.9"
+    },
+    {
+      "action": "explain_firm",
+      "elbow L/R units": "1.74 → 1.30 / 1.57 → 1.22",
+      "abduction L/R deg": "39.2 → 28.1 / 34.7 → 26.4",
+      "chest peak deg": "8.0 → 12.3",
+      "head travel": "0.52 → 0.81",
+      "waist travel": "0.09 → 0.16",
+      "hold chest range deg": "4.7 → 7.6"
+    },
+    {
+      "action": "surprise",
+      "elbow L/R units": "1.73 → 1.27 / 1.57 → 1.19",
+      "abduction L/R deg": "38.8 → 27.5 / 34.8 → 25.7",
+      "chest peak deg": "7.2 → 10.1",
+      "head travel": "0.65 → 0.87",
+      "waist travel": "0.06 → 0.08",
+      "hold chest range deg": "11.8 → 16.0"
+    },
+    {
+      "action": "think",
+      "elbow L/R units": "1.31 → 1.12 / 1.76 → 1.29",
+      "abduction L/R deg": "28.5 → 23.9 / 39.8 → 27.9",
+      "chest peak deg": "3.7 → 9.7",
+      "head travel": "0.27 → 0.52",
+      "waist travel": "0.11 → 0.15",
+      "hold chest range deg": "5.2 → 12.2"
+    },
+    {
+      "action": "greet",
+      "elbow L/R units": "1.64 → 1.20 / 2.28 → 2.28",
+      "abduction L/R deg": "36.6 → 25.9 / 56.0 → 56.0",
+      "chest peak deg": "6.7 → 11.1",
+      "head travel": "0.43 → 0.78",
+      "waist travel": "0.12 → 0.25",
+      "hold chest range deg": "4.5 → 7.4"
+    },
+    {
+      "action": "listen",
+      "elbow L/R units": "1.19 → 1.06 / 1.20 → 1.07",
+      "abduction L/R deg": "25.7 → 22.7 / 25.9 → 22.8",
+      "chest peak deg": "10.3 → 11.7",
+      "head travel": "0.79 → 0.87",
+      "waist travel": "0.13 → 0.15",
+      "hold chest range deg": "2.7 → 5.0"
+    },
+    {
+      "action": "comfort",
+      "elbow L/R units": "1.78 → 1.32 / 1.20 → 0.92",
+      "abduction L/R deg": "40.3 → 28.6 / 25.8 → 19.6",
+      "chest peak deg": "11.3 → 13.5",
+      "head travel": "0.83 → 0.97",
+      "waist travel": "0.14 → 0.17",
+      "hold chest range deg": "3.7 → 5.7"
+    },
+    {
+      "action": "look_up",
+      "elbow L/R units": "1.74 → 1.31 / 1.54 → 1.19",
+      "abduction L/R deg": "39.2 → 28.4 / 34.0 → 25.5",
+      "chest peak deg": "6.8 → 10.0",
+      "head travel": "0.66 → 0.89",
+      "waist travel": "0.03 → 0.05",
+      "hold chest range deg": "8.7 → 12.8"
+    },
+    {
+      "action": "agree",
+      "elbow L/R units": "1.40 → 1.20 / 1.30 → 0.99",
+      "abduction L/R deg": "30.6 → 25.9 / 28.2 → 21.0",
+      "chest peak deg": "6.6 → 9.0",
+      "head travel": "0.48 → 0.64",
+      "waist travel": "0.08 → 0.12",
+      "hold chest range deg": "3.2 → 5.4"
+    }
+  ],
+  "mesh": {
+    "method": "80 held poses; nearest-vertex/normal rigid skinning including grants and local translations; physics disabled",
+    "baseline": {
+      "poses": 80,
+      "marked": 14,
+      "maxHand": 0,
+      "maxSleeve": 0,
+      "maxDepth": 0.087
+    },
+    "current": {
+      "poses": 80,
+      "marked": 14,
+      "maxHand": 0,
+      "maxSleeve": 19,
+      "maxDepth": 0.111
+    },
+    "knownAdditionalWaveAt2_5": {
+      "baseline": {
+        "penetrating": 0,
+        "hand": 0,
+        "sleeve": 0,
+        "arm": 0,
+        "maxDepth": 0,
+        "worst": null,
+        "handGap": 4.882
+      },
+      "current": {
+        "penetrating": 16,
+        "hand": 0,
+        "sleeve": 16,
+        "arm": 0,
+        "maxDepth": 0.223,
+        "worst": {
+          "bone": "左袖子_13_0",
+          "against": "左辫子A10",
+          "at": [
+            2.51,
+            10.53,
+            -3.27
+          ]
+        },
+        "handGap": 4.889
+      }
+    },
+    "limitation": "80 fixed sample poses omit wave@2.5. That extra pose has a NEW sleeve-to-braid heuristic contact: 16 vertices, .223 model-unit depth. .111 is not the global maximum. Other sleeve/hair signals remain; no zero-penetration claim."
+  },
+  "numericalSourceHashes": {
+    "motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+    "motion-skeleton.js": "81894038fed748f1a3302600dbf0ceb32452dfebaa5017eaa4d2d09daf170d4e",
+    "motion-profile.js": "21406acb568c4497551e73a52344a80fb5cbb0fb7386ddc2149c76a9b1fe568e",
+    "motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985"
+  },
+  "numericalSourceChangedDuringRun": [],
+  "evidenceDirectory": "outputs/body-elbows-20261016"
+}

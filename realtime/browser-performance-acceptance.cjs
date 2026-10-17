@@ -120,7 +120,8 @@ const read = page => page.evaluate(() => window.performanceLab.snapshot());
         const l = window.performanceLab, frame = () => new Promise(requestAnimationFrame);
         const before = l.snapshot();
         if (!l.play(id)) throw new Error(`${id} rejected`);
-        const start = performance.now(); let frames = 0, seen = false, finite = true, bound = true, maxBody = 0, maxHands = 0;
+        const start = performance.now(); let frames = 0, seen = false, finite = true, bound = true, maxBody = 0, maxHands = 0, chestDegrees = 0, holdDegrees = 0, holdStart = null;
+        const angle = (a,b) => 2*Math.acos(Math.min(1,Math.abs(a.reduce((sum,v,i)=>sum+v*b[i],0))))*180/Math.PI;
         const phases = new Set();
         while (performance.now() - start < 14000) {
           await frame(); const s = l.snapshot(), g = s.motion.gestures.find(g => g.gesture === id && !g.recovering); frames++;
@@ -128,12 +129,18 @@ const read = page => page.evaluate(() => window.performanceLab.snapshot());
           finite &&= s.rendered.finite && s.rendered.weights.every(Number.isFinite);
           bound &&= s.rendered.missingBindings.length === 0;
           for (const key of ['head', 'chest']) maxBody = Math.max(maxBody, Math.hypot(...s.rendered.rotations[key].map((v,i) => v-before.rendered.rotations[key][i])));
+          const chest = s.rendered.rotations.upperChest;
+          chestDegrees = Math.max(chestDegrees,angle(chest,before.rendered.rotations.upperChest));
+          if(g?.phase==='hold') { holdStart ??= chest; holdDegrees=Math.max(holdDegrees,angle(chest,holdStart)); }
           for (const key of ['leftWrist','rightWrist']) maxHands = Math.max(maxHands, Math.hypot(...s.rendered.bones[key].map((v,i) => v-before.rendered.bones[key][i])));
           if (seen && !s.motion.gestures.length) break;
         }
-        return { id, frames, seen, finite, bound, maxBody, maxHands, phases: [...phases], remaining: l.snapshot().motion.gestures.length, elapsedMs: performance.now()-start };
+        return { id, frames, seen, finite, bound, maxBody, maxHands, chestDegrees, holdDegrees, phases: [...phases], remaining: l.snapshot().motion.gestures.length, elapsedMs: performance.now()-start };
       }, id);
-      assert(action.seen && action.frames > 8 && action.finite && action.bound && action.maxBody > .002 && action.maxHands > .04 && action.phases.includes('stroke') && action.phases.includes('recover') && action.remaining === 0, `rendered_action_${id}`, action);
+      // Head-only movement and a barely nonzero chest no longer qualify. Pure FK
+      // tests have per-action intent ranges; this checks that the PMX actually
+      // receives readable torso motion and that long holds keep evolving.
+      assert(action.seen && action.frames > 8 && action.finite && action.bound && action.chestDegrees >= 4 && action.maxHands > .04 && action.phases.includes('stroke') && action.phases.includes('recover') && action.remaining === 0 && (!['explain','wave','chest'].includes(id) || action.holdDegrees >= .7), `rendered_action_${id}`, action);
       progress(`${id} complete (${Math.round(action.elapsedMs)} ms, ${action.frames} frames)`);
     }
     assert(ids.length === 16, 'all_public_actions_exercised', ids);
