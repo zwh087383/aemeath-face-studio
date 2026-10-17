@@ -21,8 +21,25 @@ export function createControllerSink({ audio, face, motion, onPosture = () => tr
         const a = face.playback(epoch, status, command.time), b = motion.playback(epoch, status, command.time);
         return a === true && b === true;
       }
-      case 'cue': return command.cue.kind === 'gesture'
-        ? motion.enqueue(command.cue) === true : face.enqueue(command.cue) === true;
+      case 'cue': {
+        if (command.cue.kind === 'action' && command.cue.action === 'nod' && motion.options?.continuity) {
+          // The trusted scheduler already released this cue at the media anchor.
+          // Only one controller owns the new head stroke; do not also enqueue the
+          // legacy fixed nod in FaceController.
+          const accepted = motion.requestReaction({ id: command.cue.id, kind: 'nod', strength: command.cue.strength,
+            now: atWall, owner: identity, clock: 'audio', audioAt: command.cue.at, reason: 'audio_anchored_agreement' }) === true;
+          try { observe({ type: 'reaction_admission', identity, atWall, cue: command.cue, accepted,
+            reason: accepted ? 'motion_accepted' : 'visual_part_unavailable' }); } catch { /* diagnostic only */ }
+          // Missing an optional head reaction is a successful no-op for the
+          // audio scheduler, not a transport fault. Execution feedback above is
+          // separate and must never count this skip as a displayed movement.
+          return true;
+        }
+        const accepted = command.cue.kind === 'gesture' ? motion.enqueue(command.cue) === true : face.enqueue(command.cue) === true;
+        try { observe({ type: 'cue_admission', identity, atWall, cue: command.cue, accepted,
+          reason: accepted ? 'controller_accepted' : 'controller_rejected' }); } catch { /* diagnostic only */ }
+        return accepted;
+      }
       case 'stop_audio': {
         // A stale cleanup must never cancel the next transport instance.
         const before = audio.snapshot();

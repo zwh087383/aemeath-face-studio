@@ -62,8 +62,9 @@ function fixture(t, options = {}) {
     onEvent: event => events.push(event), ...options });
   const render = dt => {
     const audio = session.sync();
-    face.update(now, dt, session.lipSample(audio), true);
-    motion.update(now, dt, { face: face.head, actions: face.activeActions, speech: 0 });
+    const visual = session.visualState(audio);
+    face.update(now, dt, session.lipSample(audio), true, visual);
+    motion.update(now, dt, { face: face.head, actions: face.activeActions, speech: 0, behavior: visual.behavior, paused: visual.paused });
     for (const quaternion of motion.locals.values()) assert.ok(quaternion.every(Number.isFinite));
   };
   const advance = seconds => {
@@ -287,4 +288,259 @@ test('failed resume closes received PCM and never reports audible playback', asy
   f.session.appendPcm({ owner, sequence: 0, samples: pcm() });
   assert.equal(await f.session.playReady, false); assert.equal(f.session.audio.snapshot().sourceCount, 0);
   assert.equal(f.session.snapshot().timings.firstPlaybackAt, undefined); assert.match(f.session.lastError, /resume_failed/);
+});
+
+test('host interaction persists through long thinking and rejects an obsolete local turn', async t => {
+  const f = fixture(t); f.session.setConnection('c1');
+  const old = f.session.inputStarted();
+  assert.equal(f.session.inputEnded(old), true);
+  f.advance(7);
+  assert.equal(f.session.snapshot().behavior.mode, 'thinking');
+  assert.equal(f.motion.snapshot().posture, 'relaxed');
+  assert.equal(f.motion.snapshot().gestures.length, 0);
+  assert.ok(Math.abs(f.motion.snapshot().gaze.yaw) < .005, 'long unresolved wait preserves partner attention');
+  const next = f.session.inputStarted();
+  assert.equal(f.session.inputEnded(old), false);
+  assert.equal(f.session.snapshot().behavior.mode, 'listening');
+  f.session.inputEnded(next);
+  const owner = await f.begin(); f.advance(.4);
+  assert.equal(f.session.snapshot().behavior.mode, 'thinking', 'buffering does not solve the thought');
+  assert.equal(f.session.visualState().mouthMode, 'closed');
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(1) }); f.advance(.15);
+  assert.equal(f.session.snapshot().behavior.mode, 'responding');
+  assert.equal(f.session.visualState().mouthMode, 'speech');
+  assert.equal(f.motion.snapshot().posture, 'relaxed', 'audio start must not raise hands');
+});
+
+test('natural subtitle comfort keeps hands quiet and its attitude survives media end', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(1) }); f.advance(.1);
+  f.session.pushSubtitle('慢慢来，我在这里陪着你。', { owner, sequence: 0 });
+  f.advance(.02); f.workers.at(-1).complete(); f.advance(.1);
+  assert.equal(f.session.snapshot().behavior.intent, 'comfort');
+  assert.equal(f.motion.snapshot().gestures.length, 0);
+  assert.equal(f.face.snapshot().preset, 'neutral', 'attitude is not duplicated as preset');
+  const warmth = f.session.snapshot().behavior.state.warmth;
+  f.session.finishAudio(owner); f.advance(1.3);
+  assert.equal(f.session.visualState().mouthMode, 'closed');
+  assert.equal(f.session.snapshot().behavior.state.warmth, warmth);
+  assert.equal(f.session.snapshot().behavior.mode, 'listening');
+  assert.equal(f.session.answerAvailable(owner), false, 'ended cannot be revived as responding');
+});
+
+test('cancel and replacement fence behavior as well as audio and delayed worker instructions', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(2) }); f.advance(.1);
+  f.session.pushSubtitle('你好！', { owner, sequence: 0 }); f.advance(.02);
+  const worker = f.workers.at(-1), callback = worker.onmessage, job = worker.jobs[0];
+  assert.equal(f.session.cancel('barge_in'), true);
+  assert.equal(f.session.visualState().mouthMode, 'closed');
+  assert.equal(f.session.snapshot().behavior.mode, 'listening');
+  assert.equal(f.session.snapshot().behavior.owner, null);
+  const local = f.session.inputStarted(); f.session.inputEnded(local);
+  const next = await f.begin('r2');
+  const before = f.session.snapshot().behavior;
+  callback({ data: worker.handler(job) });
+  assert.equal(f.session.answerAvailable(owner), false);
+  assert.equal(f.session.inputEnded(local), false);
+  assert.deepEqual(f.session.snapshot().behavior, before);
+  assert.equal(f.session.snapshot().behavior.owner.responseId, next.responseId);
+});
+
+test('mouth ownership follows playback boundaries despite zero-lip object truthiness', async t => {
+  const f = fixture(t), owner = await f.begin();
+  assert.ok(f.session.lipSample());
+  assert.equal(f.session.visualState().mouthMode, 'closed');
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(1) }); f.advance(.1);
+  assert.equal(f.session.visualState().mouthMode, 'speech');
+  f.session.pause(); assert.equal(f.session.visualState().paused, true);
+  assert.equal(f.session.visualState().mouthMode, 'closed');
+  f.advance(.5); await f.session.resume(); f.advance(.1);
+  assert.equal(f.session.visualState().paused, false);
+  assert.equal(f.session.visualState().mouthMode, 'speech');
+  f.session.providerDone(owner);
+  assert.equal(f.session.visualState().mouthMode, 'speech', 'providerDone is not playback end');
+  f.session.cancel(); assert.equal(f.session.visualState().mouthMode, 'closed');
+});
+
+test('optional planner exceptions degrade visuals while accepted audio keeps playing', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.behaviorPlanner.answerAvailable = () => { throw new Error('probe'); };
+  assert.equal(f.session.appendPcm({ owner, sequence: 0, samples: voiced(1) }), true);
+  f.advance(.1);
+  assert.equal(f.session.audio.snapshot().status, 'playing');
+  assert.equal(f.session.snapshot().behavior, null);
+  assert.equal(f.session.pushSubtitle('随便一段很长的解释也不能重新触发旧兜底。', { owner, sequence: 0 }).reason, 'sidecar_disabled');
+  f.session.cancel(); await f.begin('r2');
+  assert.equal(f.session._sidecarEnabled, false, 'failure cannot silently re-enable legacy fallback');
+});
+
+test('waiting keeps attention without inventing a thinking glance or advancing audio cues', async t => {
+  const f = fixture(t); f.session.setConnection('c1');
+  f.face.headSway = false; // production scene delegates head motion to the body composer
+  f.motion.setOptions({ continuity: true });
+  const token = f.session.inputStarted(); f.session.inputEnded(token);
+  await f.begin(); f.advance(1);
+  assert.equal(f.session.audio.status, 'buffering');
+  assert.equal(f.motion.time, 0);
+  assert.equal(f.session.visualState().paused, false);
+  assert.ok(Math.abs(f.motion.snapshot().gaze.yaw) < .005, 'waiting remains attentive');
+  assert.ok(Math.abs(f.motion.snapshot().head.yaw) < .005);
+  assert.equal(f.session.snapshot().behavior.state.uncertainty, 0);
+});
+
+test('causal partner PCM runs without a response and rejects old/future capture identity', t => {
+  const f = fixture(t); f.session.setConnection('c1');
+  const token = f.session.inputStarted();
+  assert.equal(f.session.owner, null);
+  const input = { token, samples: voiced(.02), sampleRate: 24000, capturedAtMs: 0 };
+  assert.equal(f.session.observePartnerPcm(input), true);
+  assert.equal(f.session.snapshot().behavior.partnerVoicing, true);
+  assert.equal(f.session.observePartnerPcm(input), false, 'duplicate capture is not a fresh observation');
+  assert.equal(f.session.observePartnerPcm({ ...input, capturedAtMs: 100 }), false, 'future frame refused');
+  assert.equal(f.session.snapshot().metrics.cancels, 0);
+  const next = f.session.inputStarted(); f.advance(.02);
+  assert.equal(f.session.observePartnerPcm({ ...input, capturedAtMs: 20 }), false, 'old generation not relabeled');
+  assert.equal(f.session.observePartnerPcm({ ...input, token: next, capturedAtMs: 20 }), true);
+  assert.equal(f.session.inputEnded(next), true);
+  assert.equal(f.session.snapshot().behavior.partnerVoicing, false);
+  assert.equal(f.session.audio.snapshot().status, 'idle');
+});
+
+test('partner observation can overlap real playback without revoking it, and pause freezes self voicing', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(1) }); f.advance(.1);
+  const token = f.session.interactionToken();
+  assert.equal(f.session.observePartnerPcm({ token, samples: voiced(.02), sampleRate: 24000, capturedAtMs: 100 }), true);
+  const visual = f.session.visualState();
+  assert.equal(visual.behavior.partnerVoicing, true); assert.equal(visual.behavior.selfVoicing, true);
+  assert.equal(f.session.audio.status, 'playing'); assert.equal(f.session.metrics.cancels, 0);
+  assert.equal(visual.rhythm.clock, 'audio'); assert.ok(visual.rhythm.availableLeadSeconds > .8);
+  f.session.pause(); const paused = f.session.visualState();
+  assert.equal(paused.mouthMode, 'closed'); assert.equal(paused.rhythm.voiced, false);
+  assert.equal(paused.behavior.selfVoicing, false);
+});
+
+test('invalid PCM and optional input observation failure cannot cancel accepted reply audio', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(1) }); f.advance(.1);
+  const token = f.session.interactionToken();
+  assert.equal(f.session.observePartnerPcm({ token, samples: new Float32Array([NaN]), sampleRate: 24000, capturedAtMs: 100 }), false);
+  f.session.behaviorPlanner.observeInteraction = () => { throw new Error('optional observation failure'); };
+  assert.equal(f.session.observePartnerPcm({ token, samples: voiced(.02), sampleRate: 24000, capturedAtMs: 100 }), false);
+  assert.equal(f.session.audio.status, 'playing'); assert.equal(f.session.metrics.cancels, 0);
+  assert.equal(f.session.visualState().mouthMode, 'speech');
+});
+
+test('silent input arming is not speech and lost PCM expires without audio cancellation', t => {
+  const f = fixture(t); f.session.setConnection('c1');
+  const token = f.session.inputStarted('c1', { voiced: false });
+  assert.ok(token); assert.equal(f.session.snapshot().behavior.partnerVoicing, false);
+  assert.equal(f.session.observePartnerPcm({ token, samples: voiced(.02), sampleRate: 24000, capturedAtMs: 0 }), true);
+  f.advance(.3);
+  assert.equal(f.session.visualState().behavior.partnerVoicing, false);
+  assert.equal(f.session.metrics.cancels, 0);
+});
+
+test('interrupt releases authored gaze before the arm has completed its protected recovery', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(4) });
+  f.session.enqueue({ kind: 'gesture', gesture: 'shy', at: .05 }); f.advance(2);
+  assert.ok(Math.abs(f.motion.snapshot().gaze.yaw) > .08);
+  f.session.cancel('user_interrupt'); f.advance(.10);
+  assert.equal(f.motion.snapshot().recovering, true);
+  assert.equal(f.motion.snapshot().gaze.targetYaw, 0, 'old authored glance cannot own new listening attention');
+  assert.ok(f.motion.snapshot().gestures.length > 0, 'preserve the managed hand tail');
+  f.advance(3); assert.equal(f.motion.snapshot().gestures.length, 0);
+});
+
+test('scheduler playback failure retires behavior instead of replaying a stale playing snapshot', async t => {
+  const f = fixture(t), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(2) }); f.advance(.1);
+  f.face.playback = () => false; f.advance(.02);
+  assert.equal(f.session.scheduler.status, 'fault');
+  assert.equal(f.session.audio.status, 'cancelled');
+  assert.equal(f.session.snapshot().behavior.owner, null);
+  assert.equal(f.session.snapshot().behavior.mode, 'listening');
+  assert.equal(f.session.visualState().mouthMode, 'closed');
+});
+
+test('watchdog cleanup retires the continuous behavior owner without another sync', async t => {
+  let clock = 0;
+  const f = fixture(t, { clock: () => clock }), owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(2) }); f.advance(.1);
+  clock = 2; f.session.scheduler.tick();
+  assert.equal(f.session.scheduler.status, 'cancelled');
+  assert.equal(f.session.audio.status, 'cancelled');
+  assert.equal(f.session.snapshot().behavior.owner, null);
+  assert.equal(f.session.snapshot().behavior.mode, 'listening');
+});
+
+test('disconnect retires response and local input identity; only a fresh connection can resume', async t => {
+  const f = fixture(t); f.session.setConnection('c1');
+  const token = f.session.inputStarted(); f.session.inputEnded(token);
+  const owner = await f.begin(); f.session.appendPcm({ owner, sequence: 0, samples: voiced(2) }); f.advance(.1);
+  assert.equal(f.session.disconnect('c1'), true);
+  assert.equal(f.session.connectionId, null); assert.equal(f.session.owner, null);
+  assert.equal(f.session.beginResponse({ connectionId: 'c1', responseId: 'late' }), null);
+  assert.equal(f.session.inputEnded(token), false);
+  assert.equal(f.session.setConnection('c1'), false);
+  assert.equal(f.session.setConnection('c2'), true);
+  assert.equal(f.session.disconnect('c1'), false);
+  const next = f.session.beginResponse({ connectionId: 'c2', responseId: 'fresh' });
+  assert.ok(next); assert.equal(await f.session.playReady, true);
+  assert.equal(f.session.snapshot().behavior.owner.connectionId, 'c2');
+});
+
+test('face actions acknowledge actual composition and cannot acknowledge a retired response', async t => {
+  const f = fixture(t); f.motion.setOptions({ continuity: true });
+  const owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(2) });
+  const feedback = [], original = f.session.sidecar.executionFeedback.bind(f.session.sidecar);
+  f.session.sidecar.executionFeedback = (id, result) => { feedback.push({ id, ...result }); return original(id, result); };
+  assert.equal(f.session.enqueue({ id: 'actual-shake', kind: 'action', action: 'shake', at: .1 }, owner).accepted, true);
+  assert.equal(f.session.timings.firstCueAt, undefined);
+  f.advance(.08);
+  assert.equal(feedback.some(item => item.id === 'actual-shake' && item.displayed), false);
+  f.advance(.12);
+  assert.ok(feedback.some(item => item.id === 'actual-shake' && item.accepted && !item.displayed));
+  assert.ok(feedback.some(item => item.id === 'actual-shake' && item.displayed));
+  assert.ok(f.session.timings.firstDisplayedCueAt >= f.session.timings.firstCueAt);
+  const previous = f.face.snapshot();
+  assert.ok(previous.executedCues.some(item => item.id === 'actual-shake' && item.epoch === owner.epoch));
+  await f.begin('r2'); feedback.length = 0;
+  assert.deepEqual(f.face.snapshot().executedCues, []);
+  const snapshot = f.face.snapshot.bind(f.face); f.face.snapshot = () => previous;
+  f.session.observeMotion();
+  assert.equal(feedback.some(item => item.displayed), false);
+  f.face.snapshot = snapshot;
+});
+
+test('optional nod rejection neither faults audio nor claims first executed cue', async t => {
+  const f = fixture(t); f.motion.setOptions({ continuity: true });
+  const owner = await f.begin();
+  f.session.appendPcm({ owner, sequence: 0, samples: voiced(2) });
+  const request = f.motion.requestReaction.bind(f.motion);
+  f.motion.requestReaction = reaction => reaction.kind === 'nod' ? false : request(reaction);
+  f.session.enqueue({ id: 'rejected-nod', kind: 'action', action: 'nod', at: .05 }, owner);
+  f.advance(.2);
+  assert.equal(f.session.audio.status, 'playing');
+  assert.equal(f.session.timings.firstCueAt, undefined);
+  assert.equal(f.session.timings.firstDisplayedCueAt, undefined);
+  assert.ok(f.events.some(event => event.type === 'reaction_admission' && !event.accepted));
+});
+
+test('voice from a retired generation expires instead of becoming a permanent partner onset', async t => {
+  const f = fixture(t); f.session.setConnection('c1');
+  const token = f.session.inputStarted('c1', { voiced: false });
+  f.session.observePartnerPcm({ token, samples: voiced(.02), sampleRate: 24000, capturedAtMs: 0 });
+  assert.equal(f.session.snapshot().behavior.partnerVoicing, true);
+  const owner = await f.begin();
+  f.advance(.3);
+  assert.equal(f.session.visualState().behavior.partnerVoicing, false);
+  const next = f.session.interactionToken();
+  assert.equal(f.session.observePartnerPcm({ token: next, samples: voiced(.02), sampleRate: 24000, capturedAtMs: 300 }), true);
+  assert.equal(f.session.snapshot().behavior.partnerVoicing, true);
+  f.session.cancel('input_ended', owner); f.advance(.3);
+  assert.equal(f.session.visualState().behavior.partnerVoicing, false);
 });

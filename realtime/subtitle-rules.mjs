@@ -44,7 +44,39 @@ const HISTORICAL = /刚才|之前|昨天|上次|曾经|以前|当时|刚刚/;
 const NOW = /^(?:现在|此刻|这次|如今)/;
 const SPEAKER_PREFIX = /^(?:真的|真是|太|好|很|有点|嗯|啊|哇|呀|这下|实在|非常|特别|那|那么|其实|当然|现在|此刻|这次|如今|先|再|就|所以|于是|然后|随后|接着|刚好|确实|的确)*$/;
 
-function empty(reason) { return { cues: [], suppressedReason: reason, fallbackEligible: false }; }
+function empty(reason, policy) { return { cues: [], suppressedReason: reason, fallbackEligible: false,
+  ...(policy === 'natural' ? { behavior: { intent: 'neutral', reaction: { level: 'defer' } } } : {}) }; }
+
+// Intent is a bounded candidate, never a host state transition. In particular,
+// saying "我想一想" cannot declare that a response is or has finished thinking.
+const NATURAL_INTENTS = Object.freeze([
+  ['comfort', /慢慢来|别着急|不要着急|不用着急|别担心|不用担心|我在这里|我陪着你|陪着你|没关系/, 90],
+  ['agreement', /^(?:对|是的|就是这样|就是这个意思|确实如此)$|你说得对/, 70],
+  ['explanation', /主要有|原因|第一点|第二点|分成.{0,4}步|首先|接下来|步骤|解释|说明/, 40],
+  ['consideration', /我想一想|我想想|我在思考|仔细想|认真想|我拿不准|我不确定/, 30],
+]);
+
+function naturalResult(result, available, intents) {
+  const explicit = available.find(item => item.cue.kind !== 'expression'
+    && ['explicit_self_action', 'confirmed_user_request'].includes(item.cue.reason))?.cue;
+  const selected = available.find(item => item.cue.kind !== 'expression')?.cue;
+  const face = result.cues.find(item => item.kind === 'expression');
+  const reasonIntent = { greeting: 'greeting', agreement: 'agreement', disagreement: 'disagreement',
+    explanation: 'explanation', uncertainty: 'consideration', affection: 'affection' };
+  let intent = intents.sort((a, b) => b.priority - a.priority)[0]?.intent
+    ?? reasonIntent[selected?.reason] ?? ({ focus: 'consideration', curious: 'curiosity', happy: 'pleased',
+      smile: 'warm', surprise: 'surprise', shy: 'shy', playful: 'playful' }[face?.preset]) ?? 'neutral';
+  if (!explicit && selected?.reason === 'disagreement') intent = 'disagreement';
+  let motion = explicit, level = explicit ? (explicit.kind === 'gesture' ? 'authored' : 'micro') : 'none';
+  if (!explicit && intent === 'greeting') {
+    motion = selected?.gesture === 'wave' ? selected : cue('gesture', 'wave', .45, 'greeting'); level = 'authored';
+  } else if (!explicit && ['agreement', 'disagreement'].includes(intent)) {
+    motion = cue('action', intent === 'agreement' ? 'nod' : 'shake', .24, intent); level = 'micro';
+  }
+  if (!motion && result.suppressedReason && !face && !intents.length) level = 'defer';
+  return { ...result, cues: [face, motion].filter(Boolean), fallbackEligible: false,
+    behavior: { intent, reaction: { level } } };
+}
 
 function plainText(input) {
   if (typeof input !== 'string') return { reason: 'invalid_text' };
@@ -96,16 +128,16 @@ function directRequest(text) {
  * `fallbackEligible` only grants the host permission to consider a cooled-down
  * conversation gesture. It never represents an instruction to play immediately.
  */
-export function selectSubtitleCues(text, { userText = '', profile = 'balanced' } = {}) {
+export function selectSubtitleCues(text, { userText = '', profile = 'balanced', policy = 'legacy' } = {}) {
   const clean = plainText(text), user = plainText(userText);
-  if (clean.reason) return empty(clean.reason);
-  if (user.reason) return empty(user.reason);
+  if (clean.reason) return empty(clean.reason, policy);
+  if (user.reason) return empty(user.reason, policy);
   if (!Object.hasOwn(PROFILE_OFFSET, profile)) profile = 'balanced';
   text = clean.text;
-  if (!/[\p{L}\p{N}]/u.test(text)) return empty(clean.removed ? 'annotation_only' : 'empty_text');
-  if (/(?:算了|取消|撤回|收回|不做了|还是别)(?:吧|了|这个动作|刚才的话)?[。！!\s]*$/.test(text)) return empty('revoked');
+  if (!/[\p{L}\p{N}]/u.test(text)) return empty(clean.removed ? 'annotation_only' : 'empty_text', policy);
+  if (/(?:算了|取消|撤回|收回|不做了|还是别)(?:吧|了|这个动作|刚才的话)?[。！!\s]*$/.test(text)) return empty('revoked', policy);
 
-  const candidates = [], lastMention = new Map();
+  const candidates = [], lastMention = new Map(), intents = [], lastIntentMention = new Map();
   let actor = '', context = null, suppressedReason = null, index = 0;
   const add = (kind, id, match, clause, base, priority, reason) => {
     const key = `${kind}:${id}`, blocked = negated(clause, match);
@@ -124,7 +156,8 @@ export function selectSubtitleCues(text, { userText = '', profile = 'balanced' }
     if (subject && !/(?:朝|向|对|给|看|看到|见到|望向|瞥|谢谢)$/.test(subjectPrefix)) {
       actor = SELF.test(subject[0]) && SPEAKER_PREFIX.test(subjectPrefix) ? 'self' : 'other';
     }
-    if (/^(?:你好[呀啊]?|你说得对|你对我真好|有你真好|谢谢你|吓我一跳)$/.test(clause.trim())) actor = 'self';
+    if (/^(?:你好[呀啊]?|你说得对|你对我真好|有你真好|谢谢你|吓我一跳)$/.test(clause.trim())
+      || (policy === 'natural' && /^(?:你来啦|你来了|我在这里陪着你|慢慢来|(?:你|您)?(?:别着急|不用着急|别担心|不用担心))$/.test(clause.trim()))) actor = 'self';
     // A report about somebody else is not the speaker's emotion or movement.
     if (/我(?:看到|听说|记得)|我(?:觉得|发现).{0,8}(?:他|她|它|别人|朋友)/.test(clause)) actor = 'other';
     if (META.test(clause)) context = 'discussion';
@@ -138,6 +171,20 @@ export function selectSubtitleCues(text, { userText = '', profile = 'balanced' }
     }
     if (actionMention && /要不要|能不能|是否|该不该|吗|么|呢|可不可以|能否/.test(clause)) {
       suppressedReason ||= 'action_question'; continue;
+    }
+    if (policy === 'natural') {
+      for (const [intent, pattern, priority] of NATURAL_INTENTS) {
+        const match = pattern.exec(clause.trim());
+        if (!match) continue;
+        const blocked = negated(clause.trim(), match);
+        lastIntentMention.set(intent, { index, blocked });
+        if (blocked) continue;
+        // Keep all existing subject/context guards. Generic explanations and
+        // acknowledgements can be actorless; reported third-person clauses cannot.
+        intents.push({ intent, priority, index });
+      }
+      if (/^(?:你来啦|你来了|嗨|你好[呀啊]?|早安|晚上好|早上好)$/.test(clause.trim()))
+        intents.push({ intent: 'greeting', priority: 80, index });
     }
     for (const [kind, id, pattern] of ACTIONS) {
       for (const match of clause.matchAll(new RegExp(pattern.source, 'gu'))) {
@@ -174,5 +221,10 @@ export function selectSubtitleCues(text, { userText = '', profile = 'balanced' }
   const cues = [expression?.cue, motion?.cue].filter(Boolean);
   const fallbackEligible = !motion && !suppressedReason && !clean.removed
     && /[\u3400-\u9fff]/u.test(text) && text.length >= 8 && !/[？?不没别]/.test(text) && !PURE_ACK.test(text);
-  return { cues, suppressedReason: cues.length ? null : suppressedReason, fallbackEligible };
+  const result = { cues, suppressedReason: cues.length ? null : suppressedReason, fallbackEligible };
+  const validIntents = intents.filter(item => {
+    const last = lastIntentMention.get(item.intent);
+    return !last || !last.blocked || last.index < item.index;
+  });
+  return policy === 'natural' ? naturalResult(result, available, validIntents) : result;
 }

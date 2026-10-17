@@ -70,6 +70,21 @@ test('manual handshake, PCM splitting and subtitle delivery have independent syn
   assert.equal(f.client.sendText('不能并发'), null);
 });
 
+test('local input observation runs after network send and cannot fail or cancel input', async t => {
+  const f = fixture(t), socket = await f.connect();
+  const token = { connectionId: 'c1', interactionGeneration: 4 };
+  f.session.interactionToken = () => token;
+  f.session.observePartnerPcm = input => {
+    assert.equal(socket.sent.at(-1).type, 'input_audio');
+    assert.equal(input.token, token); assert.equal(input.sampleRate, 16000);
+    f.log.push(['observe_pcm']); throw new Error('visual failure');
+  };
+  assert.equal(f.client.sendInput(new Int16Array(320)), true);
+  assert.equal(f.client.inputSequence, 1);
+  assert.ok(f.log.some(event => event[0] === 'observe_pcm'));
+  assert.ok(!f.log.some(event => event[0] === 'local_cancel'));
+});
+
 test('provider completion never finishes local audio; a new request waits for actual playback drain', async t => {
   const f = fixture(t), socket = await f.connect(); f.client.sendText('你好。'); f.created(socket);
   f.provider(socket, { type: 'response.audio.delta', response_id: 'r1', delta: f.pcm(2400) }); f.done(socket);
@@ -230,4 +245,51 @@ test('closing a naturally ended trial does not manufacture an interruption measu
   const f = fixture(t), socket = await f.connect(); f.client.sendText('你好。'); f.created(socket);
   f.done(socket); f.state.status = 'ended'; f.client.close();
   assert.equal(f.client.currentTrial.cancelAt, null);
+});
+
+test('trusted input events use a local interaction token before a response exists', async t => {
+  const f = fixture(t), transitions = []; let generation = 0;
+  f.session.inputStarted = connectionId => { const token = { connectionId, interactionGeneration: ++generation }; transitions.push(['start', token]); return token; };
+  f.session.inputEnded = token => { transitions.push(['end', token]); return true; };
+  f.session.inputCancelled = token => { transitions.push(['cancel', token]); return true; };
+  const socket = await f.connect();
+  f.client.sendText('请想一下再回答。');
+  assert.deepEqual(transitions.map(x => x[0]), ['start', 'end']);
+  assert.equal(transitions[0][1], transitions[1][1]);
+  assert.equal(transitions[0][1].connectionId, 'c1');
+  assert.equal(Object.hasOwn(transitions[0][1], 'responseId'), false);
+  f.client.cancel();
+  assert.equal(transitions.at(-1)[0], 'cancel');
+  f.created(socket, 'late-revoked');
+  assert.equal(f.session.owner, null, 'late created cannot open a visual response');
+});
+
+test('arming VAD while speaking does not itself interrupt; actual speech boundary updates the new token', async t => {
+  const f = fixture(t), transitions = []; let generation = 0;
+  f.session.inputStarted = connectionId => { const token = { connectionId, interactionGeneration: ++generation }; transitions.push(['start', token]); return token; };
+  f.session.inputEnded = token => { transitions.push(['end', token]); return true; };
+  const socket = await f.connect('vad'); f.client.prepareInput(); f.created(socket);
+  f.state.status = 'playing'; transitions.length = 0;
+  f.client.prepareInput();
+  assert.equal(transitions.length, 0, 'microphone arming is not VAD');
+  f.provider(socket, { type: 'input_audio_buffer.speech_started' });
+  assert.equal(transitions.at(-1)[0], 'start');
+  const token = transitions.at(-1)[1];
+  f.provider(socket, { type: 'input_audio_buffer.speech_stopped' });
+  assert.deepEqual(transitions.at(-1), ['end', token]);
+  assert.ok(f.log.some(row => row[0] === 'local_cancel' && row[1] === 'server_vad'));
+});
+
+test('arming VAD after natural end preserves the attitude until real speech starts', async t => {
+  const f = fixture(t), transitions = [];
+  f.session.inputStarted = connectionId => { const token = { connectionId, interactionGeneration: 1 }; transitions.push(['start', token]); return token; };
+  f.session.inputEnded = token => { transitions.push(['end', token]); return true; };
+  const socket = await f.connect('vad'); f.client.prepareInput(); f.created(socket);
+  f.done(socket); f.state.status = 'ended'; transitions.length = 0;
+  assert.ok(f.client.prepareInput());
+  assert.equal(transitions.length, 0, 'quiet microphone arming must preserve previous attitude and body tail');
+  f.provider(socket, { type: 'input_audio_buffer.speech_started' });
+  assert.equal(transitions.length, 1);
+  f.provider(socket, { type: 'input_audio_buffer.speech_stopped' });
+  assert.deepEqual(transitions.at(-1), ['end', transitions[0][1]]);
 });

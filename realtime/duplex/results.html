@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D 方案 · 完整链路实测</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+<body><header><p class="eyebrow">EXPERIMENTAL / WAI + QWEN / D</p><h1>接回记忆之后，实际怎样？</h1><p>短回复跑通，连续插话接续未通过。本批因一条取消用量未知而暂停；可播放录像或离线回放。</p><a href="./">进入人物互动与离线回放 →</a></header>
+<div class="report"><div id="summary" class="notice">读取验收统计…</div><section class="panel"><h2>逐轮结果</h2><p>“说完→开播”从送入音频的最后有声样本计到 WebAudio 开播；动作和表情计到渲染观察。不是物理扬声器的声学延迟。</p><div style="overflow:auto"><table><thead><tr><th>问题 / 回答</th><th>结果</th><th>说完→开播</th><th>WAI 准备</th><th>动作 / 表情晚于声音</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section class="panel"><h2>本批现场录像</h2><p>素材包含送入的用户问题及模型现场生成的声音。可以拖动进度查看动作，音量默认较低。</p><div id="videos" class="video-grid"></div></section>
+<section class="panel"><h2>打断与记忆结算</h2><div id="interrupts"></div><p>未播完或已撤销的回答不计入“完整已送达”。输入历史独立保留。原身体动作、近身肘部和利落挥手用文件哈希核对。</p></section>
+<section class="panel"><h2>实验边界</h2><p>实际 WAI 检索使用隔离合成记忆；用户问题由本地语音合成后按原速送入。回复由 Qwen 现场生成，不是固定回答配音。持续麦克风入口已接，但这批自动测量不证明真人远场、回声消除和扬声器声学表现。自主后台、摄像头和 Neo4j 本轮关闭。</p><p>D 同轮输出依赖模型行为：工具调用不替代语音，只有动作没有声音的回复会明确失败，不自动掩盖成串行续轮。每次失败也消耗实验限额；远端取消缺失用量会停止本批。</p><a href="./VALIDATION.md">完整验收说明</a> · <a href="./validation-summary.json">脱敏逐轮统计</a></section></div>
+<script type="module">
+const $=id=>document.getElementById(id), number=x=>Number.isFinite(x)?`${(x/1000).toFixed(2)} s`:'—';
+const td=(row,text)=>{const cell=document.createElement('td');cell.textContent=text;row.append(cell);};
+try{const response=await fetch('./validation-summary.json');if(!response.ok)throw Error('实测报告尚未生成');const d=await response.json();
+  $('summary').textContent=`${d.counts.waiAttempts} 次 WAI 尝试 · ${d.counts.acknowledged} 次播完并结算 · ${d.counts.toolOnly} 次仅工具失败 · Qwen 响应 ${d.usage.responseCount} · 未知用量 ${d.usage.unknown} · 身体轨迹 ${d.allProtectedUnchanged?'保持原样':'待核查'}`;
+  for(const r of d.rows){const tr=document.createElement('tr');td(tr,r.input+'\n'+(r.transcript||'未生成语音'));td(tr,r.acknowledged?'已播完并写入历史':r.toolOnly?'仅工具，无语音':r.revoked?'已撤销':r.deliveryRejected?'早期送达校验失败':'未结算');td(tr,number(r.inputEndToPlaybackMs));td(tr,number(r.preparationMs));td(tr,number(r.motionAfterPlaybackMs)+' / '+number(r.expressionAfterPlaybackMs));$('rows').append(tr);}
+  const labels={'greet':'开心挥手','memory-final':'记忆检索：无糖柠檬水','barge-chain':'真实插话：未通过接续','memory-drink':'仅动作、无语音：失败样本','memory-retry':'重复检查：仍无语音'};
+  const order=['memory-final','greet','barge-chain','memory-drink','memory-retry'];
+  for(const c of d.cases.filter(c=>c.videoAvailable).sort((a,b)=>order.indexOf(a.name)-order.indexOf(b.name))){const card=document.createElement('div'),video=document.createElement('video'),p=document.createElement('p');video.controls=true;video.preload='metadata';video.volume=.8;video.src='/duplex-data/'+c.video;if(c.posterAvailable)video.poster='/duplex-data/'+c.name+'-poster.jpg';video.onerror=()=>{card.hidden=true;};p.textContent=labels[c.name]??c.name;card.append(video,p);$('videos').append(card);}
+  const seen=new Set();for(const x of d.interruptions){if(seen.has(x.turnId))continue;seen.add(x.turnId);const p=document.createElement('p');p.textContent=`${x.reason}：停播调用 ${x.returnMs.toFixed(1)} ms，音源 ${x.sourcesBefore}→${x.sourcesAfter}，收口 ${Number.isFinite(x.mouthClosedMs)?x.mouthClosedMs.toFixed(1):'未观测'} ms，收势 ${Number.isFinite(x.motionStoppedMs)?x.motionStoppedMs.toFixed(1):'未观测'} ms。`; $('interrupts').append(p);}
+}catch(e){$('summary').textContent=e.message;}
+</script></body></html>

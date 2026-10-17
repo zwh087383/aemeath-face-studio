@@ -4,6 +4,7 @@ import {
 } from './motion-math.js';
 import { buildRig, forearmFrame, forwardKinematics, handRelative, solveArm, solveSupport, wristFromPalm } from './motion-skeleton.js';
 import { AEMEATH_MOTION_BINDING, GESTURES, MOTION_DEFAULTS, OVERLAP, POSTURES } from './motion-profile.js';
+import { angularVelocity, continueScalar, inertialOffset, rotationFromVector, rotationVector, rotationVectorVelocity } from './continuity-math.js';
 
 // Flat arm parameter layout (model space, already mirrored per side).
 const ARM = 17, HAND = 0, POLE = 3, PALM = 6, POINT = 9, SHRUG = 12, PROTRACT = 13, CURL = 14, THUMB = 15, SPREAD = 16;
@@ -173,7 +174,7 @@ export class MotionController {
     this.locals.translations = new Map();
     this.fk = new Map();
     this.diag = { L: {}, R: {} };
-    this.options = { intensity: 1, speed: 1, natural: true };
+    this.options = { intensity: 1, speed: 1, natural: true, continuity: false };
     this.mode = 'auto';
     this.epoch = 0; this.active = false; this.status = 'idle'; this.time = 0; this.now = 0;
     this.statusSince = 0;
@@ -191,15 +192,146 @@ export class MotionController {
     this.work = { arm: { L: Float64Array.from(relaxed.L), R: Float64Array.from(relaxed.R) }, body: new Float64Array(BODY.length),
       sample: new Float64Array(ARM), bodySample: new Float64Array(BODY.length) };
     this.head = { pitch: 0, yaw: 0, roll: 0, eyesYaw: 0, eyesPitch: 0 };
-    this.lastInput = { face: { pitch: 0, yaw: 0, roll: 0 }, actions: [] };
+    this.lastInput = { face: { pitch: 0, yaw: 0, roll: 0 }, actions: [], behavior: null };
+    // These are modest authored procedural primitives. They are not captured
+    // human motion or a retargeted clip. Existing full gestures remain unchanged.
+    this.restPoses = { low: this.copyPosture(relaxed), ready: this.copyPosture(this.profile.postures.listening) };
+    this.restPoses.ready.body.fill(0);
+    this.continuity = { rest: 'low', restRevision: null, observedRestRevision: null, handoff: null, queuedHandoff: null,
+      displayed: null, previous: null, nod: null, primitive: null, attentionShare: 0, attentionAt: 0,
+      lastAccepted: null, lastDisplayed: null, reactions: [], pendingReactions: [], reactionIds: new Set(), generation: null };
   }
 
   copyPosture(p) { return { L: Float64Array.from(p.L), R: Float64Array.from(p.R), body: Float64Array.from(p.body) }; }
 
-  setOptions({ intensity, speed, natural } = {}) {
+  setOptions({ intensity, speed, natural, continuity } = {}) {
     if (intensity !== undefined && Number.isFinite(intensity)) this.options.intensity = clamp(intensity, .2, 1);
     if (speed !== undefined && Number.isFinite(speed)) this.options.speed = clamp(speed, .6, 1.4);
     if (natural !== undefined) this.options.natural = !!natural;
+    if (continuity !== undefined) this.options.continuity = !!continuity;
+  }
+
+  /** Trusted host boundary. Identity/epoch validation is done by the host before
+   * this call. A reaction never owns audio cancellation or writes bones itself. */
+  requestReaction(reaction = {}) {
+    if (!this.options.continuity || typeof reaction.id !== 'string' || !reaction.id || reaction.id.length > 160) return false;
+    const c = this.continuity, kind = ({ refocus: 'listen-adjust', settle: 'rest' })[reaction.kind] ?? reaction.kind;
+    if (!['rest', 'nod', 'listen-adjust', 'light-explain'].includes(kind) || c.reactionIds.has(reaction.id)) return false;
+    if (reaction.strength !== undefined && (!Number.isFinite(reaction.strength) || reaction.strength <= 0)) {
+      this.rememberReaction(reaction.id); return false;
+    }
+    if (kind === 'rest' && !['low', 'ready'].includes(reaction.rest)) return false;
+    if (kind === 'rest' && reaction.rest === c.rest && !c.handoff && !c.queuedHandoff && !c.primitive) {
+      this.rememberReaction(reaction.id); return false;
+    }
+    const epoch = reaction.epoch ?? reaction.owner?.epoch;
+    if (c.identity && reaction.connectionId !== undefined
+      && (reaction.connectionId !== c.identity.connectionId || reaction.interactionGeneration !== c.identity.interactionGeneration)) return false;
+    if (reaction.connectionId !== undefined && reaction.clock !== 'audio'
+      && (Number.isFinite(reaction.expiresAt) ? this.now > reaction.expiresAt : Number.isFinite(reaction.now) && this.now - reaction.now > .25)) {
+      this.rememberReaction(reaction.id); return false;
+    }
+    if (reaction.clock === 'audio' && (!this.active || epoch !== this.epoch)) return false;
+    if (reaction.clock === 'audio' && !reaction.due && (this.status !== 'playing' || reaction.audioAt > this.time)) {
+      if (!Number.isFinite(reaction.audioAt) || reaction.audioAt > this.time + 60 || c.pendingReactions.length >= 32
+        || c.pendingReactions.some(r => r.id === reaction.id)) return false;
+      c.pendingReactions.push({ ...reaction, epoch }); return true;
+    }
+    if (reaction.clock === 'audio' && Number.isFinite(reaction.audioAt) && this.time - reaction.audioAt > .2) return false;
+    const parts = this.partAvailability();
+    if (['nod', 'listen-adjust'].includes(kind) && parts.head !== 'available') { this.rememberReaction(reaction.id); return false; }
+    if (kind === 'light-explain' && (parts.arms.R !== 'available' || c.primitive)) { this.rememberReaction(reaction.id); return false; }
+    const strength = clamp(reaction.strength ?? .6, .1, 1), now = this.now;
+    const accepted = { ...reaction, id: reaction.id, kind, strength, at: now,
+      startClock: reaction.clock === 'audio' ? this.time : now, clock: reaction.clock === 'audio' ? 'audio' : 'wall' };
+    this.rememberReaction(reaction.id);
+    if (kind === 'rest') {
+      this.selectRest(reaction.rest, reaction.restRevision ?? reaction.id);
+      accepted.duration = .8;
+    } else if (kind === 'nod') {
+      const s = this.springs.headPitch;
+      const baseline = this.lastInput.behavior?.headPitch ?? 0;
+      c.nod = { ...accepted, start: s.x, velocity: s.v,
+        target: clamp(Math.min(s.x + .07 * strength, Math.max(s.x, baseline + .10)), -.20, .235), baseline,
+        duration: .30 + strength * .08, chest: reaction.chest === true ? .012 * strength : 0 };
+      accepted.duration = c.nod.duration + .35;
+    } else if (kind === 'listen-adjust') {
+      // Redistribute an existing orientation across the chest/neck; the motion
+      // depends on the pose being received, not a fixed head wobble waveform.
+      c.attentionShare = clamp(this.head.yaw * .18, -.035, .035);
+      c.nod = null;
+      c.attentionAt = this.lastInput.behavior?.headYaw ?? 0;
+      accepted.duration = .85;
+    } else {
+      this.queueArmHandoff(.44, 'light-explain');
+      const target = this.copyPosture(this.restPoses.ready);
+      target.R[0] -= .08; target.R[1] += .48; target.R[2] += .38;
+      target.R[CURL] = .20; target.R[SPREAD] = .18;
+      c.primitive = { ...accepted, duration: 1.8, target, holdExtension: 0, rhythmOnset: false };
+      accepted.duration = c.primitive.duration;
+    }
+    c.lastAccepted = { id: accepted.id, kind, at: now, reason: reaction.reason ?? 'trusted-host' };
+    c.reactions.push(accepted); if (c.reactions.length > 8) c.reactions.shift();
+    return true;
+  }
+
+  rememberReaction(id) {
+    const ids = this.continuity.reactionIds; ids.add(id);
+    if (ids.size > 512) ids.delete(ids.values().next().value);
+  }
+
+  /** A connection/generation change retires old meaning, preserving only the
+   * displayed motion's bounded exit. It does not manufacture a response ID. */
+  resetContinuity(generation = null) {
+    if (this.continuity.generation === generation) return;
+    this.continuity.generation = generation;
+    this.retireReactions();
+    this.continuity.reactionIds.clear();
+    this.continuity.lastAccepted = null; this.continuity.lastDisplayed = null;
+    this.continuity.observedRestRevision = null; this.continuity.attentionShare = 0;
+  }
+
+  selectRest(rest, revision = rest) {
+    const c = this.continuity;
+    if (!this.restPoses[rest] || (c.rest === rest && c.restRevision === revision)) return false;
+    if (c.rest !== rest) this.queueArmHandoff(.8, 'rest');
+    c.rest = rest; c.restRevision = revision;
+    return true;
+  }
+
+  compatibleRest() {
+    const source = this.continuity.displayed?.arms ?? this.work.arm;
+    const cost = rest => SIDES.reduce((sum, side) => sum + Math.hypot(...this.restPoses[rest][side].slice(0, 3)
+      .map((x, i) => x - (source[side].values ?? source[side])[i])), 0);
+    return cost('ready') + .22 < cost('low') ? 'ready' : 'low';
+  }
+
+  queueArmHandoff(duration, reason) {
+    if (!this.options.continuity || !this.continuity.displayed) return;
+    this.continuity.queuedHandoff ??= { from: this.continuity.displayed, duration, reason };
+  }
+
+  retireReactions() {
+    if (!this.options.continuity) return;
+    const c = this.continuity;
+    if (c.primitive) this.queueArmHandoff(.55, 'interrupt');
+    c.primitive = null; c.nod = null; c.pendingReactions.length = 0;
+    for (const reaction of c.reactions) if (!reaction.recovering) {
+      reaction.recovering = true; reaction.exitAt = this.now;
+      reaction.frozenAge = this.reactionAge(reaction);
+    }
+  }
+
+  reactionAge(reaction) { return (reaction.clock === 'audio' ? this.time : this.now) - reaction.startClock; }
+
+  partAvailability() {
+    const active = this.gestures.filter(g => !g.recovering), exiting = this.gestures.some(g => g.recovering);
+    const busy = track => active.some(g => g.def.tracks.includes(track));
+    const c = this.continuity, arms = {};
+    for (const side of SIDES) arms[side] = busy(side) || c.primitive ? 'occupied'
+      : exiting || c.handoff || c.queuedHandoff ? 'exiting' : 'available';
+    const head = busy('body') || (c.nod && this.reactionAge(c.nod) < c.nod.duration) ? 'occupied' : 'available';
+    return { gaze: 'available', head, torso: busy('body') || c.primitive ? 'occupied' : 'available', arms };
   }
 
   /** Diagnostic freeze of one gesture at a fixed age (key-pose inspection); null clears. */
@@ -240,6 +372,11 @@ export class MotionController {
     // A new playback instance invalidates every older audio-scoped gesture.
     this.retractWhere(g => g.clock === 'audio', this.now);
     this.pending = this.pending.filter(c => c.clock !== 'audio');
+    if (this.options.continuity) {
+      this.continuity.pendingReactions.length = 0;
+      if (this.continuity.nod?.clock === 'audio') this.continuity.nod = null;
+      if (this.continuity.primitive?.clock === 'audio') { this.queueArmHandoff(.5, 'source-retired'); this.continuity.primitive = null; }
+    }
     this.epoch = epoch; this.active = true; this.time = 0; this.rebase = false;
     this.setStatus('playing');
     return true;
@@ -270,11 +407,15 @@ export class MotionController {
     // Switch posture first so retraction is timed against where the hands now return to.
     this.applyAutoPosture(now);
     this.retractWhere(() => true, now);
+    this.retireReactions();
     return true;
   }
 
   /** Retract every active gesture (manual stop), keeping playback state. */
-  retract(now = this.now) { this.pending = this.pending.filter(c => c.clock !== 'wall'); return this.retractWhere(() => true, now); }
+  retract(now = this.now) {
+    this.pending = this.pending.filter(c => c.clock !== 'wall');
+    const count = this.retractWhere(() => true, now); this.retireReactions(); return count;
+  }
 
   retractWhere(predicate, now) {
     let count = 0;
@@ -301,6 +442,13 @@ export class MotionController {
   }
 
   freeze(g, now, duration) {
+    if (this.options.continuity && !g.def.additive) {
+      // Snapshot the final composed/IK pose, never this gesture's unblended peak.
+      // Retired arms have no sequential lerp contribution beneath the new source.
+      this.queueArmHandoff(clamp(duration, .32, 1.05), 'source-retired');
+      g.skipArms = true;
+      this.continuity.rest = this.compatibleRest();
+    }
     // Capture the gesture's live contribution so retraction starts from the exact current pose.
     g.recovering = true; g.recoverStart = now; g.recoverDuration = Math.max(.18, duration);
     g.frozen = g.live; g.live = null;
@@ -360,6 +508,7 @@ export class MotionController {
 
   start(cue, now) {
     const def = this.profile.gestures[cue.gesture];
+    if (this.options.continuity && def.tracks.includes('body')) this.continuity.nod = null;
     // Same-track conflicts: an additive beat never interrupts a gesture; a full gesture replaces.
     const conflicts = this.gestures.filter(g => !g.recovering && g.def.tracks.some(t => def.tracks.includes(t)));
     if (def.additive && conflicts.length) { this.rejected++; return; }
@@ -369,6 +518,10 @@ export class MotionController {
     const recoverStretch = travelStretch(def.release, side => home[side], def.duration - def.recoverStart);
     // A replaced gesture hands over during the newcomer's (stretched) prepare.
     for (const g of conflicts) this.freeze(g, now, def.prepareEnd * stretch / cue.rate);
+    if (this.options.continuity && this.continuity.primitive && !def.additive) {
+      this.queueArmHandoff(.45, 'authored-takeover');
+      this.continuity.primitive = null;
+    }
     const random = prng(hash(cue.id));
     const jitter = [(random() - .5) * .08, (random() - .5) * .08, (random() - .5) * .06];
     this.gestures.push({ ...cue, def, rate: cue.rate * (1 + (random() - .5) * .06), jitter, stretch, recoverStretch,
@@ -376,14 +529,46 @@ export class MotionController {
     this.lastStart.set(cue.gesture, now);
   }
 
-  /** Per-frame update. input: { face: {pitch,yaw,roll}, actions: [], speech } */
+  /** Per-frame update. The trusted host may supply bounded continuous behavior
+   * targets; these never enqueue gestures or write bones outside compose(). */
   update(now, dt, input = {}) {
     dt = clamp(dt, 0, .1);
     this.now = now;
     if (input.face) this.lastInput.face = input.face;
     if (input.actions) this.lastInput.actions = input.actions;
+    this.lastInput.behavior = input.behavior?.body ?? null;
+    this.lastInput.mediaPaused = typeof input.paused === 'boolean' ? input.paused : null;
+    this.lastInput.rhythm = input.rhythm ?? null;
+    if (this.options.continuity) {
+      if (input.behavior && Object.hasOwn(input.behavior, 'connectionId')) {
+        const identity = { connectionId: input.behavior.connectionId, interactionGeneration: input.behavior.interactionGeneration };
+        this.resetContinuity(`${identity.connectionId ?? 'disconnected'}:${identity.interactionGeneration ?? 0}`);
+        this.continuity.identity = identity;
+      }
+      const body = input.behavior?.body;
+      const paused = this.lastInput.mediaPaused ?? (this.status === 'paused');
+      if (paused) for (const item of [this.continuity.nod, this.continuity.primitive, ...this.continuity.reactions]) {
+        if (item?.clock === 'wall' && !item.recovering) item.startClock += dt;
+      }
+      const revision = body?.restRevision ?? body?.rest;
+      if (!paused && body?.rest && revision !== this.continuity.observedRestRevision
+        && !this.gestures.some(g => !g.recovering) && !this.continuity.primitive) {
+        this.selectRest(body.rest, revision); this.continuity.observedRestRevision = revision;
+      }
+      if (!paused && input.behavior?.reaction) this.requestReaction(input.behavior.reaction);
+      this.continuity.pendingReactions = this.continuity.pendingReactions.filter(reaction => {
+        if (!this.active || reaction.epoch !== this.epoch) return false;
+        if (this.status !== 'playing' || this.time < reaction.audioAt) return true;
+        this.requestReaction({ ...reaction, due: true }); return false;
+      });
+    }
     if (this.rebase) {
       for (const g of this.gestures) if (g.clock === 'audio' && !g.recovering) { g.at = now - (this.time - g.at); g.clock = 'wall'; }
+      if (this.options.continuity) for (const reaction of [this.continuity.nod, this.continuity.primitive, ...this.continuity.reactions]) {
+        if (reaction?.clock === 'audio' && !reaction.recovering) {
+          reaction.startClock = now - (this.time - reaction.startClock); reaction.clock = 'wall';
+        }
+      }
       this.rebase = false;
     }
     this.applyAutoPosture(now);
@@ -399,7 +584,14 @@ export class MotionController {
       ? now - g.recoverStart < g.recoverDuration + .2
       // Authored clock, past the slowest lagged group (fingers enter .1 s late).
       : this.ageOf(g) < g.def.duration + REMOVE_AFTER);
-    this.observeSpeech(now, dt, input.speech ?? 0);
+    if (this.options.continuity && !this.lastInput.mediaPaused) for (const g of this.gestures) {
+      if (!g.recovering && !g.def.additive && !g.continuityRestChosen && this.ageOf(g) >= g.def.recoverStart) {
+        g.continuityRestChosen = true;
+        const rest = this.compatibleRest();
+        if (rest !== this.continuity.rest) { this.queueArmHandoff(.5, 'compatible-rest'); this.continuity.rest = rest; }
+      }
+    }
+    if (!this.options.continuity) this.observeSpeech(now, dt, input.speech ?? 0);
 
     const p = this.posture;
     if (this.status === 'paused' && !this.gestures.some(g => g.recovering)) p.start += dt;
@@ -412,12 +604,17 @@ export class MotionController {
     }
 
     const arms = this.work.arm, body = this.work.body;
-    for (const side of SIDES) arms[side].set(p.current[side]);
+    for (const side of SIDES) arms[side].set(this.options.continuity ? this.restPoses[this.continuity.rest][side] : p.current[side]);
     body.set(p.current.body);
     const intensity = this.options.intensity;
     if (this.inspection) this.blendGesture(this.inspection, now, arms, body, 1);
     else for (const g of this.gestures) this.blendGesture(g, now, arms, body, intensity);
+    if (this.options.continuity && !this.inspection) {
+      this.applyContinuousSource(arms, body, now, dt);
+      this.applyArmHandoff(arms, now, dt);
+    }
     this.compose(now, dt, arms, body);
+    if (this.options.continuity) this.captureDisplayed(now);
     return this.locals;
   }
 
@@ -462,6 +659,7 @@ export class MotionController {
         continue;
       }
       const arm = arms[track];
+      if (g.skipArms && this.options.continuity) continue;
       if (def.additive) {
         for (const group of GROUPS) {
           const w = weights[group] * fade(group);
@@ -493,6 +691,126 @@ export class MotionController {
     }
   }
 
+  applyContinuousSource(arms, body, now, dt) {
+    const c = this.continuity, p = c.primitive;
+    if (p) {
+      const age = this.reactionAge(p), rhythm = this.lastInput.rhythm;
+      // Only a previously accepted light expression may hold a little longer.
+      // Playback energy is not a gesture proposal or a semantic label.
+      if (rhythm?.playing && rhythm.onset && age > .55 && age < 1.25 && !p.rhythmOnset) {
+        p.holdExtension = .12 * clamp(rhythm.energy ?? 0); p.rhythmOnset = true;
+      }
+      if (age < p.duration + p.holdExtension) {
+        arms.R.set(p.target.R);
+        // A single purposeful body accompaniment. Unchanged full gestures keep
+        // their original, larger authored amplitude; this primitive is separate.
+        const weight = age < .45 ? smoother(age / .45) : 1 - smoother((age - 1.1 - p.holdExtension) / .7);
+        body[0] += .055 * p.strength * weight;
+        body[1] -= .032 * p.strength * weight;
+        body[3] -= .012 * p.strength * weight;
+      } else {
+        this.queueArmHandoff(.65, 'expression-settle');
+        c.rest = this.compatibleRest(); c.primitive = null;
+        for (const side of SIDES) arms[side].set(this.restPoses[c.rest][side]);
+      }
+    }
+    // Reallocation keeps its attained posture until an attention target changes;
+    // there is no timer that repeatedly switches between two poses.
+    const headTarget = this.lastInput.behavior?.headYaw ?? 0;
+    if (Math.abs(headTarget - c.attentionAt) > .04) c.attentionShare = 0;
+    body[1] += c.attentionShare;
+    body[4] -= c.attentionShare * .45;
+    c.reactions = c.reactions.filter(r => r.recovering ? now - r.exitAt < .45 : this.reactionAge(r) < (r.duration ?? 1));
+    for (const r of c.reactions) {
+      if (!r.displayed && !r.recovering) {
+        r.displayed = true;
+        c.lastDisplayed = { id: r.id, kind: r.kind, at: now, reason: r.reason ?? 'trusted-host' };
+      }
+    }
+  }
+
+  applyArmHandoff(arms, now, dt) {
+    const c = this.continuity;
+    if (c.queuedHandoff) {
+      const queued = c.queuedHandoff, from = queued.from;
+      c.handoff = { start: from.at, duration: queued.duration, reason: queued.reason, offsets: {} };
+      // Differentiate the already accepted authored source, not future audio.
+      // Subtracting its velocity prevents adding the outgoing velocity on top of
+      // a target that is itself moving at a source-replacement boundary.
+      const epsilon = .001, next = Object.fromEntries(SIDES.map(side => [side, Float64Array.from(this.restPoses[c.rest][side])]));
+      for (const g of this.gestures) {
+        const preview = { ...g, live: null };
+        if (!g.recovering) preview.fixedAge = warp(g.def, (this.clockOf(g) + epsilon - g.at) * g.rate, g);
+        this.blendGesture(preview, now + epsilon, next, new Float64Array(BODY.length), this.options.intensity);
+      }
+      if (c.primitive) next.R.set(c.primitive.target.R);
+      for (const side of SIDES) {
+        const a = from.arms[side], goalRotation = handQuat(arms[side], [0, 0, 0, 1]);
+        const targetAngular = angularVelocity(goalRotation, handQuat(next[side], [0, 0, 0, 1]), epsilon);
+        const difference = qmul(a.rotation, qconj(goalRotation)), vector = rotationVector(difference);
+        const targetInOffsetFrame = qrotate(difference, targetAngular);
+        c.handoff.offsets[side] = {
+          values: Float64Array.from(arms[side], (goal, i) => a.values[i] - goal),
+          velocity: Float64Array.from(a.velocity, (velocity, i) => velocity - (next[side][i] - arms[side][i]) / epsilon),
+          rotation: vector,
+          angularVelocity: rotationVectorVelocity(vector, a.angularVelocity.map((velocity, i) => velocity - targetInOffsetFrame[i])),
+        };
+      }
+      c.queuedHandoff = null;
+    }
+    const h = c.handoff;
+    if (!h) return;
+    const paused = (this.lastInput.mediaPaused ?? (this.status === 'paused'))
+      && !['interrupt', 'source-retired'].includes(h.reason);
+    if (paused) h.start += dt;
+    const age = now - h.start;
+    if (age >= h.duration) { c.handoff = null; return; }
+    for (const side of SIDES) {
+      const arm = arms[side], offset = h.offsets[side], goalRotation = handQuat(arm, [0, 0, 0, 1]);
+      // Position, pole, shoulder and fingers retain their displayed velocity at
+      // the boundary. Quaternion rotation stays in the achieved forearm frame;
+      // carrying a world rotation through a large elbow turn can cross the wrist
+      // twist limit's +/- pi seam and introduce a new orientation discontinuity.
+      for (let i = 0; i < ARM; i++) {
+        if (i >= PALM && i < POINT + 3) continue;
+        arm[i] += inertialOffset(offset.values[i], offset.velocity[i], age, h.duration).value;
+      }
+      const correction = rotationFromVector(offset.rotation.map((x, i) =>
+        inertialOffset(x, offset.angularVelocity[i], age, h.duration).value));
+      const rotation = qmul(correction, goalRotation);
+      arm.set(qrotate(rotation, REF_PALM), PALM); arm.set(qrotate(rotation, REF_POINT), POINT);
+    }
+  }
+
+  captureDisplayed(now) {
+    // Re-evaluate after solveArm: wrists include support, arm IK and wrist limits.
+    // MMD grant is applied by the renderer later and is deliberately not fed back.
+    forwardKinematics(this.rig, this.locals, this.fk);
+    const c = this.continuity, previous = c.displayed;
+    const chest = this.fk.get(this.rig.torso.upperChest.name), inverse = qconj(chest.rotation);
+    const displayed = { at: now, arms: {}, wrists: {} }, dt = previous ? now - previous.at : 0;
+    for (const side of SIDES) {
+      const s = this.rig.sides[side], wrist = this.fk.get(s.names.wrist), elbow = this.fk.get(s.names.elbow);
+      // These are the *composed* parameters that produced the displayed FK,
+      // including other sources and the previous handoff, not a gesture target.
+      // Keep this exact solver input for identity at t=0: treating the solved FK
+      // wrist as a fresh IK target would apply model hierarchy corrections twice.
+      const values = Float64Array.from(this.work.arm[side]);
+      const position = add(this.rig.torso.upperChest.rest, qrotate(inverse, sub(wrist.position, chest.position)));
+      const localHand = qmul(qconj(elbow.rotation), wrist.rotation);
+      const rotation = handQuat(values, [0, 0, 0, 1]);
+      const old = previous?.arms[side];
+      displayed.arms[side] = { values, rotation, achievedPosition: position, achievedHandRotation: localHand,
+        velocity: Float64Array.from(values, (value, i) => dt > 1e-6 && old ? (value - old.values[i]) / dt : 0),
+        angularVelocity: old ? angularVelocity(old.rotation, rotation, dt) : [0, 0, 0] };
+      const oldWrist = previous?.wrists[side];
+      displayed.wrists[side] = { position: [...wrist.position], rotation: [...wrist.rotation],
+        linearVelocity: wrist.position.map((value, i) => dt > 1e-6 && oldWrist ? (value - oldWrist.position[i]) / dt : 0),
+        angularVelocity: oldWrist ? angularVelocity(oldWrist.rotation, wrist.rotation, dt) : [0, 0, 0], frame: 'post-ik-model' };
+    }
+    c.previous = previous; c.displayed = displayed;
+  }
+
   observeSpeech(now, dt, level) {
     if (!this.options.natural || !this.active || this.status !== 'playing' || this.posture.target !== 'speaking') { this.quiet = 0; return; }
     if (level < .06) { this.quiet += dt; return; }
@@ -514,13 +832,32 @@ export class MotionController {
       const x = this.phase.breath;
       breath = x < .42 ? smoother(x / .42) : 1 - smoother((x - .42) / .58);
     }
-    const micro = natural ? {
+    const micro = natural && !this.options.continuity ? {
       yaw: D.micro.headYaw * (.65 * Math.sin(now * .37 + this.micro[0]) + .35 * Math.sin(now * .91 + this.micro[1])),
       pitch: D.micro.headPitch * (.6 * Math.sin(now * .29 + this.micro[2]) + .4 * Math.sin(now * 1.13 + this.micro[3])),
       side: D.micro.bodySide * Math.sin(now * .21 + this.micro[4]),
     } : { yaw: 0, pitch: 0, side: 0 };
-    const [lean, twist, side, bodyHeadPitch, bodyHeadYaw, bodyHeadRoll, neckForward, gazePitch,
-      authoredGazeYaw, pelvisPitch, pelvisRoll, hipShift] = body;
+    // Sustained attention is independent of hand travel / gesture envelopes.
+    // At the peak of a full authored expression keep its body amplitude intact;
+    // quiet posture targets occupy the space before and after that expression.
+    const behavior = this.lastInput.behavior;
+    const limit = (key, bound) => Number.isFinite(behavior?.[key]) ? clamp(behavior[key], -bound, bound) : 0;
+    const authoredWeight = this.inspection ? 1 : Math.max(0, ...this.gestures.map(g => {
+      const live = g.recovering ? g.frozen : g.live;
+      const fade = g.recovering ? 1 - smoother((now - g.recoverStart) / g.recoverDuration) : 1;
+      return (live?.weights.body?.body ?? 0) * fade;
+    }));
+    const quietWeight = 1 - clamp(authoredWeight);
+    const lean = body[0] + limit('lean', .06) * quietWeight;
+    const twist = body[1] + limit('twist', .05) * quietWeight;
+    const side = body[2] + limit('side', .04) * quietWeight;
+    const bodyHeadPitch = body[3] + limit('headPitch', .12) * quietWeight;
+    const bodyHeadYaw = body[4] + limit('headYaw', .16) * quietWeight;
+    const bodyHeadRoll = body[5] + limit('headRoll', .08) * quietWeight;
+    const neckForward = body[6] + limit('neckForward', .025) * quietWeight;
+    const gazePitch = body[7] + limit('gazePitch', .18);
+    const authoredGazeYaw = body[8] + limit('gazeYaw', .3);
+    const [, , , , , , , , , pelvisPitch, pelvisRoll, hipShift] = body;
     // Head, neck and gaze are combined and limited here, in one place.
     const face = this.lastInput.face, glance = this.lastInput.actions.includes('glance');
     const req = {
@@ -531,13 +868,28 @@ export class MotionController {
     const s = this.springs;
     // An audio pause freezes the expression's physical follow-through as well as
     // its keys. Retraction after cancellation still advances on the wall clock.
-    const step = this.status === 'paused' && !this.gestures.some(g => g.recovering) ? 0 : dt;
+    // Buffer starvation also freezes the audio cue clock, but only an explicit
+    // user pause freezes sustained attention and physical follow-through.
+    const mediaPaused = this.lastInput.mediaPaused ?? (this.status === 'paused');
+    const step = mediaPaused && !this.gestures.some(g => g.recovering) ? 0 : dt;
     const returning = this.gestures.some(g => g.recovering || this.ageOf(g) >= g.def.recoverStart);
-    const gazeTarget = authoredGazeYaw + bodyHeadYaw + (glance ? face.yaw * D.eyes.glanceLead : 0);
+    const releasedGaze = behavior && !this.inspection && !this.gestures.some(g => !g.recovering);
+    const gazeTarget = releasedGaze ? limit('gazeYaw', .3) + limit('headYaw', .16)
+      : authoredGazeYaw + bodyHeadYaw + (glance ? face.yaw * D.eyes.glanceLead : 0);
+    const gazePitchTarget = releasedGaze ? limit('gazePitch', .18) + limit('headPitch', .12) : gazePitch + bodyHeadPitch;
     const gazeYaw = spring(s.gazeYaw, gazeTarget, D.springs.gaze, step);
-    const gazeP = spring(s.gazePitch, gazePitch + bodyHeadPitch, D.springs.gaze, step);
+    const gazeP = spring(s.gazePitch, gazePitchTarget, D.springs.gaze, step);
     const headOmega = returning ? 24 : D.springs.head;
-    const hp = spring(s.headPitch, req.pitch, headOmega, step), hy = spring(s.headYaw, req.yaw, headOmega, step), hr = spring(s.headRoll, req.roll, headOmega, step);
+    let hp;
+    const c = this.continuity, nod = this.options.continuity ? c.nod : null;
+    if (nod && this.reactionAge(nod) >= nod.duration && Math.abs((behavior?.headPitch ?? 0) - nod.baseline) > .012) c.nod = null;
+    if (nod && c.nod) {
+      // The single stroke is sampled directly from its captured position and
+      // velocity, not passed through a second low-pass head filter.
+      const sample = continueScalar(nod.start, nod.velocity, nod.target, this.reactionAge(nod), nod.duration);
+      hp = s.headPitch.x = sample.value; s.headPitch.v = sample.velocity;
+    } else hp = spring(s.headPitch, req.pitch, headOmega, step);
+    const hy = spring(s.headYaw, req.yaw, headOmega, step), hr = spring(s.headRoll, req.roll, headOmega, step);
     const share = D.head.neckShare;
     const neckOmega = returning ? 22 : D.springs.neck;
     const np = spring(s.neckPitch, hp * share, neckOmega, step), ny = spring(s.neckYaw, hy * share, neckOmega, step), nr = spring(s.neckRoll, hr * share, neckOmega, step);
@@ -595,7 +947,7 @@ export class MotionController {
     }
     this.breath = breath;
     this.bodyState = { lean: torsoPitch, twist: torsoTwist, side: torsoRoll, pelvisPitch: hipPitch, pelvisRoll: hipRoll, hipShift: shift };
-    this.gaze = { yaw: gazeYaw, pitch: gazeP, targetYaw: gazeTarget, targetPitch: gazePitch + bodyHeadPitch };
+    this.gaze = { yaw: gazeYaw, pitch: gazeP, targetYaw: gazeTarget, targetPitch: gazePitchTarget };
   }
 
   snapshot() {
@@ -608,6 +960,17 @@ export class MotionController {
         phase: g.recovering ? 'retract' : phaseOf(g.def, age), recovering: g.recovering,
         retractProgress: g.recovering ? clamp((this.now - g.recoverStart) / g.recoverDuration) : 0 };
     });
+    const c = this.continuity, parts = this.partAvailability();
+    const wrists = c.displayed?.wrists ?? {};
+    const handsSettled = !c.handoff && !c.queuedHandoff && !c.primitive && !gestures.length
+      && Object.values(wrists).every(wrist => Math.hypot(...wrist.linearVelocity) < .18);
+    const compatibleRest = this.compatibleRest();
+    const handPlacementNeeded = SIDES.some(side => Math.hypot(...this.work.arm[side].slice(0, 3)
+      .map((value, i) => value - this.restPoses[compatibleRest][side][i])) > .16);
+    const reactions = c.reactions.map(r => ({ id: r.id, kind: r.kind, age: r.recovering ? r.frozenAge : this.reactionAge(r),
+      duration: r.duration, strength: r.strength, recovering: !!r.recovering,
+      weight: r.recovering ? 1 - smoother((this.now - r.exitAt) / .45) : 1,
+      owner: r.owner, connectionId: r.connectionId, interactionGeneration: r.interactionGeneration, clock: r.clock }));
     return { mode: this.mode, posture: this.posture.target, postureName: POSTURES[this.posture.target].name,
       postureBlend: smoother((this.now - this.posture.start) / MOTION_DEFAULTS.postureTransition),
       epoch: this.epoch, active: this.active, status: this.status, time: this.time,
@@ -615,6 +978,16 @@ export class MotionController {
       recovering: gestures.some(g => g.recovering), options: { ...this.options },
       head: { ...this.head }, body: { ...this.bodyState }, gaze: { ...this.gaze },
       bodyVelocity: Object.fromEntries(['lean', 'twist', 'side', 'pelvisPitch', 'pelvisRoll', 'hipShift'].map(key => [key, this.springs[key].v])),
+      parts, wrists, reactions,
+      headVelocity: { pitch: this.springs.headPitch.v, yaw: this.springs.headYaw.v, roll: this.springs.headRoll.v },
+      interactionPose: { headYaw: this.head.yaw, headPitch: this.head.pitch, gazeYaw: this.gaze?.yaw ?? 0, gazePitch: this.gaze?.pitch ?? 0,
+        handRest: handsSettled ? c.rest : compatibleRest, handsSettled, handPlacementNeeded,
+        headBusy: parts.head !== 'available', armsBusy: Object.values(parts.arms).some(v => v !== 'available'),
+        torsoBusy: parts.torso !== 'available' },
+      execution: { lastAccepted: c.lastAccepted && { ...c.lastAccepted }, lastDisplayed: c.lastDisplayed && { ...c.lastDisplayed },
+        rest: c.rest, nod: c.nod ? { id: c.nod.id, phase: this.reactionAge(c.nod) < c.nod.duration ? 'stroke' : 'hold', target: c.nod.target } : null,
+        handoff: c.handoff ? { reason: c.handoff.reason, duration: c.handoff.duration, age: this.now - c.handoff.start,
+          frame: 'upper-chest-rest', rotation: 'forearm-frame-rotation-vector' } : null },
       support: { planted: !!this.rig.support, error: Math.max(0, ...Object.values(this.rig.legs).map(leg => leg.unreachable ?? 0)) },
       reach: { L: this.diag.L.reach, R: this.diag.R.reach } };
   }

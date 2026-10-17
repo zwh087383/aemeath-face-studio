@@ -5,6 +5,7 @@ import { RealtimeScheduler } from '../scheduler.mjs';
 import { SubtitleSidecar } from '../subtitle-sidecar.mjs';
 import { createSubtitleWorkerHandler } from '../subtitle-worker.mjs';
 import { selectSubtitleCues } from '../subtitle-rules.mjs';
+import { BehaviorPlanner } from '../behavior-planner.mjs';
 
 const A = Object.freeze({ connectionId: 'c1', responseId: 'r1', epoch: 1 });
 const B = Object.freeze({ connectionId: 'c1', responseId: 'r2', epoch: 2 });
@@ -32,6 +33,7 @@ function harness(options = {}, selector = semantic) {
     push(sequence, text, owner = A, itemId = 'i1') { return sidecar.push({ ...owner, itemId, sequence, text }); },
     play(time, status = 'playing', owner = A) { return scheduler.playback({ ...owner, status, time }); },
     time(value) { wall = value; },
+    wall() { return wall; },
     flush() { const worker = workers.at(-1); let count = 0; while (worker.jobs.length && worker.onmessage && ++count < 100) worker.flushOne(); },
     cues() { return commands.filter(command => command.type === 'cue'); },
     close() { sidecar.dispose(); },
@@ -47,6 +49,179 @@ test('actual Qwen praise split across deltas emits one happy cue at the sentence
   h.time(.1);h.play(.1);h.scheduler.tick();
   assert.equal(h.cues().filter(c=>c.cue.kind==='expression' && c.cue.preset==='happy').length,1);
   h.close();
+});
+
+function naturalHarness(selector = selectSubtitleCues) {
+  let h;
+  const planner = new BehaviorPlanner({ clock: () => h.wall() });
+  h = harness({ planner }, selector);
+  h.planner = planner;
+  h.start = (owner = A) => {
+    assert.equal(h.scheduler.begin(owner), true);
+    assert.equal(planner.setConnection(owner.connectionId), true);
+    assert.equal(planner.begin(owner), true);
+    assert.equal(h.sidecar.begin(owner, { policy: 'natural' }), true);
+  };
+  return h;
+}
+
+test('natural explicit none, micro and defer all block legacy fallback eligibility', () => {
+  for (const level of ['none', 'micro', 'defer']) {
+    const h = naturalHarness(() => ({ cues: level === 'micro'
+      ? [{ kind: 'action', action: 'nod', strength: .24 }] : [], fallbackEligible: true,
+      behavior: { intent: 'neutral', reaction: { level } } }));
+    h.start(); h.push(0, '这是普通的一句话。'); h.flush();
+    assert.equal(h.scheduler.queue.some(entry => entry.cue.gesture === 'explain'), false);
+    assert.equal(h.scheduler.queue.length, level === 'micro' ? 1 : 0);
+    assert.equal(h.planner.snapshot().lastPlan.reaction.level, level); h.close();
+  }
+});
+
+test('natural real subtitles preserve quiet comfort and reduce agreement while retaining wave', () => {
+  for (const [text, expected] of [['慢慢来，我在这里陪着你。', null],
+    ['这里主要有两个原因，先看第一点。', null], ['嗯，对。', 'nod'], ['欸，你来啦！', 'wave']]) {
+    const h = naturalHarness(); h.start(); h.push(0, text); h.flush();
+    assert.equal(h.scheduler.queue.length, expected ? 1 : 0, text);
+    if (expected) assert.equal(h.scheduler.queue[0].cue.action ?? h.scheduler.queue[0].cue.gesture, expected);
+    assert.ok(h.planner.snapshot().lastPlan); h.close();
+  }
+});
+
+test('scheduler enqueue is only a proposal; executor feedback records acceptance and display separately', () => {
+  const h = naturalHarness(); h.start(); h.push(0, '嗯，对。'); h.flush();
+  const cueId = h.scheduler.queue[0].cue.id;
+  assert.equal(h.planner.snapshot().acceptedHistory.length, 0);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true }), true);
+  assert.equal(h.planner.snapshot().acceptedHistory.length, 1);
+  assert.equal(h.planner.snapshot().displayedHistory.length, 0);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true, displayed: true }), true);
+  assert.equal(h.planner.snapshot().displayedHistory.length, 1);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true, displayed: true }), false);
+  h.close();
+});
+
+test('natural rejected execution releases reservation without consuming actual motion budget', () => {
+  const h = naturalHarness(); h.start(); h.push(0, '嗯，对。嗯，对。'); h.flush();
+  assert.equal(h.scheduler.queue.length, 1, 'unresolved queue reservation still prevents duplicates');
+  const first = h.scheduler.queue[0].cue.id;
+  assert.equal(h.sidecar.lastMotion, -Infinity); assert.equal(h.sidecar.lastByCue.has('action:nod'), false);
+  h.time(.06); h.play(.06);
+  assert.equal(h.sidecar.executionFeedback(first, { accepted: false, reason: 'visual_part_unavailable' }), true);
+  assert.equal(h.sidecar.snapshot().pendingMotionReservations, 0);
+  h.time(.1); h.play(.1); h.push(1, '嗯，对。'); h.flush();
+  assert.equal(h.scheduler.queue.length, 1, 'skipped cue does not spend the 3/8-second sidecar budgets');
+  assert.equal(h.planner.snapshot().displayedHistory.length, 0); h.close();
+});
+
+test('natural maxCues capacity is released after refusal while queued counter remains diagnostic', () => {
+  const h = naturalHarness(); h.sidecar.maxCues = 1; h.start(); h.push(0, '嗯，对。'); h.flush();
+  const cueId = h.scheduler.queue[0].cue.id;
+  assert.equal(h.sidecar.turnCues, 1);
+  h.time(.06); h.play(.06);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: false, reason: 'visual_part_unavailable' }), true);
+  assert.equal(h.sidecar.turnCues, 0); assert.equal(h.sidecar.counts.queuedCues, 1);
+  h.time(.1); h.play(.1); h.push(1, '嗯，对。'); h.flush();
+  assert.equal(h.scheduler.queue.length, 1); assert.equal(h.sidecar.turnCues, 1);
+  assert.equal(h.sidecar.counts.queuedCues, 2); h.close();
+});
+
+test('cancel releases admitted but unshown reservation, while actual display survives cancellation', () => {
+  for (const displayed of [false, true]) {
+    const h = naturalHarness(); h.start(); h.push(0, '嗯，对。'); h.flush();
+    const cueId = h.scheduler.queue[0].cue.id;
+    h.time(.06); h.play(.06);
+    assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true, displayed }), true);
+    assert.equal(h.sidecar.cancel(A), true);
+    h.time(.1); h.start(B); h.push(0, '嗯，对。', B); h.flush();
+    assert.equal(h.scheduler.queue.length, displayed ? 0 : 1);
+    assert.equal(h.sidecar.lastMotion, displayed ? .06 : -Infinity);
+    assert.equal(h.sidecar.executionFeedback(cueId, { accepted: false }), false, 'retired feedback cannot erase visible history');
+    h.close();
+  }
+});
+
+test('scheduler late drop frees an unadmitted reservation before next natural decision', () => {
+  const h = naturalHarness(); h.start(); h.push(0, '嗯，对。'); h.flush();
+  h.time(.4); h.play(.4);
+  assert.equal(h.scheduler.queue.length, 0); assert.equal(h.cues().length, 0);
+  assert.equal(h.sidecar.snapshot().pendingMotionReservations, 1, 'release occurs when consuming the next decision');
+  h.push(1, '嗯，对。'); h.flush();
+  assert.equal(h.scheduler.queue.length, 1);
+  assert.equal(h.sidecar.snapshot().pendingMotionReservations, 1, 'only new reservation remains');
+  assert.equal(h.sidecar.lastMotion, -Infinity); assert.equal(h.planner.snapshot().displayedHistory.length, 0);
+  h.close();
+});
+
+test('actual display commits budget once; malformed or later rejected feedback cannot undo it', () => {
+  const h = naturalHarness(); h.start(); h.push(0, '嗯，对。'); h.flush();
+  const cueId = h.scheduler.queue[0].cue.id;
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: false, displayed: true }), false);
+  assert.equal(h.sidecar.snapshot().pendingMotionReservations, 1);
+  h.time(.06); h.play(.06);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true }), true);
+  assert.equal(h.sidecar.lastMotion, -Infinity);
+  h.time(.08); assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true, displayed: true }), true);
+  assert.equal(h.sidecar.lastMotion, .08);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: false }), false);
+  h.time(.1); h.play(.1); h.push(1, '嗯，对。'); h.flush();
+  assert.equal(h.scheduler.queue.length, 0); assert.equal(h.planner.snapshot().displayedHistory.length, 1);
+  h.close();
+});
+
+test('worker failure stops analysis but does not erase the budget of an already queued displayed cue', () => {
+  const h = naturalHarness(); h.start(); h.push(0, '嗯，对。'); h.flush();
+  const cueId = h.scheduler.queue[0].cue.id;
+  h.workers[0].onerror({}); assert.equal(h.sidecar.status, 'disabled');
+  h.time(.06); h.play(.06);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true, displayed: true }), true);
+  assert.equal(h.sidecar.lastMotion, .06); assert.equal(h.sidecar.snapshot().pendingMotionReservations, 0);
+  assert.equal(h.sidecar.cancel(A), true);
+  assert.equal(h.sidecar.executionFeedback(cueId, { accepted: true, displayed: true }), false);
+  h.close();
+});
+
+test('host owner/anchor/catalog validation runs before candidate can change planner attitude', () => {
+  for (const mutate of [d => { d.anchor = 5; }, d => { d.cues.find(cue => cue.kind === 'gesture').gesture = 'invented'; }]) {
+    const h = naturalHarness(); h.start(); h.push(0, '你好。');
+    const job = h.workers[0].jobs[0], before = h.planner.snapshot().state;
+    const decision = { ...selectSubtitleCues('你好。', { policy: 'natural' }), anchor: .06, receivedAt: 0 };
+    mutate(decision);
+    h.workers[0].onmessage({ data: { type: 'result', generation: job.generation, jobId: job.jobId, owner: A, decisions: [decision] } });
+    assert.equal(h.sidecar.status, 'disabled'); assert.equal(h.planner.counts.accepted, 0);
+    assert.deepEqual(h.planner.snapshot().state, before); h.close();
+  }
+});
+
+test('late results and old interaction generation cannot overwrite local listening', () => {
+  for (const invalidate of ['time', 'generation']) {
+    const h = naturalHarness(); h.start(); h.push(0, '我很开心。');
+    if (invalidate === 'time') { h.time(.5); h.play(.5); }
+    else h.planner.userSpeechStarted(A.connectionId);
+    const state = h.planner.snapshot().state;
+    h.flush(); assert.equal(h.planner.counts.accepted, 0);
+    assert.deepEqual(h.planner.snapshot().state, state); assert.equal(h.scheduler.queue.length, 0); h.close();
+  }
+});
+
+test('occupied body and repeated micro cues expose explicit degradation to planner', () => {
+  const busy = naturalHarness(); busy.start();
+  busy.scheduler.enqueue({ ...A, id: 'manual-wave', kind: 'gesture', gesture: 'wave', at: .06 });
+  busy.push(0, '你好！'); busy.flush();
+  assert.equal(busy.scheduler.queue.length, 1);
+  assert.equal(busy.planner.snapshot().lastPlan.degraded, 'body_busy'); busy.close();
+  const repeat = naturalHarness(); repeat.start(); repeat.push(0, '嗯，对。嗯，对。'); repeat.flush();
+  assert.equal(repeat.scheduler.queue.length, 1);
+  assert.equal(repeat.planner.snapshot().lastPlan.degraded, 'density_limit'); repeat.close();
+});
+
+test('planner compute and feedback failures disable optional visuals without interrupting audio', () => {
+  for (const method of ['planCandidate', 'feedback']) {
+    const h = naturalHarness(); h.start();
+    h.planner[method] = () => { throw new Error('injected planner failure'); };
+    assert.doesNotThrow(() => { h.push(0, '嗯，对。嗯，对。'); h.flush(); });
+    assert.equal(h.sidecar.status, 'disabled'); assert.equal(h.scheduler.counts.interrupted, 0);
+    assert.equal(h.play(.1), true); h.close();
+  }
 });
 
 test('host must explicitly begin after scheduler, with complete owner and bounded context', () => {

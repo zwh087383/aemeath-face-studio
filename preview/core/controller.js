@@ -35,10 +35,12 @@ export class FaceController {
     this.head = { pitch: 0, yaw: 0, roll: 0 };
     this.activePreset = 'neutral';
     this.activeActions = [];
+    this.executedCues = [];
     this.nextBlink = 2.4;
     this.blinkStart = -100;
     this.random = 173;
     this.rejected = 0;
+    this.pausedWeights = null;
     // Idle head sway. A body-motion layer that composes head/gaze itself turns this off.
     this.headSway = true;
   }
@@ -57,6 +59,7 @@ export class FaceController {
     this.status = 'playing';
     this.time = 0;
     this.cues.length = 0;
+    this.executedCues.length = 0;
     this.seen.clear();
     this.cooldown.clear();
     return true;
@@ -69,6 +72,7 @@ export class FaceController {
     if (status === 'ended') {
       this.active = false;
       this.cues.length = 0;
+      this.executedCues.length = 0;
     }
     return true;
   }
@@ -78,12 +82,13 @@ export class FaceController {
     this.active = false;
     this.status = 'cancelled';
     this.cues.length = 0;
+    this.executedCues.length = 0;
     this.cooldown.clear();
     this.base = 'neutral';
     return true;
   }
 
-  clearCues() { this.cues.length = 0; }
+  clearCues() { this.cues.length = 0; this.executedCues.length = 0; }
 
   enqueue(cue) {
     const reject = () => { this.rejected++; return false; };
@@ -115,7 +120,7 @@ export class FaceController {
     return accepted;
   }
 
-  update(now, dt, lip = null, idle = true) {
+  update(now, dt, lip = null, idle = true, { mouthMode, paused = false } = {}) {
     this.now = now;
     dt = clamp(dt, 0, .1);
     const t = this.target;
@@ -125,6 +130,7 @@ export class FaceController {
     let tilt = base.tilt * this.strength;
     this.activePreset = this.base;
     this.activeActions.length = 0;
+    this.executedCues.length = 0;
     let actionPitch = 0, actionYaw = 0, actionRoll = 0, forcedBlink = 0;
     this.cues = this.cues.filter(cue => {
       const clock = cue.clock === 'audio' ? this.time : now;
@@ -139,6 +145,10 @@ export class FaceController {
       const action = ACTIONS[cue.action];
       const localAge = age * action.duration / cue.duration;
       this.activeActions.push(cue.action);
+      // Evidence of entry into this frame's actual composition, not enqueue.
+      // Epoch is retained so an old frame cannot acknowledge a new response.
+      if (age > 0 && cue.strength > 0) this.executedCues.push({ id: cue.id, epoch: cue.epoch,
+        kind: cue.kind, action: cue.action, age, clock: cue.clock });
       if (cue.action === 'blink') forcedBlink = Math.max(forcedBlink, Math.sin(Math.PI * localAge / action.duration) ** 1.5);
       else {
         const v = curve(action.keys, localAge) * cue.strength;
@@ -154,10 +164,20 @@ export class FaceController {
       for (const [name, value] of Object.entries(p.morphs)) t[C[name]] += clamp(value * this.strength * cue.strength) * fade;
       tilt = mix(tilt, p.tilt * this.strength * cue.strength, fade);
       this.activePreset = p.id;
+      if (age > 0 && fade > 0 && cue.strength > 0) this.executedCues.push({ id: cue.id,
+        epoch: cue.epoch, kind: cue.kind, preset: cue.preset, age, clock: cue.clock });
     }
 
-    const speaking = this.status === 'playing' && this.active;
-    const closed = ['paused', 'cancelled', 'ended'].includes(this.status);
+    // Explicit host ownership does not infer speech from the truthiness of lip,
+    // nor release articulation on zero-energy samples/short provider gaps.
+    const legacyMode = this.status === 'playing' && this.active ? 'speech'
+      : ['paused', 'cancelled', 'ended'].includes(this.status) ? 'closed' : 'expression';
+    const mode = mouthMode === undefined ? legacyMode
+      : ['speech', 'closed', 'expression'].includes(mouthMode) ? mouthMode : 'closed';
+    const speaking = mode === 'speech', closed = mode === 'closed';
+    const expressionPaused = paused || this.status === 'paused';
+    if (expressionPaused && !this.pausedWeights) this.pausedWeights = Float32Array.from(this.weights);
+    if (!expressionPaused) this.pausedWeights = null;
     if (speaking || closed) {
       for (const i of VOWELS) t[i] = speaking ? clamp(lip?.weights?.[i] ?? 0) : 0;
       t[C.mouthWide] = speaking ? clamp(lip?.weights?.[C.mouthWide] ?? 0) : 0;
@@ -179,9 +199,15 @@ export class FaceController {
     t[C.blink] = blink * (1 - Math.max(t[C.smileEyes], t[C.wink]));
     for (const i of [C.eyeSharp, C.eyeDroop, C.eyeHalf, C.eyeSmile, C.eyeWide, C.pupilSmall]) t[i] *= 1 - t[C.blink];
     for (let i = 0; i < t.length; i++) {
-      const mouth = VOWELS.includes(i) || i === C.mouthWide || i === C.mouthNarrow;
+      const mouth = VOWELS.includes(i) || i === C.mouthWide || i === C.mouthNarrow || i === C.mouthFlat;
       const tau = mouth ? (speaking ? .025 : .018) : i === C.blink ? .012 : i === C.blush ? .16 : .09;
-      this.weights[i] = clamp(mix(this.weights[i], clamp(t[i]), 1 - Math.exp(-dt / tau)));
+      // Media pause freezes the displayed non-mouth expression rather than
+      // continuing to converge on a frozen cue's future target. Blink remains
+      // independently timed, and closed articulation can still release promptly.
+      const step = expressionPaused && !mouth && i !== C.blink ? 0 : dt;
+      this.weights[i] = expressionPaused && !mouth && i !== C.blink ? this.pausedWeights[i]
+        : mouth && closed && mouthMode !== undefined ? 0
+        : clamp(mix(this.weights[i], clamp(t[i]), 1 - Math.exp(-step / tau)));
     }
     const total = VOWELS.reduce((sum, i) => sum + this.weights[i], 0);
     if (total > .72) for (const i of VOWELS) this.weights[i] *= .72 / total;
@@ -189,7 +215,7 @@ export class FaceController {
     const lid = Math.max(this.weights[C.smileEyes], this.weights[C.wink]);
     this.weights[C.blink] = Math.min(this.weights[C.blink], 1 - lid);
     this.weights[C.eyeWide] = Math.min(this.weights[C.eyeWide], 1 - Math.max(lid, this.weights[C.blink]));
-    const k = 1 - Math.exp(-dt / .06);
+    const k = expressionPaused ? 0 : 1 - Math.exp(-dt / .06);
     this.head.pitch = mix(this.head.pitch, clamp(actionPitch, -.14, .14), k);
     const sway = idle && this.headSway;
     this.head.yaw = mix(this.head.yaw, clamp(actionYaw + (sway ? .012 * Math.sin(now * .49) : 0), -.2, .2), k);
@@ -200,6 +226,7 @@ export class FaceController {
   snapshot() {
     return { epoch: this.epoch, active: this.active, status: this.status, time: this.time,
       preset: this.activePreset, actions: [...this.activeActions], queued: this.cues.length,
+      executedCues: this.executedCues.map(cue => ({ ...cue })),
       rejected: this.rejected, mouthOpen: VOWELS.reduce((s, i) => s + this.weights[i], 0),
       head: { ...this.head }, weights: Array.from(this.weights) };
   }

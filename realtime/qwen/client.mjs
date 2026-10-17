@@ -62,7 +62,9 @@ export class QwenClient {
     if (!trial) return false;
     if (trial.cancelAt === null) trial.cancelAt = this._now();
     trial.revoked = true; trial.cancelReason = reason;
-    return trial.owner ? this.session.cancel(reason, trial.owner) : true;
+    if (trial.owner) return this.session.cancel(reason, trial.owner);
+    this.session.inputCancelled?.(trial.interaction);
+    return true;
   }
   _shutdown(reason) {
     if (this._closedHandled) return;
@@ -74,6 +76,7 @@ export class QwenClient {
       if (trial.providerDoneAt === null) trial.usageStatus = 'unknown';
     }
     this._connectReject?.(new Error(reason)); this._connectResolve = null; this._connectReject = null;
+    this.session.disconnect?.(this.connectionId);
     this._emit('closed', { reason });
   }
   _fail(code) {
@@ -134,6 +137,8 @@ export class QwenClient {
     if (!this._canSubmit() || typeof text !== 'string' || !text.trim() || text.length > 2000 || !validOptions({ sidecar, profile })) return null;
     const trial = this._newTrial('text', { sidecar, profile }); this._pending = trial;
     if (!this._send({ type: 'text', text, requestId: trial.requestId })) return null;
+    trial.interaction = this.session.inputStarted?.(this.connectionId, { voiced: false });
+    this.session.inputEnded?.(trial.interaction);
     return trial.requestId;
   }
 
@@ -141,15 +146,30 @@ export class QwenClient {
     if (!this.ready || this._pending || !validOptions({ sidecar, profile }) || (this.mode !== 'vad' && !this._canSubmit())) return null;
     this._inputOptions = { sidecar, profile };
     const trial = this._newTrial(this.mode === 'vad' ? 'vad-audio' : 'audio', { sidecar, profile });
-    trial.inputStartAt = this._now(); this._pending = trial; return trial;
+    trial.inputStartAt = this._now(); this._pending = trial;
+    // VAD arming is not speech, including after the previous reply has ended.
+    if (this.mode === 'manual' && !activeAudio(this.session.audio.snapshot()) && !this._active) {
+      trial.interaction = this.session.inputStarted?.(this.connectionId, { voiced: false });
+    }
+    return trial;
   }
 
   sendInput(samples) {
     if (!this.ready || !(samples instanceof Int16Array) || !samples.length || samples.length > 16000) return false;
+    // Preserve the input's host identity before network delivery; never relabel a
+    // queued observation using a newer interaction after the send returns.
+    let token = null;
+    const capturedAtMs = this._now(); // client submission boundary, not device ADC time
+    try { token = this.session.interactionToken?.(); } catch { /* optional visual observation */ }
     const sequence = this.inputSequence;
     if (!this._send({ type: 'input_audio', sequence, audio: encodePcm(samples) })) return false;
     this.inputSequence++; this.inputFrames += samples.length; this._uncommittedFrames += samples.length;
     if (this._pending?.phase === 'input' && this._pending.inputStartAt === null) this._pending.inputStartAt = this._now();
+    // Sending audio remains first. Local observation is optional and cannot
+    // cancel playback; authoritative local/server barge-in retains ownership.
+    try {
+      if (token) this.session.observePartnerPcm?.({ token, samples, sampleRate: 16000, capturedAtMs });
+    } catch { /* visual observation must not fail an already sent audio packet */ }
     return true;
   }
 
@@ -159,6 +179,8 @@ export class QwenClient {
     const trial = this._pending ?? this._newTrial('audio', { sidecar, profile });
     trial.sidecar = sidecar; trial.profile = profile; trial.phase = 'submitted'; trial.submittedAt = this._now(); this._pending = trial;
     if (!this._send({ type: 'commit', requestId: trial.requestId })) return null;
+    trial.interaction ??= this.session.inputStarted?.(this.connectionId, { voiced: false });
+    this.session.inputEnded?.(trial.interaction);
     this._uncommittedFrames = 0; return trial.requestId;
   }
 
@@ -217,9 +239,11 @@ export class QwenClient {
       if (!this.ready || this.mode !== 'vad') throw new Error('unexpected_vad_event');
       if (activeAudio(this.session.audio.snapshot()) || this._active) this.cancel('server_vad');
       if (!this._pending) this.prepareInput();
+      if (this._pending && !this._pending.revoked) this._pending.interaction = this.session.inputStarted?.(this.connectionId);
       this._emit('speech_started', { event, trial: this._pending }); return;
     }
     if (type === 'input_audio_buffer.speech_stopped') {
+      if (this.ready && this.mode === 'vad' && this._pending && !this._pending.revoked) this.session.inputEnded?.(this._pending.interaction);
       this._emit('speech_stopped', { event, trial: this._pending }); return;
     }
     if (type.includes('input_audio_transcription')) { this._emit('input_transcript', { event }); return; }

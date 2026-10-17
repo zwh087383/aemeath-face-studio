@@ -21,7 +21,7 @@ export async function createScene(stage, progress = () => {}) {
   const mesh = await new MMDLoader(manager).loadAsync('/model/' + encodeURIComponent('鸣潮_爱弥斯1.05.pmx'));
   for (const [i, name] of AEMEATH_BINDINGS) if (mesh.geometry.morphTargets[i]?.name !== name) throw new Error(`Morph binding: ${name}`);
   const face = new FaceController(); face.headSway = false;
-  const motion = new MotionController({ skeleton: skeletonFromMesh(mesh) }); motion.setOptions({ natural: true, intensity: 1, speed: 1 });
+  const motion = new MotionController({ skeleton: skeletonFromMesh(mesh) }); motion.setOptions({ natural: true, intensity: 1, speed: 1, continuity: true });
   const rig = new MotionRig(mesh), helper = new MMDAnimationHelper(); helper.add(mesh, { physics: false }); helper.enable('ik', false);
   const rest = mesh.skeleton.bones.map(b => [b, b.quaternion.clone(), b.position.clone()]); mesh.frustumCulled = false; scene.add(mesh);
   const observedBones = [
@@ -50,13 +50,17 @@ export async function createScene(stage, progress = () => {}) {
     face, motion, environment,
     setView(next) { if (['face', 'body', 'angle', 'side', 'full'].includes(next)) { view = next; resize(); } },
     setExpressionEnabled(enabled) { expressionEnabled = !!enabled; },
-    step(now, dt, lip, { paused = false, idle = true, speechOwnsMouth = true } = {}) {
-      const start = performance.now(), baseWeights = face.update(now / 1000, dt, lip, idle);
-      motion.update(now / 1000, dt, { face: face.head, actions: face.activeActions, speech: 0 });
+    step(now, dt, lip, { paused = false, idle = true, speechOwnsMouth = true, mouthMode, behavior = null, rhythm = null } = {}) {
+      // New hosts explicitly decide mouth ownership; compatibility applies only
+      // to older diagnostic callers which have not adopted that contract.
+      mouthMode ??= speechOwnsMouth ? (face.status === 'playing' && lip ? 'speech' : 'closed') : (lip ? 'speech' : 'expression');
+      const start = performance.now(), baseWeights = face.update(now / 1000, dt, lip, idle, { mouthMode, paused });
+      motion.update(now / 1000, dt, { face: face.head, actions: face.activeActions, speech: 0, behavior, rhythm, paused });
       const body = motion.snapshot();
-      const overlay = expression.update(now / 1000, expressionEnabled ? body.gestures : [], { paused });
+      const overlay = expression.update(now / 1000, expressionEnabled ? body.gestures : [], {
+        paused, attitude: behavior?.state ?? null, reactions: expressionEnabled ? body.reactions ?? [] : [] });
       const weights = blendExpressionOverlay(baseWeights, overlay, {
-        speechActivity: !!lip || (speechOwnsMouth && ['paused', 'cancelled', 'ended'].includes(face.status)),
+        mouthMode, attitude: expression.attitude,
         closure: lip?.closure ?? 0, out: composedWeights });
       mesh.morphTargetInfluences.fill(0);
       for (let i = 0; i < AEMEATH_BINDINGS.length; i++) mesh.morphTargetInfluences[AEMEATH_BINDINGS[i][0]] = weights[i];
@@ -70,7 +74,7 @@ export async function createScene(stage, progress = () => {}) {
         rotations[key] = bone.getWorldQuaternion(new THREE.Quaternion()).toArray();
       }
       rendered = { frame: ++frameCount, mouthOpen: VOWELS.reduce((n, i) => n + weights[i], 0), weights: Array.from(weights), bones, rotations,
-        expression: { enabled: expressionEnabled, overlay: Array.from(overlay) },
+        expression: { enabled: expressionEnabled, overlay: Array.from(overlay), mouthMode, attitude: behavior?.state ?? null },
         missingBindings: [...rig.missing], finite: [...weights, ...Object.values(bones).flat(), ...Object.values(rotations).flat()].every(Number.isFinite),
         driverMs: assigned - start, renderMs: submitted - assigned, view };
       if (!rendered.finite || rendered.missingBindings.length) throw new Error('Invalid avatar pose');

@@ -79,7 +79,7 @@ test('avatar catalog preserves non-body timing/order and follows current public 
 
 test('idle construction sets natural speed one without claiming or cancelling any epoch', () => {
   const f = fixture({ start: false });
-  assert.deepEqual(f.motion.options, { intensity: 1, speed: 1, natural: true });
+  assert.deepEqual(f.motion.options, { intensity: 1, speed: 1, natural: true, continuity: false });
   assert.equal(f.motion.epoch, 0); assert.equal(f.face.epoch, 0);
   assert.equal(f.audio.cancelCount, 0); assert.deepEqual(f.events, []);
   assert.equal(f.sink({ type: 'retract', identity: B, atWall: 0 }), false);

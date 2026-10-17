@@ -34,6 +34,16 @@ test('adapter freezes controller on initial buffering and routes face/body indep
   assert.equal(f.events.filter(e => e[0] === 'face' && e[1] === 'cue').length, 1);
 });
 
+test('continuity nod has one head owner and an occupied head never faults audio', () => {
+  const f = fixture(); f.motion.options = { continuity: true };
+  const reactions = []; f.motion.requestReaction = reaction => { reactions.push(reaction); return false; };
+  f.scheduler.enqueue({ ...owner, id: 'new-nod', kind: 'action', action: 'nod', at: .06, strength: .3 });
+  assert.equal(f.scheduler.playback({ ...owner, status: 'playing', time: .06 }), true);
+  assert.equal(reactions.length, 1); assert.equal(reactions[0].clock, 'audio'); assert.equal(reactions[0].audioAt, .06);
+  assert.equal(f.events.filter(event => event[0] === 'face' && event[1] === 'cue').length, 0);
+  assert.equal(f.scheduler.fault, null); assert.equal(f.audio.sourceActive, true);
+});
+
 test('adapter cut is synchronous before wall-clock body retraction; delayed cue cannot revive', () => {
   const f = fixture(); f.setNow(10);
   assert.equal(f.scheduler.interrupt(owner), true);

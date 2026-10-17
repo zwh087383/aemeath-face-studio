@@ -1,0 +1,703 @@
+{
+  "experimental": true,
+  "source": "actual_WAI_cloud_speech_and_browser_playback",
+  "input": "local_synthetic_spoken_questions_streamed_at_original_speed",
+  "syntheticMemory": true,
+  "physicalAcousticsVerified": false,
+  "autonomousTimersCameraNeo4j": false,
+  "clockBoundary": "browser input last voiced sample and playback same clock; provider stages use server monotonic clock",
+  "rows": [
+    {
+      "turnId": "turn-2e59729f6557467792bb04de0d2156ab",
+      "connectionId": "duplex-a6776a0257ff4ba2b4defb851cceaa72",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "记得呀，是无糖柠檬水。",
+      "status": "completed",
+      "acknowledged": false,
+      "revoked": true,
+      "speechFrames": 65280,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseSpeechAndTool": true,
+      "bothBeforeReceipt": true,
+      "toolOnly": false,
+      "browserEvidence": "failed-first-memory-browser.json",
+      "contextMessages": 2,
+      "contextChars": 4193,
+      "factsInPrompt": [
+        "drink",
+        "appointment",
+        "books"
+      ],
+      "preparationMs": 1453.0000000013388,
+      "requestToPcmMs": 875.0,
+      "validTurnToFinalAsrMs": 734.0,
+      "finalAsrToWaiMs": 0.0,
+      "inputEndToPlaybackMs": 4217.375,
+      "requestToPlaybackMs": 943.2,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": 349.2,
+      "mouthAfterPlaybackMs": 363.2,
+      "error": null,
+      "deliveryRejected": true,
+      "overlapInputAcks": 3,
+      "promptVariant": "initial"
+    },
+    {
+      "turnId": "turn-10e20e2724d740aba49f122f3dfe89e2",
+      "connectionId": "duplex-df469cd566fb49e1abc51756cd5c4d14",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "",
+      "status": "completed",
+      "acknowledged": false,
+      "revoked": true,
+      "speechFrames": 0,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseSpeechAndTool": false,
+      "bothBeforeReceipt": false,
+      "toolOnly": true,
+      "browserEvidence": "memory-retry-browser.json",
+      "contextMessages": 2,
+      "contextChars": 4193,
+      "factsInPrompt": [
+        "drink",
+        "appointment",
+        "books"
+      ],
+      "preparationMs": 1828.0000000013388,
+      "requestToPcmMs": null,
+      "validTurnToFinalAsrMs": 297.0,
+      "finalAsrToWaiMs": 15.0,
+      "inputEndToPlaybackMs": null,
+      "requestToPlaybackMs": null,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "mouthAfterPlaybackMs": null,
+      "error": "reply_has_no_complete_speech",
+      "deliveryRejected": true,
+      "overlapInputAcks": 2,
+      "promptVariant": "initial"
+    },
+    {
+      "turnId": "turn-534936f10df34cc387b1dfaec00f46ed",
+      "connectionId": "duplex-df469cd566fb49e1abc51756cd5c4d14",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "",
+      "status": "completed",
+      "acknowledged": false,
+      "revoked": true,
+      "speechFrames": 0,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseSpeechAndTool": false,
+      "bothBeforeReceipt": false,
+      "toolOnly": true,
+      "browserEvidence": "memory-retry-browser.json",
+      "contextMessages": 3,
+      "contextChars": 4212,
+      "factsInPrompt": [
+        "drink",
+        "appointment",
+        "books"
+      ],
+      "preparationMs": 1312.999999994645,
+      "requestToPcmMs": null,
+      "validTurnToFinalAsrMs": 250.0,
+      "finalAsrToWaiMs": 15.0,
+      "inputEndToPlaybackMs": null,
+      "requestToPlaybackMs": null,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "mouthAfterPlaybackMs": null,
+      "error": "reply_has_no_complete_speech",
+      "deliveryRejected": true,
+      "overlapInputAcks": 2,
+      "promptVariant": "initial"
+    },
+    {
+      "turnId": "turn-084534bd87e64253ad3168424364f259",
+      "connectionId": "duplex-f1102c8ee5f64a8cb5046c12417128ad",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "记得呀，你在星桥咖啡店最喜欢喝无糖柠檬水。",
+      "status": "completed",
+      "acknowledged": true,
+      "revoked": false,
+      "speechFrames": 103680,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseSpeechAndTool": true,
+      "bothBeforeReceipt": true,
+      "toolOnly": false,
+      "browserEvidence": "memory-final-browser.json",
+      "contextMessages": 2,
+      "contextChars": 4193,
+      "factsInPrompt": [
+        "drink",
+        "appointment",
+        "books"
+      ],
+      "preparationMs": 1218.9999999973224,
+      "requestToPcmMs": 1125.0,
+      "validTurnToFinalAsrMs": 235.0,
+      "finalAsrToWaiMs": 15.0,
+      "inputEndToPlaybackMs": 4144.375,
+      "requestToPlaybackMs": 1173.5,
+      "motionAfterPlaybackMs": 109.4,
+      "expressionAfterPlaybackMs": 188.7,
+      "mouthAfterPlaybackMs": 94.0,
+      "error": null,
+      "deliveryRejected": false,
+      "overlapInputAcks": 4,
+      "promptVariant": "speech_first"
+    },
+    {
+      "turnId": "turn-87f1db190e4c404d973cafdc626e926f",
+      "connectionId": "duplex-f1102c8ee5f64a8cb5046c12417128ad",
+      "input": "好呀，先跟我挥挥手，打个招呼吧。",
+      "transcript": "嗨，你好呀！",
+      "status": "completed",
+      "acknowledged": true,
+      "revoked": false,
+      "speechFrames": 44160,
+      "plans": [
+        {
+          "expression": "happy",
+          "gesture": "wave"
+        }
+      ],
+      "sameResponseSpeechAndTool": true,
+      "bothBeforeReceipt": true,
+      "toolOnly": false,
+      "browserEvidence": "greet-browser.json",
+      "contextMessages": 4,
+      "contextChars": 4250,
+      "factsInPrompt": [
+        "drink",
+        "project"
+      ],
+      "preparationMs": 1546.9999999986612,
+      "requestToPcmMs": 1172.0,
+      "validTurnToFinalAsrMs": 235.0,
+      "finalAsrToWaiMs": 15.0,
+      "inputEndToPlaybackMs": 4257.35,
+      "requestToPlaybackMs": 1245.4,
+      "motionAfterPlaybackMs": 33.6,
+      "expressionAfterPlaybackMs": 110.7,
+      "mouthAfterPlaybackMs": 387.1,
+      "error": null,
+      "deliveryRejected": false,
+      "overlapInputAcks": 3,
+      "promptVariant": "speech_first"
+    },
+    {
+      "turnId": "turn-6f079f09eca84f46828e5d044930512a",
+      "connectionId": "duplex-f1102c8ee5f64a8cb5046c12417128ad",
+      "input": "请详细讲讲星桥练习项目里3张角色表情草图的绘制步骤，大概说20秒。",
+      "transcript": "先定好角色的基础脸型，然后画出眼睛、眉毛和嘴巴的大致位置。接着根据表情调整五官的形状，比如开心时嘴角上扬，生气时眉毛下压。最后细化线条，加上阴影和细节，让表情更生动。",
+      "status": "completed",
+      "acknowledged": false,
+      "revoked": true,
+      "speechFrames": 418560,
+      "plans": [],
+      "sameResponseSpeechAndTool": false,
+      "bothBeforeReceipt": false,
+      "toolOnly": false,
+      "browserEvidence": "barge-chain-browser.json",
+      "contextMessages": 6,
+      "contextChars": 4310,
+      "factsInPrompt": [
+        "drink",
+        "project"
+      ],
+      "preparationMs": 1156.0000000026776,
+      "requestToPcmMs": 703.0,
+      "validTurnToFinalAsrMs": 375.0,
+      "finalAsrToWaiMs": 344.0,
+      "inputEndToPlaybackMs": 3954.688,
+      "requestToPlaybackMs": 819.3,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "mouthAfterPlaybackMs": 146.5,
+      "error": null,
+      "deliveryRejected": false,
+      "overlapInputAcks": 7,
+      "promptVariant": "speech_first"
+    },
+    {
+      "turnId": "turn-34ad1f3528be438fb6987e9de96d35df",
+      "connectionId": "duplex-f1102c8ee5f64a8cb5046c12417128ad",
+      "input": "等一下，先别讲步骤了。我。",
+      "transcript": "好，那我先不讲步骤了，等你准备好了再说。",
+      "status": "cancelled",
+      "acknowledged": false,
+      "revoked": true,
+      "speechFrames": 0,
+      "plans": [],
+      "sameResponseSpeechAndTool": false,
+      "bothBeforeReceipt": false,
+      "toolOnly": false,
+      "browserEvidence": "barge-chain-browser.json",
+      "contextMessages": 7,
+      "contextChars": 4307,
+      "factsInPrompt": [
+        "project"
+      ],
+      "preparationMs": 1639.999999999418,
+      "requestToPcmMs": null,
+      "validTurnToFinalAsrMs": 125.0,
+      "finalAsrToWaiMs": 0.0,
+      "inputEndToPlaybackMs": null,
+      "requestToPlaybackMs": null,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "mouthAfterPlaybackMs": null,
+      "error": "usage_unknown_admission_blocked",
+      "deliveryRejected": false,
+      "overlapInputAcks": 1,
+      "promptVariant": "speech_first"
+    }
+  ],
+  "cases": [
+    {
+      "name": "barge-chain",
+      "failure": "usage_or_protocol_blocked",
+      "mode": "barge",
+      "video": "barge-chain.webm",
+      "videoAvailable": true,
+      "posterAvailable": true
+    },
+    {
+      "name": "memory-drink",
+      "failure": "acceptance_timeout",
+      "mode": "normal",
+      "video": "failed-first-memory.webm",
+      "videoAvailable": false,
+      "posterAvailable": false
+    },
+    {
+      "name": "greet",
+      "failure": null,
+      "mode": "normal",
+      "video": "greet.webm",
+      "videoAvailable": true,
+      "posterAvailable": true
+    },
+    {
+      "name": "memory-drink",
+      "failure": "reply_has_no_complete_speech",
+      "mode": "normal",
+      "video": "memory-drink.webm",
+      "videoAvailable": true,
+      "posterAvailable": false
+    },
+    {
+      "name": "memory-final",
+      "failure": null,
+      "mode": "normal",
+      "video": "memory-final.webm",
+      "videoAvailable": true,
+      "posterAvailable": true
+    },
+    {
+      "name": "memory-retry",
+      "failure": "reply_has_no_complete_speech",
+      "mode": "normal",
+      "video": "memory-retry.webm",
+      "videoAvailable": true,
+      "posterAvailable": false
+    }
+  ],
+  "interruptions": [
+    {
+      "turnId": "turn-10e20e2724d740aba49f122f3dfe89e2",
+      "at": 19374.39999999851,
+      "reason": "provider_incomplete",
+      "mediaTime": 0,
+      "sourcesBefore": 0,
+      "queuedBefore": 0,
+      "sourcesAfter": 0,
+      "returnMs": 2.7999999970197678,
+      "activeMotion": false,
+      "mouthClosedMs": 38,
+      "motionStoppedMs": 38.19999999552965,
+      "sourcesRemain": 0
+    },
+    {
+      "turnId": "turn-534936f10df34cc387b1dfaec00f46ed",
+      "at": 66322.19999999553,
+      "reason": "provider_incomplete",
+      "mediaTime": 0,
+      "sourcesBefore": 0,
+      "queuedBefore": 0,
+      "sourcesAfter": 0,
+      "returnMs": 0.20000000298023224,
+      "activeMotion": false,
+      "mouthClosedMs": 10.300000004470348,
+      "motionStoppedMs": 10.300000004470348,
+      "sourcesRemain": 0
+    },
+    {
+      "turnId": "turn-6f079f09eca84f46828e5d044930512a",
+      "at": 112462.19999999553,
+      "reason": "confirmed_voice_barge_in",
+      "mediaTime": 2.770666666666622,
+      "sourcesBefore": 0,
+      "queuedBefore": 14.669333333333379,
+      "sourcesAfter": 0,
+      "returnMs": 0.5,
+      "activeMotion": false,
+      "mouthClosedMs": 12.900000005960464,
+      "motionStoppedMs": 12.900000005960464,
+      "sourcesRemain": 0
+    },
+    {
+      "turnId": "turn-34ad1f3528be438fb6987e9de96d35df",
+      "at": 115480.60000000149,
+      "reason": "confirmed_voice_barge_in",
+      "mediaTime": 0,
+      "sourcesBefore": 0,
+      "queuedBefore": 0,
+      "sourcesAfter": 0,
+      "returnMs": 0.19999999552965164,
+      "activeMotion": false,
+      "mouthClosedMs": 12.699999995529652,
+      "motionStoppedMs": 12.699999995529652,
+      "sourcesRemain": 0
+    }
+  ],
+  "counts": {
+    "waiAttempts": 7,
+    "acknowledged": 2,
+    "toolOnly": 2,
+    "cooutput": 3
+  },
+  "successfulTurnLatency": {
+    "inputEndToPlaybackMs": {
+      "n": 2,
+      "median": 4200.863,
+      "min": 4144.375,
+      "max": 4257.35
+    },
+    "preparationMs": {
+      "n": 2,
+      "median": 1383.0,
+      "min": 1219.0,
+      "max": 1547.0
+    },
+    "requestToPcmMs": {
+      "n": 2,
+      "median": 1148.5,
+      "min": 1125.0,
+      "max": 1172.0
+    },
+    "requestToPlaybackMs": {
+      "n": 2,
+      "median": 1209.45,
+      "min": 1173.5,
+      "max": 1245.4
+    },
+    "motionAfterPlaybackMs": {
+      "n": 2,
+      "median": 71.5,
+      "min": 33.6,
+      "max": 109.4
+    },
+    "expressionAfterPlaybackMs": {
+      "n": 2,
+      "median": 149.7,
+      "min": 110.7,
+      "max": 188.7
+    }
+  },
+  "usage": {
+    "responseCount": 15,
+    "unknown": 1,
+    "blocked": true,
+    "reasons": [
+      "provider_usage_missing_or_invalid"
+    ],
+    "reportedTokens": 21375,
+    "scope": "Qwen realtime only; WAI auxiliary models are additional"
+  },
+  "preservation": {
+    "preview/core/motion-controller.js": {
+      "sha256": "4a107730f7b6657fcf729dce6dfd0fe10fe2c79f5e6459973c8d3107b866d5dd",
+      "unchanged": true
+    },
+    "preview/core/motion-math.js": {
+      "sha256": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985",
+      "unchanged": true
+    },
+    "preview/core/motion-profile.js": {
+      "sha256": "e1c8bf747369eac59bb35f5d82c3088e70001b644aaceb153933215f263ed782",
+      "unchanged": true
+    },
+    "preview/core/controller.js": {
+      "sha256": "a94771ac584e9821262613ef0d8fa233b467fa46701756d6a5e3de49aa5b2433",
+      "unchanged": true
+    },
+    "preview/core/expression-choreography.js": {
+      "sha256": "487f8efb7f4ceb8d8e8c37ebba14be2fce97fdecb6c383fe2f22bc2bd86f1101",
+      "unchanged": true
+    },
+    "preview/studio/motion-rig.js": {
+      "sha256": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "unchanged": true
+    },
+    "realtime/qwen/scene.mjs": {
+      "sha256": "a925fbd9bb8e71ddaf4a137a037341469f13a726e593e8be6e5068593f7351b2",
+      "unchanged": true
+    }
+  },
+  "allProtectedUnchanged": true,
+  "promptPhases": {
+    "initial": {
+      "attempts": 3,
+      "cooutput": 1,
+      "toolOnly": 2,
+      "deliveryWhitespaceFailure": 1
+    },
+    "speechFirst": {
+      "attempts": 4,
+      "acknowledgedCooutput": 2,
+      "audioOnlyInterrupted": 1,
+      "cancelledBeforePlayback": 1
+    }
+  },
+  "postTestFix": {
+    "danglingAsrHoldMs": 1200,
+    "normalSentencesExtraWaitMs": 0,
+    "offlineVerified": true,
+    "cloudRetested": false
+  },
+  "finalRuntime": {
+    "history": {
+      "count": 6,
+      "by_role": {
+        "assistant": 2,
+        "user": 4
+      },
+      "complete_assistant": 2
+    },
+    "diary": {
+      "buffer_entries": 6,
+      "archive_files": {
+        "small": 0,
+        "daily": 0,
+        "weekly": 0
+      }
+    },
+    "queues": {
+      "reply_effects": {
+        "done": 5
+      },
+      "input_maintenance": {
+        "done": 12
+      }
+    },
+    "runtime": {
+      "turns": {
+        "completed": 3,
+        "cancelled": 1
+      },
+      "active_acks": 0,
+      "deliveries": {
+        "delivered": 2,
+        "cancelled": 1
+      }
+    },
+    "memory": {
+      "count": 6,
+      "ids": [
+        "81001",
+        "81002",
+        "81003",
+        "81004",
+        "d0e9ad72-7b87-5675-a337-3fdcf0c06238",
+        "d7b9f27b-743b-5b8c-893b-6f4ff8023965"
+      ],
+      "collection": "amis_episodic_memory__embeddinggemma2_768_v1"
+    }
+  },
+  "quiescent": true,
+  "successfulDrain": true,
+  "auxiliaryModelRecords": [
+    {
+      "elapsedSeconds": 3.967000000004191,
+      "events": [
+        {
+          "count": 5,
+          "key": "model_request, completed, deepseek-flash"
+        }
+      ],
+      "runtimeAttempt": "start2",
+      "count": 5
+    },
+    {
+      "elapsedSeconds": 8.452999999979511,
+      "events": [
+        {
+          "count": 10,
+          "key": "model_request, completed, deepseek-flash"
+        }
+      ],
+      "runtimeAttempt": "start3",
+      "count": 10
+    },
+    {
+      "elapsedSeconds": 20.75100000000384,
+      "events": [
+        {
+          "count": 23,
+          "key": "model_request, completed, deepseek-flash"
+        }
+      ],
+      "runtimeAttempt": "start4",
+      "count": 23
+    }
+  ],
+  "validation": {
+    "waiFullInitial": {
+      "passed": 2914,
+      "failed": 11,
+      "failure": "AST test fixture missing new transport variables",
+      "sourceChanged": false,
+      "realCredentialsLoaded": false
+    },
+    "waiCorrectedTargeted": 84,
+    "waiFragmentFixTargeted": 38,
+    "nodeWorkspace": 426,
+    "nodeStagedSnapshot": 399,
+    "media": [
+      {
+        "file": "barge-chain.webm",
+        "bytes": 3276695,
+        "decodeOk": true,
+        "decoderErrors": ""
+      },
+      {
+        "file": "greet.webm",
+        "bytes": 1862154,
+        "decodeOk": true,
+        "decoderErrors": ""
+      },
+      {
+        "file": "memory-drink.webm",
+        "bytes": 998117,
+        "decodeOk": true,
+        "decoderErrors": ""
+      },
+      {
+        "file": "memory-final.webm",
+        "bytes": 2334041,
+        "decodeOk": true,
+        "decoderErrors": ""
+      },
+      {
+        "file": "memory-retry.webm",
+        "bytes": 935627,
+        "decodeOk": true,
+        "decoderErrors": ""
+      }
+    ]
+  },
+  "replayRegression": {
+    "source": "saved_native_events_only",
+    "first": "ended",
+    "second": "ended",
+    "firstCall": "e1.c1",
+    "secondCall": "e2.c1",
+    "interrupt": {
+      "turnId": "turn-2e59729f6557467792bb04de0d2156ab",
+      "at": 57204.90000000596,
+      "reason": "explicit_user_interrupt",
+      "mediaTime": 0.27999999999999936,
+      "sourcesBefore": 1,
+      "queuedBefore": 0.12000000000000066,
+      "sourcesAfter": 0,
+      "returnMs": 0.5999999940395355,
+      "activeMotion": false,
+      "mouthClosedMs": 10.899999998509884,
+      "sourcesRemain": 0,
+      "motionStoppedMs": 459.8999999985099
+    },
+    "audio": {
+      "epoch": 3,
+      "status": "cancelled",
+      "time": 0.27999999999999936,
+      "receivedDuration": 0.4,
+      "queuedSeconds": 0,
+      "retainedSeconds": 0,
+      "sourceActive": false,
+      "sourceCount": 0,
+      "context": "running",
+      "finished": true,
+      "nextSequence": 1,
+      "sampleRate": 24000,
+      "volume": 1,
+      "fault": null,
+      "lastError": null
+    },
+    "noProviderCall": true,
+    "noSettlement": true,
+    "passed": true
+  },
+  "waveReplayRegression": {
+    "source": "saved_native_events_only",
+    "first": "ended",
+    "second": "ended",
+    "firstCall": "e1.c1",
+    "secondCall": "e2.c1",
+    "interrupt": {
+      "turnId": "turn-87f1db190e4c404d973cafdc626e926f",
+      "at": 20087.79999999702,
+      "reason": "explicit_user_interrupt",
+      "mediaTime": 0.6693333333333339,
+      "sourcesBefore": 4,
+      "queuedBefore": 1.170666666666666,
+      "sourcesAfter": 0,
+      "returnMs": 0.6000000014901161,
+      "activeMotion": true,
+      "mouthClosedMs": 14.100000001490116,
+      "sourcesRemain": 0,
+      "motionStoppedMs": 820.7000000029802
+    },
+    "audio": {
+      "epoch": 3,
+      "status": "cancelled",
+      "time": 0.6693333333333339,
+      "receivedDuration": 1.84,
+      "queuedSeconds": 0,
+      "retainedSeconds": 0,
+      "sourceActive": false,
+      "sourceCount": 0,
+      "context": "running",
+      "finished": true,
+      "nextSequence": 5,
+      "sampleRate": 24000,
+      "volume": 1,
+      "fault": null,
+      "lastError": null
+    },
+    "noProviderCall": true,
+    "noSettlement": true,
+    "passed": true
+  }
+}
