@@ -33,7 +33,7 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn"):
     async def status(request):
         allow(request)
         return web.json_response({"experimental": True, "mode": mode, "budget": budget.snapshot(),
-            "variants": ["full-cold", "full-warm", "memory-warm"],
+            "variants": ["full-cold", "full-warm", "memory-warm", "qwen-direct"],
             "connected": bool(active), "model": "qwen-audio-3.1-realtime-plus",
             "memory": "actual_WAI_with_isolated_synthetic_state", "defaultStrength": .65,
             "savedSessions": [p.stem for p in sorted(output.glob("duplex-*.json"))]},
@@ -54,7 +54,7 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn"):
         if active or budget.data["blocked"]:
             raise web.HTTPConflict(text="Busy or usage blocked")
         variant = request.query.get("variant", "full-cold")
-        if variant not in {"full-cold", "full-warm", "memory-warm"}:
+        if variant not in {"full-cold", "full-warm", "memory-warm", "qwen-direct"}:
             raise web.HTTPBadRequest(text="Unsupported reply variant")
         ws = web.WebSocketResponse(max_msg_size=100_000, heartbeat=15)
         session = DuplexSession(runtime, main, budget, output, ws.send_json, mode=mode, variant=variant)
@@ -138,9 +138,10 @@ def main():
     config = configure(args.env_file, args.data_dir, batch_id=args.batch_id)
     runtime, wai_main = bootstrap_runtime(config)
     save_json(args.output / "manifest.json", {"experimental": True, "mode": args.mode,
-        "batchId": args.batch_id, "variants": ["full-cold", "full-warm", "memory-warm"],
+        "batchId": args.batch_id, "variants": ["full-cold", "full-warm", "memory-warm", "qwen-direct"],
         "maxTurns": args.max_turns, "maxResponses": args.max_responses,
         "topology": "continuous listener / final ASR / WAI retrieval+context / D response / playback ACK",
+        "directTopology": "local memory+context / Qwen direct audio / optional request_full_reply / full-analysis Qwen / aggregate playback ACK",
         "syntheticMemory": True, "spontaneousReply": True, "prerecordedAnswer": False,
         "autonomousTimers": False, "physicalAcousticsVerified": False})
     web.run_app(create_app(runtime, wai_main, budget, args.output, mode=args.mode), host="127.0.0.1", port=args.port,

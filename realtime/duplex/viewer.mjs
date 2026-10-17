@@ -18,12 +18,17 @@ function event(e) {
   if (s?.type === 'input_final') $('input').textContent = s.transcript;
   if (s?.type === 'turn_started') { $('pipeline').textContent = '检索记忆、准备上下文'; $('answer').textContent = ''; }
   if (s?.type === 'context_ready') $('pipeline').textContent = '记忆已就绪，Qwen 正在回复';
+  if (s?.type === 'handoff_requested') $('pipeline').textContent = 'Qwen 请求完整分析，准备第二段回复';
+  if (s?.type === 'response_created' && s.segmentIndex === 1) $('pipeline').textContent = '第二个 Qwen 已接入，语音按顺序播放';
+  if (s?.type === 'turn_output_done') $('pipeline').textContent = '本轮生成完成，等待实际播放结束';
   if (s?.type === 'tool') $('plan').textContent = JSON.stringify(JSON.parse(s.arguments), null, 2);
   if (s?.type === 'settled') $('pipeline').textContent = '已播完，回复已结算';
 }
 function updateUI() {
   const t = client.current, a = session.audio.snapshot();
-  $('connect').disabled = !ready || replaying || client.ready || client.blocked || service?.budget?.blocked;
+  const budget = client.budget ?? service?.budget;
+  const batchExhausted = budget && (budget.turns >= budget.turnLimit || budget.responses + (budget.reserved ?? 0) >= budget.responseLimit);
+  $('connect').disabled = !ready || replaying || client.ready || (client.blocked && !client.canReconnect) || budget?.blocked || batchExhausted || service?.offline;
   for (const id of ['mic', 'feed', 'send']) $(id).disabled = !client.ready || client.blocked || client.inputExhausted;
   $('stop-mic').disabled = !microphone;
   $('phase').textContent = replaying ? '离线回放 · 不调用模型' : client.blocked ? '新调用已停止 · 本地记录保留' : a.status === 'playing' ? '正在回应 · 仍在持续接收语音' : a.status === 'paused' ? '听到声音，暂时停下' : client.ready ? '正在倾听' : '未连接';
@@ -37,7 +42,8 @@ function updateUI() {
   }
   const b = client.budget ?? service?.budget;
   if (b) $('budget').textContent = `${b.blocked ? '本批暂停：有未知用量。' : '有界实验：'} 回复 ${b.turns}/${b.turnLimit} · Qwen 响应 ${b.responses}/${b.responseLimit} · 未知 ${b.unknown}`;
-  $('diagnostics').textContent = JSON.stringify({ turn: t ? { text:t.text, context:t.context, tools:t.tools, result:t.result, settledAt:t.settledAt, error:t.error } : null,
+  $('diagnostics').textContent = JSON.stringify({ turn: t ? { text:t.text, variant:t.variant, context:t.context, contexts:t.contexts,
+    handoff:t.handoff, segments:t.segments, tools:t.tools, result:t.result, settledAt:t.settledAt, error:t.error } : null,
     interruptions:client.interruptions, inputPackets:client.sequence, budget:b }, null, 2);
 }
 async function loadReplays() {
@@ -60,14 +66,14 @@ async function replay(index=+$('replay-choice').value) {
   // Same PCM, tool validation and scheduler, without a websocket or delivery ACK.
   client=new DuplexClient({session,onEvent:event});
   const connectionId=`replay-${++replaySerial}`;
-  client.message({type:'ready',connectionId,listenerConfiguration:{},budget:service.budget});client.inputExhausted=true;
-  const terminal=item.record.events.find(e=>e.turnId===item.turn.id&&e.type==='response_done');
+  client.message({type:'ready',connectionId,listenerConfiguration:{},budget:service.budget,variant:item.record.variant??item.turn.variant});client.inputExhausted=true;
+  const terminal=item.record.events.findLast(e=>e.turnId===item.turn.id&&['turn_output_done','response_done'].includes(e.type));
   const contentEnd=(terminal?.serverMs??Infinity)+(item.turn.result.frames/24)+2000;
   const events=item.record.events.filter(e=>e.turnId===item.turn.id&&!['delivery','settled','runtime_state','wai_submitted'].includes(e.type)
     &&!(e.type==='revoked'&&e.serverMs>contentEnd));
   const origin=events[0].serverMs,start=now();
   try {
-    $('status').textContent='离线回放本批真实事件。不会请求模型或写入已送达历史。';
+    $('status').textContent=service?.offline?'离线协议演示：历史音频拼接，转交事件为模拟，不是本版云端结果。':'离线回放本批真实事件。不会请求模型或写入已送达历史。';
     $('input').textContent=item.turn.text;
     for(const saved of events){
       await new Promise(r=>setTimeout(r,Math.max(0,start+saved.serverMs-origin-now())));
@@ -110,6 +116,7 @@ function frame(time) {
   requestAnimationFrame(frame);
 }
 async function connect(variant=$('variant')?.value ?? 'full-cold') {
+  if (service?.offline) throw Error('本页仅为离线协议演示，不提供云端连接。');
   const url = new URL('/api/duplex', location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';
   url.searchParams.set('variant',variant);
   await context.resume(); const reply = await client.connect(url.href);
@@ -149,7 +156,7 @@ function stopMic() { ++generation;microphone?.stop();microphone=null;micParts=[]
 function close() { stopMic();clearInterval(silenceTimer);client?.close(); }
 function snapshot() {return {client:client.snapshot(),audio:session.audio.snapshot(),session:session.snapshot(),motion:scene.motion.snapshot(),rendered,
   trace:structuredClone(trace),frames:structuredClone(frameRows),environment:scene.environment,
-  acousticVerified:false,syntheticMemory:true,source:'actual_WAI_D_duplex'};}
+  acousticVerified:false,syntheticMemory:true,source:service?.offline?'offline_protocol_fixture':'actual_WAI_D_duplex'};}
 function startRecording(label='真实对话') {
   if(recording)throw Error('already_recording');
   // Capture the submitted WebGL canvas directly. Copying it to a second 2D
@@ -165,11 +172,19 @@ async function stopRecording() {if(!recording)return null;const r=recording;r.re
 async function videoBase64(){if(!recordingBlob)return null;return await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result.slice(r.result.indexOf(';base64,')+8));r.readAsDataURL(recordingBlob);});}
 async function boot(){
   service=await(await fetch('/api/duplex/status')).json();
+  if (service.offline) {
+    $('status').textContent='离线协议演示：历史音频拼接，转交事件为模拟，不是本版云端结果。';
+    document.querySelector('.notice').textContent='离线协议演示：历史音频拼接，转交事件为模拟，不是本版云端结果。只验收顺序播放、动作时序和整轮打断，不代表云端响应速度。';
+    $('replay').textContent='播放离线协议演示';
+    $('replay-choice').setAttribute('aria-label','离线协议演示片段');
+  }
   if($('variant')){
-    const labels={'full-cold':'完整前置 · 原连接方式','full-warm':'完整前置 · 连接预热','memory-warm':'记忆快答 · 连接预热'};
+    const labels={'full-cold':'完整前置 · 原连接方式','full-warm':'完整前置 · 连接预热',
+      'memory-warm':'旧实验 · DeepSeek 短答后 Qwen 配音','qwen-direct':'新实验 · Qwen 直接记忆快答与按需转交'};
     $('variant').replaceChildren(...(service.variants??['full-cold']).map(v=>{const o=document.createElement('option');o.value=v;o.textContent=labels[v];return o;}));
-    $('variant').value=(service.variants??[]).includes('memory-warm')?'memory-warm':'full-cold';
-    if(service.variants)document.querySelector('a[href="./results.html"]')?.setAttribute('href','./fast-results.html');
+    $('variant').value=(service.variants??[]).includes('qwen-direct')?'qwen-direct':(service.variants??[]).includes('memory-warm')?'memory-warm':'full-cold';
+    if(service.variants)document.querySelector('a[href="./results.html"]')?.setAttribute('href',
+      service.variants.includes('qwen-direct') ? './direct-results.html' : './fast-results.html');
   }
   context=new AudioContext({sampleRate:24000,latencyHint:'interactive'});mix=context.createGain();mix.gain.value=.16;mix.connect(context.destination);
   capture=context.createMediaStreamDestination();mix.connect(capture);

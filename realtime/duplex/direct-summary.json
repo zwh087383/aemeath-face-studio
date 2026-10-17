@@ -1,0 +1,373 @@
+{
+  "experimental": true,
+  "batch": "qwen-direct-handoff-20261017",
+  "branch": "codex/experimental-qwen-direct-handoff-20261017",
+  "conclusion": "记忆与上下文已直接交给 Qwen 语音回复；按需原生转交跑通，但尚未证明提速和自然路由可靠。",
+  "budget": {
+    "turnLimit": 6,
+    "responseLimit": 16,
+    "turns": 6,
+    "responsesWithId": 13,
+    "reported": 13,
+    "reserved": 0,
+    "active": 0,
+    "unknown": 0,
+    "unused": 3,
+    "blocked": false,
+    "reasons": [],
+    "reportedTokens": 19446,
+    "reportedByRole": {
+      "listener": 6,
+      "direct_reply": 6,
+      "full_reply": 1
+    }
+  },
+  "history": {
+    "users": 6,
+    "assistants": 5,
+    "completeAssistants": 5,
+    "allDeliveredTranscriptsMatch": true,
+    "interruptedTurnHasNoAssistantHistory": true
+  },
+  "background": {
+    "total": 35,
+    "modelStatusCounts": {
+      "deepseek-flash / completed": 35
+    },
+    "turnScopeCounts": {
+      "background": 6,
+      "turn": 6,
+      "input": 18,
+      "learning": 5
+    },
+    "nonemptyTaskLabels": 0,
+    "fastDeepSeekTextDraftCalls": 0,
+    "fastCallCountBasis": "source-reviewed direct capability bypass plus per-turn textDraftModelCalls=0; metadata task labels are empty, so task attribution is not independently recoverable from this log",
+    "promptContentRead": false
+  },
+  "rows": [
+    {
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "我记得呢，你在星桥咖啡店最喜欢喝的是无糖柠檬水。",
+      "route": "direct",
+      "inputEndToPlaybackMs": 3815.875,
+      "browserPreparationMs": 1489.6,
+      "preparationMs": 1500,
+      "endpointMs": 1228.475,
+      "contextToRequestMs": 176.9,
+      "requestToPcmMs": 819.5,
+      "pcmToPlaybackMs": 101.4,
+      "motionAfterPlaybackMs": 257.4,
+      "expressionAfterPlaybackMs": 257.4,
+      "settled": true,
+      "revoked": false,
+      "actions": [
+        {
+          "expression": "smile",
+          "gesture": "nod",
+          "strength": 0.65,
+          "accepted": true
+        }
+      ],
+      "segments": [
+        {
+          "index": 0,
+          "phase": "direct",
+          "frames": 105600,
+          "audioDurationMs": 4400.0,
+          "requestToFirstPcmMs": 819.6,
+          "toolOnly": false,
+          "usageState": "reported"
+        }
+      ]
+    },
+    {
+      "input": "那刚才说的这杯饮料适合什么时候喝呢？",
+      "transcript": "无糖柠檬水清爽解渴，很适合在午后阅读或散步时享用，既能提神又不会给身体带来负担。",
+      "route": "direct",
+      "inputEndToPlaybackMs": 3966.6,
+      "browserPreparationMs": 1283.0,
+      "preparationMs": 1297.0,
+      "endpointMs": 1416.2,
+      "contextToRequestMs": 213.5,
+      "requestToPcmMs": 853.3,
+      "pcmToPlaybackMs": 200.6,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "settled": true,
+      "revoked": false,
+      "actions": [],
+      "segments": [
+        {
+          "index": 0,
+          "phase": "direct",
+          "frames": 192000,
+          "audioDurationMs": 8000.0,
+          "requestToFirstPcmMs": 853.3,
+          "toolOnly": false,
+          "usageState": "reported"
+        }
+      ]
+    },
+    {
+      "input": "星桥读书会预约几点？座位是几号？",
+      "transcript": "星桥读书会的预约时间是下午三点，座位是十七号。",
+      "route": "direct",
+      "inputEndToPlaybackMs": 3999.275,
+      "browserPreparationMs": 1160.5,
+      "preparationMs": 1531.0,
+      "endpointMs": 1550.475,
+      "contextToRequestMs": 245.8,
+      "requestToPcmMs": 808.3,
+      "pcmToPlaybackMs": 234.2,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "settled": true,
+      "revoked": false,
+      "actions": [],
+      "segments": [
+        {
+          "index": 0,
+          "phase": "direct",
+          "frames": 115200,
+          "audioDurationMs": 4800.0,
+          "requestToFirstPcmMs": 808.3,
+          "toolOnly": false,
+          "usageState": "reported"
+        }
+      ]
+    },
+    {
+      "input": "请根据完整分析比较三种适合我的周末安排，用三句话说清楚。",
+      "transcript": "周末你可以选择去星桥咖啡店喝无糖柠檬水，享受午后时光；也可以参加下午三点的星桥读书会，坐在十七号座位；或者在家整理天文笔记，用第二本蓝色笔记本记录新发现。",
+      "route": "direct",
+      "inputEndToPlaybackMs": 5480.325,
+      "browserPreparationMs": 2799.4,
+      "preparationMs": 2078.0,
+      "endpointMs": 1932.725,
+      "contextToRequestMs": 1.4,
+      "requestToPcmMs": 675.4,
+      "pcmToPlaybackMs": 71.4,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "settled": true,
+      "revoked": false,
+      "actions": [],
+      "segments": [
+        {
+          "index": 0,
+          "phase": "direct",
+          "frames": 345600,
+          "audioDurationMs": 14400.0,
+          "requestToFirstPcmMs": 675.4,
+          "toolOnly": false,
+          "usageState": "reported"
+        }
+      ]
+    },
+    {
+      "input": "请先调用完整回复工具，比较这周与上周的全部交流。",
+      "transcript": "我没法调用什么“完整回复工具”来比较交流记录呢，但我记得我们聊过星桥咖啡店的无糖柠檬水、读书会的预约，还有周末的安排。",
+      "route": "handoff",
+      "inputEndToPlaybackMs": 5367.4,
+      "browserPreparationMs": 1395.8,
+      "preparationMs": 1406.0,
+      "endpointMs": 1215.1,
+      "contextToRequestMs": 82.3,
+      "requestToPcmMs": 2605.2,
+      "pcmToPlaybackMs": 69.0,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "settled": false,
+      "revoked": true,
+      "actions": [],
+      "segments": [
+        {
+          "index": 0,
+          "phase": "direct",
+          "frames": 0,
+          "audioDurationMs": 0.0,
+          "requestToFirstPcmMs": null,
+          "toolOnly": true,
+          "usageState": "reported"
+        },
+        {
+          "index": 1,
+          "phase": "full",
+          "frames": 245760,
+          "audioDurationMs": 10240.0,
+          "requestToFirstPcmMs": 1198.8,
+          "toolOnly": false,
+          "usageState": "reported"
+        }
+      ]
+    },
+    {
+      "input": "等一下先别讲步骤了，我的蓝色笔记本一共有几本？",
+      "transcript": "你的蓝色笔记本一共有四本，其中第二本是用来记录天文知识的。",
+      "route": "direct",
+      "inputEndToPlaybackMs": 3395.95,
+      "browserPreparationMs": 1229.7,
+      "preparationMs": 1250,
+      "endpointMs": 1314.85,
+      "contextToRequestMs": 94.1,
+      "requestToPcmMs": 684.6,
+      "pcmToPlaybackMs": 72.7,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "settled": true,
+      "revoked": false,
+      "actions": [],
+      "segments": [
+        {
+          "index": 0,
+          "phase": "direct",
+          "frames": 147840,
+          "audioDurationMs": 6160.0,
+          "requestToFirstPcmMs": 684.7,
+          "toolOnly": false,
+          "usageState": "reported"
+        }
+      ]
+    }
+  ],
+  "interruption": {
+    "inputSource": "fixture:barge",
+    "userSpeechOnsetToProvisionalPauseMs": 1.3,
+    "userSpeechOnsetToSemanticConfirmationMs": 5681.2,
+    "userSpeechEndToSemanticConfirmationMs": 1015.35,
+    "provisionalPauseToSemanticConfirmationMs": 5679.9,
+    "provisionalPauseSourcesBefore": 23,
+    "provisionalPauseSourcesAfter": 0,
+    "confirmedCancelReturnMs": 1.3,
+    "mediaTimeAtCancellationSeconds": 1.3413333333333337,
+    "queuedAudioSecondsAtCancellation": 8.898666666666667,
+    "cancelSourcesBefore": 0,
+    "cancelSourcesAfter": 0,
+    "activeMotionAtCancellation": false,
+    "mouthClosedAfterConfirmedCancelMs": 29.3,
+    "sourcesRemain": 0,
+    "physicalAcousticMeasurement": false
+  },
+  "acousticVerified": false,
+  "offlineProtocol": {
+    "source": "synthetic_handoff_protocol_with_previously_saved_pcm",
+    "newCloudResponses": 0,
+    "passed": true,
+    "audioSeconds": 9.52,
+    "secondAction": {
+      "receivedAt": 222241.80000000447,
+      "dispatchedAt": 225308.40000000596,
+      "scheduledMediaTime": 4.622666666666612,
+      "segmentStart": 4.56,
+      "accepted": true
+    },
+    "interruption": {
+      "interrupt": {
+        "turnId": "offline-turn",
+        "at": 236697.1000000015,
+        "reason": "explicit_user_interrupt",
+        "mediaTime": 4.861333333333303,
+        "sourcesBefore": 13,
+        "queuedBefore": 4.658666666666696,
+        "sourcesAfter": 0,
+        "returnMs": 0.8000000044703484,
+        "activeMotion": true,
+        "mouthClosedMs": 25,
+        "sourcesRemain": 0,
+        "motionStoppedMs": 880
+      },
+      "audio": {
+        "epoch": 5,
+        "status": "cancelled",
+        "time": 4.861333333333303,
+        "receivedDuration": 9.52,
+        "queuedSeconds": 0,
+        "retainedSeconds": 0,
+        "sourceActive": false,
+        "sourceCount": 0,
+        "context": "running",
+        "finished": true,
+        "nextSequence": 25,
+        "sampleRate": 24000,
+        "volume": 1,
+        "fault": null,
+        "lastError": null
+      },
+      "noHistoryAck": true
+    }
+  },
+  "preserved": [
+    {
+      "path": "preview/core/motion-controller.js",
+      "before": "4A107730F7B6657FCF729DCE6DFD0FE10FE2C79F5E6459973C8D3107B866D5DD",
+      "after": "4A107730F7B6657FCF729DCE6DFD0FE10FE2C79F5E6459973C8D3107B866D5DD",
+      "unchanged": true
+    },
+    {
+      "path": "preview/core/motion-math.js",
+      "before": "68ED394A8ED4BD863084C45364A10DADAEE472E518086D8A48D747EB070B7985",
+      "after": "68ED394A8ED4BD863084C45364A10DADAEE472E518086D8A48D747EB070B7985",
+      "unchanged": true
+    },
+    {
+      "path": "preview/core/motion-profile.js",
+      "before": "E1C8BF747369EAC59BB35F5D82C3088E70001B644AACEB153933215F263ED782",
+      "after": "E1C8BF747369EAC59BB35F5D82C3088E70001B644AACEB153933215F263ED782",
+      "unchanged": true
+    },
+    {
+      "path": "preview/core/controller.js",
+      "before": "A94771AC584E9821262613EF0D8FA233B467FA46701756D6A5E3DE49AA5B2433",
+      "after": "A94771AC584E9821262613EF0D8FA233B467FA46701756D6A5E3DE49AA5B2433",
+      "unchanged": true
+    },
+    {
+      "path": "preview/core/expression-choreography.js",
+      "before": "487F8EFB7F4CEB8D8E8C37EBBA14BE2FCE97FDECB6C383FE2F22BC2BD86F1101",
+      "after": "487F8EFB7F4CEB8D8E8C37EBBA14BE2FCE97FDECB6C383FE2F22BC2BD86F1101",
+      "unchanged": true
+    },
+    {
+      "path": "preview/studio/motion-rig.js",
+      "before": "63D78687D5C526A01B01C522339B35086DBC4908F925DB225DC8305DCCE7F0FF",
+      "after": "63D78687D5C526A01B01C522339B35086DBC4908F925DB225DC8305DCCE7F0FF",
+      "unchanged": true
+    },
+    {
+      "path": "realtime/qwen/scene.mjs",
+      "before": "A925FBD9BB8E71DDAF4A137A037341469F13A726E593E8BE6E5068593F7351B2",
+      "after": "A925FBD9BB8E71DDAF4A137A037341469F13A726E593E8BE6E5068593F7351B2",
+      "unchanged": true
+    }
+  ],
+  "failures": [
+    {
+      "code": "session_input_limit",
+      "detail": "单连接累计输入达到 240 秒；账本无未知。"
+    },
+    {
+      "code": "input_not_ready",
+      "detail": "重连残留阻断状态；该尝试未发起新回复，刷新后继续同一有界批次。"
+    }
+  ],
+  "postCloudFixes": [
+    "第二 Qwen 提示明确转交已由调度器完成，证据不足仍诚实说明。",
+    "监听时长上限可安全重连；未知用量与协议错误不能被重连解锁。"
+  ],
+  "postCloudRetested": false,
+  "videos": [
+    {
+      "label": "真实云测 · 记忆短答与点头",
+      "base": "direct-memory"
+    },
+    {
+      "label": "真实云测 · 转交后被打断、接续新问题（保留话术错误）",
+      "base": "direct-handoff-barge-resumed"
+    },
+    {
+      "label": "离线 · 历史 PCM＋模拟转交，第二段挥手中断（零云调用）",
+      "base": "direct-offline-interrupt"
+    }
+  ]
+}

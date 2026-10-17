@@ -1,4 +1,14 @@
-# 记忆优先快答与连接预热：D 双工实验
+# Qwen 直接记忆语音与按需转交（实验性）
+
+最新分支 `codex/experimental-qwen-direct-handoff-20261017`，配套 WAI 同名分支。选择 `qwen-direct`：本地检索、已送达上下文和人设直接交给 Qwen #1 语音回复；仅其原生 `request_full_reply` 允许 Qwen #2 用后台核心解析续答。前台不再调用 DeepSeek 快答，后台辅助模型继续。
+
+最新结果见 [DIRECT-VALIDATION.md](DIRECT-VALIDATION.md) 和 [direct-results.html](direct-results.html)。本机报告 `http://127.0.0.1:18778/duplex/direct-results.html`。已完成批准的 6 轮 / 13 个 Qwen 响应，没有未知或未结清预留；未证明端到端提速。第二 Qwen 承接话术与上限重连的修正只有离线回归，未追加云端调用。
+
+启动仍用下方 `Start-Duplex.ps1`，明确指定批准的新批次、空隔离目录和上限；`qwen-direct` 为新增可选通道。真实验收用 `realtime/browser-direct-live.cjs`，barge 模式等到整轮 `turn_output_done` 再在播放中插话，避免把第一段终态当全轮完成。两段离线协议演示用 `offline-direct-preview.py` 与 `realtime/browser-direct-handoff.cjs`，使用旧 PCM / 模拟转交，不能算新云端验收。
+
+以下为上一批保留的历史说明：
+
+## 历史：记忆优先快答与连接预热
 
 **实验性，当前没有证实快答能降低语音端到端延迟。** 配套 WAI 分支：`codex/experimental-voice-memory-fast-20261017`。本分支同名。当前结果见 [MEMORY-FAST-VALIDATION.md](MEMORY-FAST-VALIDATION.md)；原 D 实验记录 `VALIDATION.md` 保留为历史证据。
 
