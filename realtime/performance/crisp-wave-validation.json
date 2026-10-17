@@ -1,0 +1,639 @@
+{
+  "date": "2026-10-16",
+  "experimental": true,
+  "branch": "codex/close-elbows-crisp-wave-20261016",
+  "baseline": "69ba75685596ee86c7697352fed9e08875a60fe7",
+  "boundary": "Local motion/PMX only, clothing physics disabled. No new cloud, microphone, WAI retrieval or physical audio acceptance. Mesh signals are nearest vertex/normal heuristics.",
+  "numerical": {
+    "boundary": "Offline PMX linear skinning with grants/local translations; physics disabled. Nearest-vertex/normal grid signals are not triangle intersection depths or a visual-naturalness certificate.",
+    "baselineRevision": "69ba756",
+    "sourceHashes": {
+      "motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+      "motion-skeleton.js": "d9ed586812c99ffc384e8798510e4d9040f449a30ec13e51db322d5572caeb7a",
+      "motion-profile.js": "e1c8bf747369eac59bb35f5d82c3088e70001b644aaceb153933215f263ed782",
+      "motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985"
+    },
+    "sourceChangedDuringRun": [],
+    "sourceHashesVerifiedAtConsolidation": true,
+    "baselineEvidence": {
+      "completedPaths": 19,
+      "scope": "Partial baseline, not a completed 30-path sweep",
+      "sourceHashes": {
+        "motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+        "motion-skeleton.js": "81894038fed748f1a3302600dbf0ceb32452dfebaa5017eaa4d2d09daf170d4e",
+        "motion-profile.js": "ac6a3dc2e5fb53ddd7065785ba1ade6566a3ea7202c34aa64ba468aa4f93901a",
+        "motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985"
+      },
+      "rawReceipt": "baseline-mesh-partial.json"
+    },
+    "currentEvidence": {
+      "completedPaths": 30,
+      "sleeveHairFPS": 60,
+      "allBodyFPS": 10,
+      "totalPlaybackFrames": 5561,
+      "totalAllBodyFrames": 925,
+      "perPosture": [
+        {
+          "posture": "relaxed",
+          "paths": 10,
+          "sleeveHairFrames": 1956,
+          "allBodyFrames": 325,
+          "maxSleeveHair": 0,
+          "maxSleeveBody": 0,
+          "maxHand": 0
+        },
+        {
+          "posture": "speaking",
+          "paths": 10,
+          "sleeveHairFrames": 1739,
+          "allBodyFrames": 289,
+          "maxSleeveHair": 0,
+          "maxSleeveBody": 0,
+          "maxHand": 0
+        },
+        {
+          "posture": "listening",
+          "paths": 10,
+          "sleeveHairFrames": 1866,
+          "allBodyFrames": 311,
+          "maxSleeveHair": 0,
+          "maxSleeveBody": 0,
+          "maxHand": 10
+        }
+      ],
+      "held": {
+        "posture": "relaxed",
+        "samples": 99,
+        "ageStep": 0.025,
+        "maxSleeveHair": 0,
+        "maxSleeveBody": 0,
+        "maxHand": 0,
+        "worst": {
+          "id": "greet",
+          "age": 1.24,
+          "mesh": {
+            "count": 0,
+            "maxDepth": 0,
+            "worst": null,
+            "allBody": {
+              "penetrating": 10,
+              "hand": 0,
+              "sleeve": 0,
+              "arm": 10,
+              "maxDepth": 0.095,
+              "worst": {
+                "bone": "Bone_Piao082_R",
+                "against": "右侧发B4",
+                "at": [
+                  -1.68,
+                  16.14,
+                  0.27
+                ]
+              },
+              "handGap": 6.639
+            }
+          }
+        }
+      },
+      "worstOther": {
+        "time": 1.4666666666666666,
+        "age": 1.1066716058432058,
+        "phase": "stroke",
+        "penetrating": 21,
+        "hand": 0,
+        "sleeve": 0,
+        "arm": 21,
+        "maxDepth": 0.104,
+        "worst": {
+          "bone": "右腕",
+          "against": "右侧发B4",
+          "at": [
+            -1.78,
+            16.01,
+            0.32
+          ]
+        },
+        "handGap": 6.589
+      },
+      "handSignals": [
+        {
+          "posture": "listening",
+          "id": "wave",
+          "cancelPhase": null,
+          "time": 0.4,
+          "age": 0.2051143879237943,
+          "phase": "prepare",
+          "penetrating": 4,
+          "hand": 4,
+          "sleeve": 0,
+          "arm": 0,
+          "maxDepth": 0.242,
+          "worst": {
+            "bone": "左小指３",
+            "against": "スカート_3_3",
+            "at": [
+              1.68,
+              11.19,
+              1.01
+            ]
+          },
+          "handGap": 2.445
+        },
+        {
+          "posture": "listening",
+          "id": "wave",
+          "cancelPhase": "prepare",
+          "time": 0.4166666666666667,
+          "age": 0.21366082075395237,
+          "phase": "prepare",
+          "penetrating": 10,
+          "hand": 10,
+          "sleeve": 0,
+          "arm": 0,
+          "maxDepth": 0.246,
+          "worst": {
+            "bone": "左小指３",
+            "against": "スカート_3_3",
+            "at": [
+              1.69,
+              11.19,
+              1.01
+            ]
+          },
+          "handGap": 2.626
+        }
+      ]
+    },
+    "comparisons": [
+      {
+        "id": "wave",
+        "cueId": "validation-wave",
+        "posture": "relaxed",
+        "before": {
+          "completeAt": 3.9833333333333334,
+          "bodyPeak": {
+            "lean": 0.07841535083818724,
+            "twist": 0.12234224213652965,
+            "side": 0.08799914036365368,
+            "pelvisPitch": 0.007655802214137716,
+            "pelvisRoll": 0.049292361758285504,
+            "hipShift": 0.15969474229350414
+          },
+          "fkPeak": {
+            "spine": {
+              "rotationDeg": 4.289447595234945,
+              "translation": 0.18093307800709052
+            },
+            "upperChest": {
+              "rotationDeg": 9.817947167315722,
+              "translation": 0.124633204315037
+            },
+            "head": {
+              "rotationDeg": 5.200834528482139,
+              "translation": 0.4365944830803552
+            },
+            "waist": {
+              "rotationDeg": 0,
+              "translation": 0.18093307800709052
+            }
+          },
+          "elbows": {
+            "L": {
+              "maxLateral": 1.2102237346000002,
+              "meanLateral": 1.1827881894264072,
+              "maxAbductionDeg": 26.063585191915678
+            },
+            "R": {
+              "maxLateral": 2.372240937858342,
+              "meanLateral": 2.3554271616370563,
+              "maxAbductionDeg": 59.45534666515617
+            }
+          },
+          "strokeDuration": 1.2,
+          "wristDirectionExtrema": [
+            {
+              "time": 1.45,
+              "angle": 0.4510880081758242
+            },
+            {
+              "time": 1.7333333333333334,
+              "angle": -0.2680671282193305
+            },
+            {
+              "time": 1.9833333333333334,
+              "angle": 0.4472111507450808
+            },
+            {
+              "time": 2.2333333333333334,
+              "angle": -0.1900654079421388
+            }
+          ],
+          "frequencyHz": 1.9354838709677418,
+          "halfCycleEquivalentHz": 1.9148936170212763
+        },
+        "after": {
+          "completeAt": 3.566666666666667,
+          "bodyPeak": {
+            "lean": 0.07867069527184935,
+            "twist": 0.12267071808163209,
+            "side": 0.08827131908966963,
+            "pelvisPitch": 0.007704975312679337,
+            "pelvisRoll": 0.04954379529672455,
+            "hipShift": 0.16011641140531332
+          },
+          "fkPeak": {
+            "spine": {
+              "rotationDeg": 4.302480107454301,
+              "translation": 0.18147410161144154
+            },
+            "upperChest": {
+              "rotationDeg": 9.84824925466668,
+              "translation": 0.12512647436122834
+            },
+            "head": {
+              "rotationDeg": 5.2078803414538575,
+              "translation": 0.43768992408948176
+            },
+            "waist": {
+              "rotationDeg": 0,
+              "translation": 0.18147410161144154
+            }
+          },
+          "elbows": {
+            "L": {
+              "maxLateral": 0.940779528497098,
+              "meanLateral": 0.8654494580466525,
+              "maxAbductionDeg": 19.971176214065608
+            },
+            "R": {
+              "maxLateral": 1.6417518969038598,
+              "meanLateral": 1.5766431206403493,
+              "maxAbductionDeg": 36.586235311062175
+            }
+          },
+          "strokeDuration": 0.7833333333333333,
+          "wristDirectionExtrema": [
+            {
+              "time": 1.1666666666666667,
+              "angle": 0.10233190243003644
+            },
+            {
+              "time": 1.35,
+              "angle": 0.4288583903630392
+            },
+            {
+              "time": 1.5166666666666666,
+              "angle": -0.23947723181229166
+            },
+            {
+              "time": 1.6833333333333333,
+              "angle": 0.4232425653119916
+            },
+            {
+              "time": 1.85,
+              "angle": -0.1788138545637062
+            }
+          ],
+          "frequencyHz": 2.9508196721311477,
+          "halfCycleEquivalentHz": 2.926829268292683
+        }
+      },
+      {
+        "id": "greet",
+        "cueId": "validation-greet",
+        "posture": "relaxed",
+        "before": {
+          "completeAt": 3.6333333333333333,
+          "bodyPeak": {
+            "lean": 0.15600868323402056,
+            "twist": 0.08263377133199344,
+            "side": 0.07323083648210338,
+            "pelvisPitch": 0.015145613411851236,
+            "pelvisRoll": 0.045500020979024836,
+            "hipShift": 0.20820125460079633
+          },
+          "fkPeak": {
+            "spine": {
+              "rotationDeg": 5.659659115893645,
+              "translation": 0.24449683210301748
+            },
+            "upperChest": {
+              "rotationDeg": 11.10472413794628,
+              "translation": 0.372323235330901
+            },
+            "head": {
+              "rotationDeg": 5.814005287082162,
+              "translation": 0.7784292842364938
+            },
+            "waist": {
+              "rotationDeg": 0,
+              "translation": 0.24449683210301748
+            }
+          },
+          "elbows": {
+            "L": {
+              "maxLateral": 1.1972547172114558,
+              "meanLateral": 1.1441097007003733,
+              "maxAbductionDeg": 25.763659012418398
+            },
+            "R": {
+              "maxLateral": 2.2858151163841036,
+              "meanLateral": 2.25981393741507,
+              "maxAbductionDeg": 56.084027963729625
+            }
+          },
+          "strokeDuration": 0.4666666666666667,
+          "wristDirectionExtrema": [
+            {
+              "time": 1.2,
+              "angle": 0.08850307984724873
+            }
+          ],
+          "frequencyHz": null,
+          "halfCycleEquivalentHz": null
+        },
+        "after": {
+          "completeAt": 3.183333333333333,
+          "bodyPeak": {
+            "lean": 0.15631328841162434,
+            "twist": 0.0827975420380184,
+            "side": 0.07336473682292192,
+            "pelvisPitch": 0.015215458743140176,
+            "pelvisRoll": 0.04574809770456365,
+            "hipShift": 0.2090324852618092
+          },
+          "fkPeak": {
+            "spine": {
+              "rotationDeg": 5.670496792170116,
+              "translation": 0.24545339065219057
+            },
+            "upperChest": {
+              "rotationDeg": 11.129784427036896,
+              "translation": 0.37358554108123065
+            },
+            "head": {
+              "rotationDeg": 5.839188852969026,
+              "translation": 0.7797601353545873
+            },
+            "waist": {
+              "rotationDeg": 0,
+              "translation": 0.24545339065219057
+            }
+          },
+          "elbows": {
+            "L": {
+              "maxLateral": 0.7010220939190209,
+              "meanLateral": 0.6641901886422517,
+              "maxAbductionDeg": 14.744203028272826
+            },
+            "R": {
+              "maxLateral": 1.4557651312853763,
+              "meanLateral": 1.390690396984337,
+              "maxAbductionDeg": 31.904848731048126
+            }
+          },
+          "strokeDuration": 0.5166666666666667,
+          "wristDirectionExtrema": [
+            {
+              "time": 1.2833333333333334,
+              "angle": 0.43479887977448184
+            },
+            {
+              "time": 1.4833333333333334,
+              "angle": -0.28650774358033626
+            }
+          ],
+          "frequencyHz": null,
+          "halfCycleEquivalentHz": 2.5000000000000004
+        }
+      }
+    ],
+    "listeningHandSkirtMatchedCue": {
+      "cueId": "validation-wave",
+      "posture": "listening",
+      "scope": "Every frame of the first .8 seconds at 60 FPS, same cue in baseline and current",
+      "baseline": {
+        "inspectedFrames": 48,
+        "fps": 60,
+        "timeRange": [
+          0.016666666666666666,
+          0.8
+        ],
+        "markedFrames": 8,
+        "vertexFrames": 90,
+        "maxDepth": 0.212
+      },
+      "current": {
+        "inspectedFrames": 48,
+        "fps": 60,
+        "timeRange": [
+          0.016666666666666666,
+          0.8
+        ],
+        "markedFrames": 2,
+        "vertexFrames": 14,
+        "maxDepth": 0.246
+      },
+      "conclusion": "Existing signal: marked duration and vertex-frame count decrease, but maximum heuristic normal depth increases from .212 to .246 model units. Remaining limitation, not a zero-intersection claim."
+    },
+    "tests": {
+      "command": "node --test tests/wave-recovery-regression.test.mjs",
+      "passed": 4
+    },
+    "detailedReceipt": "summary.json"
+  },
+  "sourceNormalization": {
+    "file": "preview/core/motion-skeleton.js",
+    "change": "Remove extra blank lines at EOF only",
+    "measuredSHA256": "d9ed586812c99ffc384e8798510e4d9040f449a30ec13e51db322d5572caeb7a",
+    "publishedSHA256": "a9aac1cebba74486e6806dca2907279b6bba37ba71891d0cfb70ef6ab2b84c37",
+    "trimEndIdentical": true
+  },
+  "nodeFull": {
+    "passed": 274,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 46055.2173,
+    "raw": "outputs/crisp-wave-20261016/node-tests.txt"
+  },
+  "browserWave": {
+    "boundary": "Actual PMX browser render. Silent local actions; no cloud/audio. Video capture and other previews affect FPS, so this is not a performance benchmark. Mesh contact validation is separate.",
+    "sourceHashes": {
+      "preview/core/motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+      "preview/core/motion-skeleton.js": "d9ed586812c99ffc384e8798510e4d9040f449a30ec13e51db322d5572caeb7a",
+      "preview/core/motion-profile.js": "e1c8bf747369eac59bb35f5d82c3088e70001b644aaceb153933215f263ed782",
+      "preview/studio/motion-rig.js": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "realtime/qwen/scene.mjs": "fb4ad23882c9198a09d0e023389ace0c211490f0daf2c80026b86a6fe0c73360",
+      "realtime/performance/director.mjs": "cb6f2c7ba76b8bf38265bc1a747462a858886d56901a77040cea61519c8773c9",
+      "realtime/performance/viewer.mjs": "4de447197e8aaa299d1b9c405759985565ff3820aa8cca80fd033a8de5fc3bf2"
+    },
+    "actions": [
+      {
+        "id": "wave",
+        "frames": 117,
+        "elapsedMs": 3538.7999999998137,
+        "peakChestDegrees": 9.846483506194447,
+        "phases": [
+          "prepare",
+          "stroke",
+          "hold",
+          "recover",
+          "done"
+        ]
+      },
+      {
+        "id": "greet",
+        "frames": 110,
+        "elapsedMs": 3299.2000000001863,
+        "peakChestDegrees": 11.144735341367285,
+        "phases": [
+          "prepare",
+          "stroke",
+          "hold",
+          "recover",
+          "done"
+        ]
+      }
+    ],
+    "interruptions": [
+      {
+        "id": "wave",
+        "phase": "prepare",
+        "at": 0.28202380342299355,
+        "finite": true,
+        "frames": 24,
+        "maxSleeveStep": 0.12009930472245041,
+        "finishedMs": 813.8999999999069,
+        "completed": true
+      },
+      {
+        "id": "wave",
+        "phase": "stroke",
+        "at": 0.9498630427237069,
+        "finite": true,
+        "frames": 35,
+        "maxSleeveStep": 0.1567608464316794,
+        "finishedMs": 1100.8999999999069,
+        "completed": true
+      },
+      {
+        "id": "wave",
+        "phase": "hold",
+        "at": 1.4429226198500236,
+        "finite": true,
+        "frames": 37,
+        "maxSleeveStep": 0.1356523499809458,
+        "finishedMs": 1089.1000000000931,
+        "completed": true
+      },
+      {
+        "id": "wave",
+        "phase": "recover",
+        "at": 1.905155131025828,
+        "finite": true,
+        "frames": 28,
+        "maxSleeveStep": 0.12274448162903633,
+        "finishedMs": 819.0999999996275,
+        "completed": true
+      },
+      {
+        "id": "greet",
+        "phase": "prepare",
+        "at": 0.35852866346398404,
+        "finite": true,
+        "frames": 28,
+        "maxSleeveStep": 0.20550400781796221,
+        "finishedMs": 914.8000000002794,
+        "completed": true
+      },
+      {
+        "id": "greet",
+        "phase": "stroke",
+        "at": 0.996111217926891,
+        "finite": true,
+        "frames": 31,
+        "maxSleeveStep": 0.1996670757957506,
+        "finishedMs": 1036.3999999999069,
+        "completed": true
+      },
+      {
+        "id": "greet",
+        "phase": "hold",
+        "at": 1.447578906218288,
+        "finite": true,
+        "frames": 33,
+        "maxSleeveStep": 0.19171583579376475,
+        "finishedMs": 1021.1999999997206,
+        "completed": true
+      },
+      {
+        "id": "greet",
+        "phase": "recover",
+        "at": 2.1541683075241798,
+        "finite": true,
+        "frames": 29,
+        "maxSleeveStep": 0.1557972925231237,
+        "finishedMs": 906,
+        "completed": true
+      }
+    ],
+    "errors": [],
+    "passed": true,
+    "videoFiles": [
+      "page@13a256610af5780846fa9af0781d8a07.webm"
+    ],
+    "sourceChangedDuringRun": []
+  },
+  "browserAll": {
+    "passed": true,
+    "checks": 23,
+    "errors": [],
+    "sourceChangedDuringRun": [],
+    "sourceHashes": {
+      "preview/core/controller.js": "c698a6019fb17ad1c180e310e14eb2dcf838d93e54ec79cb1ad1c9165d9020e5",
+      "preview/core/profile.js": "c9adb2b68ede19b18ebd827603fce3ceac6bf7fca0734d1c3b77bc24736b43a4",
+      "preview/core/motion-controller.js": "63f36d201c2878ff82d22d18a1952cf108cdd0ba9ae01c6694f1406d1c5328a3",
+      "preview/core/motion-skeleton.js": "d9ed586812c99ffc384e8798510e4d9040f449a30ec13e51db322d5572caeb7a",
+      "preview/core/motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985",
+      "preview/core/motion-profile.js": "e1c8bf747369eac59bb35f5d82c3088e70001b644aaceb153933215f263ed782",
+      "preview/core/expression-choreography.js": "edd1dc0d25d77145f4701cbb21bda3c64d2b0168ad07e85269b85ac0cb21fcc0",
+      "preview/studio/motion-rig.js": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "realtime/qwen/scene.mjs": "fb4ad23882c9198a09d0e023389ace0c211490f0daf2c80026b86a6fe0c73360",
+      "realtime/performance/director.mjs": "cb6f2c7ba76b8bf38265bc1a747462a858886d56901a77040cea61519c8773c9",
+      "realtime/performance/viewer.mjs": "4de447197e8aaa299d1b9c405759985565ff3820aa8cca80fd033a8de5fc3bf2",
+      "realtime/browser-performance-acceptance.cjs": "68ba6c3162bf45df6fd8a64c299230e8de8ead99f90b0613e3fa95039976266b"
+    },
+    "environment": {
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "physics": false
+    },
+    "raw": "outputs/crisp-wave-20261016/browser-all-final/browser-performance-acceptance.json"
+  },
+  "failedInitialAttempts": [
+    {
+      "path": "outputs/crisp-wave-20261016/browser/browser-wave-acceptance.json",
+      "reason": "Expected nonexistent right sleeve; corrected to actual five left sleeve chains, then passed."
+    },
+    {
+      "path": "outputs/crisp-wave-20261016/browser-all/browser-performance-acceptance.json",
+      "reason": "Initial first-three-rendered-frames timeout at 15 seconds; 0 checks, unchanged script retry passed."
+    }
+  ],
+  "playbackPreview": {
+    "url": "http://127.0.0.1:18768/performance/",
+    "story": "wave_review",
+    "screenshot": "outputs/crisp-wave-20261016/preview-final.png"
+  },
+  "provenance": {
+    "helper": "scripts/check-motion-clearance.mjs included unchanged from Claude completed handoff dated 2026-10-14",
+    "rawDirectory": "outputs/crisp-wave-20261016/"
+  },
+  "nodeFinalTargeted": {
+    "command": "node --test tests/near-elbows-clearance.test.mjs tests/wave-recovery-regression.test.mjs",
+    "passed": 9,
+    "failed": 0,
+    "raw": "outputs/crisp-wave-20261016/final-targeted-tests.txt",
+    "scope": "After final resume validation and EOF-only cleanup"
+  }
+}

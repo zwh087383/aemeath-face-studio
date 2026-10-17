@@ -1,6 +1,7 @@
 import { GESTURES, GESTURE_IDS } from '../../preview/core/motion-profile.js';
 
 export const STORIES = Object.freeze({
+  wave_review: { name: '近身挥手', description: '短促挥动，完整收回；分别看普通挥手和轻快招呼的肘部与袖子。', gestures: ['wave', 'greet'], waitForRecovery: true },
   coordination: { name: '身体联动', description: '解释、挥手、耸肩、抚胸，再俯身和仰头。留意肘部、胸肩与重心怎样配合。', gestures: ['explain', 'wave', 'shrug', 'chest', 'bow_smile', 'look_up'] },
   greeting: { name: '见到你', description: '先招呼，再靠近，笑着回应。', gestures: ['greet', 'bow_smile', 'laugh', 'agree'] },
   conversation: { name: '听你说', description: '倾听、好奇、思考，再认真解释。', gestures: ['listen', 'curious', 'think', 'explain_firm', 'agree'] },
@@ -75,8 +76,9 @@ export class PerformanceDirector {
       const current = this.motion.snapshot().gestures.find(g => g.id === this.activeId);
       // Hand off during authored recovery, not after returning to a neutral pose.
       // Starting a successor uses the controller's live-pose transition.
-      if (current?.phase === 'recover' || (!current && this.activeId && !this.motion.pending.length)) {
-        const story = STORIES[this.story];
+      const story = STORIES[this.story];
+      const complete = !current && this.activeId && !this.motion.pending.length;
+      if ((!story.waitForRecovery && current?.phase === 'recover') || complete) {
         let next = this.index+1;
         if (next >= story.gestures.length) next = this.repeat ? 0 : -1;
         if (next < 0) { this.story = null; this.activeId = null; }

@@ -80,6 +80,11 @@ export function buildRig(skeleton, binding) {
       handDir, palm, thumbSide, palmAlong: .45 * len(sub(mid1, W0)), palmDepth: .12,
       shrugAxis: [0, 0, side.sign], protractAxis: [0, -side.sign, 0],
       fingers,
+      // Optional PMX cloth: five strips have fixed attachments at the upper arm.
+      // Discover only complete known strips; custom rigs without them still work.
+      sleeves: [...skeleton.keys()].filter(name => parentOf(name) === n.arm && /袖子_0_/.test(name))
+        .filter(name => skeleton.has(name.replace('_0_', '_15_')))
+        .map(name => ({ name, direction: normalize(sub(pos(name.replace('_0_', '_15_')), pos(name))) })),
     };
   }
   // Parent-first FK chain over the bones the motion system rotates or measures.
@@ -90,6 +95,7 @@ export function buildRig(skeleton, binding) {
   for (const side of Object.values(rig.sides)) {
     for (const segs of Object.values(side.fingers)) for (const s of segs) addPath(s.name);
     for (const tip of Object.values(side.names.tips)) addPath(tip);
+    for (const sleeve of side.sleeves) addPath(sleeve.name);
   }
   const depth = name => { let d = 0; for (let b = parentOf(name); b; b = parentOf(b)) d++; return d; };
   rig.chain = [...wanted].sort((a, b) => depth(a) - depth(b));
@@ -162,19 +168,19 @@ function solveChain(rig, side, pose, chestRot, chestPos) {
   const authoredPlane = perpendicular(pole, uHat, qrotate(chestRot, [s.sign, 0, 0]));
   // The authored pole describes gesture intent, not an instruction to keep the
   // humerus abducted. Low conversational hands should hang from relaxed shoulders:
-  // gravity chooses the elbow plane, with a small outward/backward allowance for
-  // the torso and sleeves. Raising the hand progressively restores authored space.
+  // gravity chooses the elbow plane with a small outward allowance. Raised hands
+  // use shoulder flexion (elbow forward), keeping the humerus near the body in
+  // front view instead of restoring a wide lateral pole.
   // Blend in the plane perpendicular to shoulder->wrist, so reach never changes.
-  const hanging = qrotate(chestRot, [s.sign * .12, -1, -.08]);
-  const downPlane = perpendicular(hanging, uHat, authoredPlane);
   const raised = smoother((pose.hand[1] - s.A0[1] + .8) / 2.7);
-  // A hand at the sternum needs room for the upper arm in front of the ribs;
-  // near-straight hanging arms need no extra correction. Aemeath's long sleeves
-  // also need a little more clearance beside the low waist than an uncovered arm.
-  const contact = smoother((1.0 - Math.abs(pose.hand[0])) / .6) * smoother((pose.hand[1] - 14) / 1.2);
+  // Palm-anchored chest poses have wrists farther out than the palm anchor. Give
+  // their upper arm forward room over the ribs without increasing lateral spread.
+  const contact = smoother((1.6 - Math.abs(pose.hand[0])) / .9) * smoother((pose.hand[1] - 14) / 1.2);
+  const hanging = qrotate(chestRot, [s.sign * .12, -1, -.08 + Math.max(raised * 2, contact)]);
+  const downPlane = perpendicular(hanging, uHat, authoredPlane);
   const extended = smoother((dist / (s.L1 + s.L2) - .94) / .045);
   const lowSleeve = smoother((13.1 - pose.hand[1]) / .8) * .5;
-  const authoredShare = .60 + .40 * Math.max(raised, contact, extended, lowSleeve);
+  const authoredShare = .20 + .25 * Math.max(raised, extended, lowSleeve);
   const pHat = normalize(add(scale(downPlane, 1 - authoredShare), scale(authoredPlane, authoredShare)));
   const upperDir = normalize(add(scale(uHat, cosA), scale(pHat, Math.sqrt(1 - cosA * cosA))));
   const cosE = clamp((s.L1 * s.L1 + s.L2 * s.L2 - d * d) / (2 * s.L1 * s.L2), -1, 1);
@@ -241,6 +247,21 @@ export function solveArm(rig, side, pose, chestRot, chestPos, locals, diag = {})
   const { twistAngle, qForearm, qWrist } = splitHand(s, handLocal(s, pose.palm, pose.point));
   locals.set(n.handTwist, qForearm);
   locals.set(n.wrist, qWrist);
+  // The PMX's long sleeves are separate cloth chains parented directly to the
+  // upper arm, not the elbow. With physics disabled they otherwise sweep behind
+  // the body as a rigid continuation of the humerus. Use a bounded kinematic
+  // drape toward the free space outside the skirt and in front of the braids.
+  // This is a cloth pose constraint, not a physics simulation. Its 45% blend
+  // preserves the carried sleeve shape; all attachment points stay fixed. No
+  // shoulder, elbow or wrist is moved to make room for the cloth.
+  const armWorld = qmul(qmul(chestRot, qShoulder), qArm);
+  for (const sleeve of s.sleeves) {
+    const carried = qrotate(armWorld, sleeve.direction);
+    const hanging = normalize(qrotate(chestRot, [s.sign * 2.2, -1, .8]));
+    const desired = normalize(add(scale(carried, .55), scale(hanging, .45)));
+    const correction = qlimit(qfromUnit(carried, desired), .65);
+    locals.set(sleeve.name, qnormalize(qmul(qmul(qconj(armWorld), correction), armWorld)));
+  }
   // Fingers: a relaxed cascade (index < middle < ring < pinky), thumb separate.
   const curl = clamp(pose.curl, -.15, 1), thumb = clamp(pose.thumb, -.2, 1), spread = clamp(pose.spread, -1, 1);
   for (const [finger, segments] of Object.entries(s.fingers)) {

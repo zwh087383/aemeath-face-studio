@@ -76,14 +76,14 @@ test('quiet and energetic expressions retain different directional stories inste
   assert.ok(bodyTravel('greet') > .3 && bodyTravel('shy') > .25, 'greet/shy change support visibly');
 });
 
-test('body rewrite preserves published speech cue durations and phase boundaries', () => {
+test('body timing retains published gestures and the explicitly faster wave/greet revision', () => {
   const timing = {
-    explain: [2.45, .66, .5, .78, 1.7], wave: [2.65, .82, .56, 1.72, 1.95],
+    explain: [2.45, .66, .5, .78, 1.7], wave: [2.25, .72, .56, 1.32, 1.55],
     shrug: [1.6, .44, .36, .56, .86], chest: [2.8, .72, .64, .86, 2.02],
     bow_smile: [3.8, 1.05, .735, 1.25, 2.65], laugh: [3.4, .98, .686, 1.18, 2.35],
     curious: [3.65, 1.12, .784, 1.32, 2.6], shy: [4.3, 1.12, .784, 1.32, 3.25],
     explain_firm: [3.65, 1.12, .784, 1.32, 2.55], surprise: [3.55, .72, .504, .92, 2.5],
-    think: [4.2, 1.3, .91, 1.5, 3.1], greet: [3.25, .95, .665, 1.15, 2.25],
+    think: [4.2, 1.3, .91, 1.5, 3.1], greet: [2.65, .88, .7, 1.24, 1.65],
     listen: [4, 1.1, .77, 1.3, 2.95], comfort: [4.1, 1.35, .945, 1.55, 3.05],
     look_up: [3.95, 1.2, .84, 1.4, 2.85], agree: [3.05, .95, .665, 1.15, 2.05],
   };

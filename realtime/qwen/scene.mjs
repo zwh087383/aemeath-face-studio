@@ -24,6 +24,15 @@ export async function createScene(stage, progress = () => {}) {
   const motion = new MotionController({ skeleton: skeletonFromMesh(mesh) }); motion.setOptions({ natural: true, intensity: 1, speed: 1 });
   const rig = new MotionRig(mesh), helper = new MMDAnimationHelper(); helper.add(mesh, { physics: false }); helper.enable('ik', false);
   const rest = mesh.skeleton.bones.map(b => [b, b.quaternion.clone(), b.position.clone()]); mesh.frustumCulled = false; scene.add(mesh);
+  const observedBones = [
+    ['head', '頭'], ['neck', '首'], ['spine', '上半身'], ['chest', '上半身2'], ['upperChest', '上半身1'],
+    ['eyes', '両目'], ['pelvis', '腰'], ['hip', '下半身'], ['leftShoulder', '左腕'], ['rightShoulder', '右腕'],
+    ['leftElbow', '左ひじ'], ['rightElbow', '右ひじ'], ['leftWrist', '左手首'], ['rightWrist', '右手首'],
+    ['leftAnkle', '左足首'], ['rightAnkle', '右足首'],
+    // This asymmetric outfit has five long sleeve strips on the left only.
+    ...Array.from({length:5},(_,i)=>[`leftSleeveRoot${i}`,`左袖子_0_${i}`]),
+    ...Array.from({length:5},(_,i)=>[`leftSleeveTip${i}`,`左袖子_15_${i}`]),
+  ].map(([key, name]) => [key, mesh.skeleton.bones.find(b => b.name === name)]);
   const expression = new ExpressionChoreographer();
   let expressionEnabled = true;
   const composedWeights = new Float32Array(face.weights.length);
@@ -55,8 +64,7 @@ export async function createScene(stage, progress = () => {}) {
       rig.apply(motion.locals); const assigned = performance.now();
       helper.update(dt); mesh.updateMatrixWorld(true); renderer.render(scene, camera); const submitted = performance.now();
       const bones = {}, rotations = {};
-      for (const [key, name] of [['head', '頭'], ['neck', '首'], ['spine', '上半身'], ['chest', '上半身2'], ['upperChest', '上半身1'], ['eyes', '両目'], ['pelvis', '腰'], ['hip', '下半身'], ['leftShoulder', '左腕'], ['rightShoulder', '右腕'], ['leftElbow', '左ひじ'], ['rightElbow', '右ひじ'], ['leftWrist', '左手首'], ['rightWrist', '右手首'], ['leftAnkle', '左足首'], ['rightAnkle', '右足首']]) {
-        const bone = mesh.skeleton.bones.find(b => b.name === name);
+      for (const [key, bone] of observedBones) {
         if (!bone) continue;
         bones[key] = bone.getWorldPosition(new THREE.Vector3()).toArray();
         rotations[key] = bone.getWorldQuaternion(new THREE.Quaternion()).toArray();

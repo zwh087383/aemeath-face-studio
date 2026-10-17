@@ -125,5 +125,5 @@ window.performanceLab={get ready(){return ready;},play,playStory,stop,pause:()=>
   director=new PerformanceDirector({motion:scene.motion,face:scene.face});ready=true;
   $('loading').remove();for(const b of document.querySelectorAll('button:disabled'))b.disabled=false;
   requestAnimationFrame(frame);
-  playStory('coordination');
+  playStory('wave_review');
 })().catch(fail);

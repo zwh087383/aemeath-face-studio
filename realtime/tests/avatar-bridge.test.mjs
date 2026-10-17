@@ -60,7 +60,7 @@ function fixture({ start = true, seed = 20261014 } = {}) {
     now: () => now, media: () => media, render };
 }
 
-test('avatar catalog preserves legacy timing/order and exposes all public body gestures', () => {
+test('avatar catalog preserves non-body timing/order and follows current public gesture timing', () => {
   const expectedKeys = [...new Set([...Object.keys(DEFAULT_CATALOG), ...GESTURE_IDS.map(id => `gesture:${id}`)])];
   assert.deepEqual(Object.keys(AVATAR_CATALOG), expectedKeys);
   assert.equal(AVATAR_CATALOG['gesture:beat'], undefined);
@@ -73,8 +73,7 @@ test('avatar catalog preserves legacy timing/order and exposes all public body g
     const bound = (p * MOTION_DEFAULTS.maxStretch + r - p
       + (def.duration + tail - r) * MOTION_DEFAULTS.maxStretch) / .97;
     assert.ok(actual.duration >= bound && actual.duration < bound + .052, key);
-    if (original) assert.deepEqual({ ...actual, duration: original.duration }, original);
-    else assert.deepEqual(actual, { duration: actual.duration, apex: def.apex, cooldown: def.cooldown, slot: 'body' });
+    assert.deepEqual(actual, { duration: actual.duration, apex: def.apex, cooldown: def.cooldown, slot: 'body' });
   }
 });
 

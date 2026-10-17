@@ -34,13 +34,14 @@ test('ordinary expressive gestures no longer hold the upper arm far out from the
   }
 });
 
-test('raising a hand restores elbow space instead of pinning the humerus to the torso', () => {
+test('raised greetings retain hand height while the elbow flexes forward instead of spreading sideways', () => {
   for (const id of ['wave', 'greet']) {
     const c = make(); c.inspect(id, GESTURES[id].apex);
     for (let i = 1; i <= 120; i++) c.update(2 + i / 60, 1 / 60);
     const pose = measure(c, 'R');
     assert.ok(pose.wrist[1] - pose.shoulder[1] > 1, `${id} hand stays raised`);
-    assert.ok(pose.lateral > 1.8, `${id} elbow has overhead clearance`);
+    assert.ok(pose.lateral < 1.8, `${id} raised elbow must stay near the body silhouette`);
+    assert.ok(pose.elbow[2] - pose.shoulder[2] > .5, `${id} elbow has forward flexion room`);
   }
 });
 

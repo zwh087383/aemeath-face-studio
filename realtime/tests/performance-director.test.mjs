@@ -52,6 +52,28 @@ test('pause freezes real controller bones and clock; resumption does not catch u
   assert.equal(f.motion.status, 'playing');
 });
 
+test('wave review finishes recovery before starting its successor', () => {
+  const f = fixture(), starts = [];
+  assert.equal(f.director.playStory('wave_review', false), true);
+  let last = '', sawRecovery = false;
+  for (let i = 0; i < 1200; i++) {
+    f.advance(1 / 60);
+    const gestures = f.motion.snapshot().gestures;
+    const current = gestures.find(g => g.id === f.director.activeId);
+    if (current?.gesture === 'wave' && current.phase === 'recover') sawRecovery = true;
+    if (current && current.id !== last) {
+      if (starts.length) {
+        assert.ok(sawRecovery, 'the outgoing wave actually reached recovery');
+        assert.equal(gestures.length, 1, 'the next greeting must not replace a recovering wave');
+      }
+      starts.push(current.gesture); last = current.id;
+    }
+  }
+  assert.deepEqual(starts, ['wave', 'greet']);
+  assert.equal(f.motion.gestures.length, 0);
+  assert.equal(f.director.story, null);
+});
+
 test('interrupt while paused releases all motion and clears story without resuming the sequence', () => {
   const f = fixture(); f.director.playStory('discovery'); f.advance(.8); f.director.pause();
   const events = f.director.events.length;

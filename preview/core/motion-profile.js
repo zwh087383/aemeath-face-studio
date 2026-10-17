@@ -89,26 +89,27 @@ const LEGACY_GESTURES = Object.freeze({
     },
   },
   wave: {
-    name: '挥手', tracks: ['R', 'L', 'body'], duration: 2.65, apex: .82, recover: .6, cooldown: 1.5,
+    name: '挥手', tracks: ['R', 'L', 'body'], duration: 2.25, apex: .72, recover: .6, cooldown: 1.5,
     // Raising the hand overhead folds the elbow first instead of swinging a straight arm out.
     arc: { tuck: .3, out: .55 },
-    phases: { prepare: [0, .56], stroke: [.56, 1.72], hold: [1.72, 1.95], recover: [1.95, 2.65] },
+    phases: { prepare: [0, .56], stroke: [.56, 1.32], hold: [1.32, 1.55], recover: [1.55, 2.25] },
     keys: {
       R: [
         [0, arm({ hand: [2.35, 13.6, 1.05], pole: [.8, -.55, -.55], palm: [-.85, .2, .4], point: [.15, .2, 1], curl: .28 })],
         // Elbow flexes first: the hand passes in front of the shoulder with the forearm
         // rising, never aimed backwards and never reaching out on a straight arm.
-        [.32, arm({ hand: [3.4, 15.4, 1.3], pole: [.9, -.6, .2], palm: [-.4, .2, .9], point: [.1, .85, .5], curl: .2, spread: .25, shrug: .03 })],
-        // Forearm near vertical with the elbow out and slightly forward; the wave pivots at the elbow.
-        [.56, arm({ hand: [3.8, 18.2, 1.0], pole: [.9, -.5, .45], palm: [.02, .05, 1], point: [0, 1, .06], curl: .12, spread: .42, thumb: .06, shrug: .055 })],
-        [.82, arm({ hand: [4.1, 18.14, 1.0], pole: [.9, -.5, .45], palm: [.08, .05, 1], point: [.4, 1, .06], curl: .1, spread: .45, thumb: .05, shrug: .055 })],
-        [1.08, arm({ hand: [3.5, 18.14, 1.0], pole: [.9, -.5, .45], palm: [-.06, .05, 1], point: [-.4, 1, .06], curl: .12, spread: .42, thumb: .06, shrug: .055 })],
-        [1.34, arm({ hand: [4.1, 18.14, 1.0], pole: [.9, -.5, .45], palm: [.08, .05, 1], point: [.4, 1, .06], curl: .1, spread: .45, thumb: .05, shrug: .055 })],
-        [1.58, arm({ hand: [3.56, 18.15, 1.0], pole: [.9, -.5, .45], palm: [-.04, .05, 1], point: [-.32, 1, .06], curl: .12, spread: .42, thumb: .06, shrug: .055 })],
-        [1.72, arm({ hand: [3.86, 18.19, 1.0], pole: [.9, -.5, .45], palm: [.02, .05, 1], point: [.08, 1, .06], curl: .14, spread: .38, thumb: .08, shrug: .05 }), 'stop'],
-        [1.95, arm({ hand: [3.83, 18.12, 1.0], pole: [.9, -.5, .45], palm: [0, .05, 1], point: [.04, 1, .06], curl: .18, spread: .32, thumb: .1, shrug: .045 }), 'stop'],
+        [.32, arm({ hand: [2.8, 15.4, 1.3], pole: [.9, -.6, .2], palm: [-.4, .2, .9], point: [.1, .85, .5], curl: .2, spread: .25, shrug: .03 })],
+        // Compact upper arm, with the original .6-unit wrist sweep. Successive
+        // reversals are .16 s apart (3.125 full cycles/s), independent of lift speed.
+        [.56, arm({ hand: [3.2, 18.2, 1.0], pole: [.9, -.5, .45], palm: [.02, .05, 1], point: [0, 1, .06], curl: .12, spread: .42, thumb: .06, shrug: .055 })],
+        [.72, arm({ hand: [3.5, 18.14, 1.0], pole: [.9, -.5, .45], palm: [.08, .05, 1], point: [.4, 1, .06], curl: .1, spread: .45, thumb: .05, shrug: .055 })],
+        [.88, arm({ hand: [2.9, 18.14, 1.0], pole: [.9, -.5, .45], palm: [-.06, .05, 1], point: [-.4, 1, .06], curl: .12, spread: .42, thumb: .06, shrug: .055 })],
+        [1.04, arm({ hand: [3.5, 18.14, 1.0], pole: [.9, -.5, .45], palm: [.08, .05, 1], point: [.4, 1, .06], curl: .1, spread: .45, thumb: .05, shrug: .055 })],
+        [1.20, arm({ hand: [2.96, 18.15, 1.0], pole: [.9, -.5, .45], palm: [-.04, .05, 1], point: [-.32, 1, .06], curl: .12, spread: .42, thumb: .06, shrug: .055 })],
+        [1.32, arm({ hand: [3.26, 18.19, 1.0], pole: [.9, -.5, .45], palm: [.02, .05, 1], point: [.08, 1, .06], curl: .14, spread: .38, thumb: .08, shrug: .05 }), 'stop'],
+        [1.55, arm({ hand: [3.23, 18.12, 1.0], pole: [.9, -.5, .45], palm: [0, .05, 1], point: [.04, 1, .06], curl: .18, spread: .32, thumb: .1, shrug: .045 }), 'stop'],
         // Lowering retraces the raise path while the weight fades.
-        [2.35, arm({ hand: [3.4, 15.4, 1.3], pole: [.9, -.6, .2], palm: [-.4, .2, .9], point: [.1, .85, .5], curl: .22, spread: .2, shrug: .02 }), 'stop'],
+        [1.95, arm({ hand: [2.8, 15.4, 1.3], pole: [.9, -.6, .2], palm: [-.4, .2, .9], point: [.1, .85, .5], curl: .22, spread: .2, shrug: .02 }), 'stop'],
       ],
       // The supporting hand moves forward before the shoulder turn; leaving it
       // planted beside the skirt would drag its fingertips through the fabric.
@@ -116,8 +117,8 @@ const LEGACY_GESTURES = Object.freeze({
         [0, POSTURES.relaxed.L],
         [.5, arm({ ...POSTURES.relaxed.L, hand: [3.1, 11.8, 1.3], curl: .28, protract: .035 })],
         [.94, arm({ ...POSTURES.relaxed.L, hand: [3.2, 12.0, 1.15], curl: .21, spread: .14, protract: .045 }), 'stop'],
-        [1.6, arm({ ...POSTURES.relaxed.L, hand: [3.15, 11.95, 1.1], curl: .23, protract: .035 })],
-        [1.95, arm({ ...POSTURES.relaxed.L, hand: [3.1, 11.85, .95], curl: .26, protract: .025 })],
+        [1.3, arm({ ...POSTURES.relaxed.L, hand: [3.15, 11.95, 1.1], curl: .23, protract: .035 })],
+        [1.55, arm({ ...POSTURES.relaxed.L, hand: [3.1, 11.85, .95], curl: .26, protract: .025 })],
       ],
       body: [
       [0,{}],
@@ -125,8 +126,8 @@ const LEGACY_GESTURES = Object.freeze({
       [0.56,{lean: 0.045,twist: -0.08,side: -0.055,pelvisRoll: 0.025,hipShift: -0.13,headYaw: -0.035,headRoll: 0.045}],
       [0.94,{lean: 0.08,twist: -0.125,side: -0.09,pelvisRoll: 0.035,hipShift: -0.22,headPitch: -0.035,headYaw: -0.035,headRoll: 0.065}, 'stop'],
       [1.4,{lean: 0.065,twist: -0.09,side: -0.065,pelvisRoll: 0.028,hipShift: -0.17,headPitch: 0.02,headYaw: -0.015,headRoll: 0.035}],
-      [1.95,{lean: 0.035,twist: -0.055,side: -0.035,pelvisRoll: 0.018,hipShift: -0.1,headPitch: 0,headRoll: 0.02}],
-      [2.38,{lean: 0.015,twist: -0.015,side: -0.012,hipShift: -0.03}]
+      [1.55,{lean: 0.035,twist: -0.055,side: -0.035,pelvisRoll: 0.018,hipShift: -0.1,headPitch: 0,headRoll: 0.02}],
+      [1.98,{lean: 0.015,twist: -0.015,side: -0.012,hipShift: -0.03}]
     ],
     },
   },
@@ -340,18 +341,18 @@ const EXPRESSIVE_GESTURES = {
     R: [[0, lowR], [.95, pose(heart, { hand: [.75, 15.1, 2.05], curl: .36, thumb: .25, spread: -.12 })], [1.5, pose(heart, { hand: [.65, 15.3, 2.05], curl: .29 }), 'stop'], [3.1, pose(heart, { hand: [.9, 14.9, 2.05], curl: .24 }), 'stop']],
     L: [[0, lowL], [1.12, pose(openL, { hand: [1.7, 12.85, 1.9], curl: .42, shrug: -.025 }), 'stop'], [2.8, pose(openL, { hand: [1.8, 12.7, 1.85], curl: .3 })], [3.1, lowL, 'stop']],
   }, [[.28, { browFocus: .22, browAsym: .2, eyeHalf: .1 }], [1.3, { browFocus: .33, browAsym: .3, eyeHalf: .15, mouthFlat: .12 }], [2.6, { browUp: .14, browSmile: .17, smile: .24 }], [3.2, { browSmile: .25, eyeSmile: .19, smile: .36 }]]),
-  greet: performance('轻快招呼', '先认出你，微微前迎，掌心打开只挥一回', 3.25, .95, 2.25, {
+  greet: performance('轻快招呼', '先认出你，微微前迎，掌心打开轻快挥一回', 2.65, .88, 1.65, {
     body: [
       [0,{}],
       [0.18,{gazeYaw: -0.1,gazePitch: -0.035,lean: -0.035,side: -0.02}],
       [0.55,{lean: 0.075,twist: -0.04,headYaw: -0.055,headRoll: -0.04,side: 0.04,hipShift: -0.075}],
       [0.95,{lean: 0.16,twist: -0.085,side: 0.075,headPitch: -0.035,headYaw: -0.02,headRoll: -0.075,pelvisRoll: -0.035,hipShift: -0.17}, 'stop'],
       [1.6,{lean: 0.105,twist: -0.05,side: 0.045,headPitch: 0.045,headRoll: -0.045,pelvisRoll: -0.02,hipShift: -0.1}],
-      [2.25,{lean: 0.055,twist: -0.02,side: 0.015,headRoll: -0.025,hipShift: -0.035}]
+      [1.95,{lean: 0.055,twist: -0.02,side: 0.015,headRoll: -0.025,hipShift: -0.035}]
     ],
-    R: [[0, lowR], [.5, LEGACY_GESTURES.wave.keys.R[1][1]], [.95, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.75, 17.65, 1.3], shrug: .045 }), 'stop'], [1.35, pose(LEGACY_GESTURES.wave.keys.R[3][1], { hand: [4.05, 17.6, 1.3], shrug: .04 })], [1.75, pose(LEGACY_GESTURES.wave.keys.R[4][1], { hand: [3.65, 17.65, 1.3], shrug: .035 }), 'stop'], [2.25, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.75, 17.55, 1.3], shrug: .025 }), 'stop'], [2.9, LEGACY_GESTURES.wave.keys.R[1][1], 'stop']],
-    L: [[0, lowL], [.8, pose(openL, { hand: [2.2, 12.95, 1.85], curl: .24, spread: .2 })], [1.35, pose(openL, { hand: [2.4, 13.15, 2.0], curl: .19, spread: .24 }), 'stop'], [2.25, pose(lowL, { hand: [1.55, 12.2, 1.6] }), 'stop']],
-  }, [[.28, { browUp: .18, browSmile: .2, smile: .25 }], [.95, { browSmile: .5, eyeSmile: .4, smile: .74 }], [1.8, { browSmile: .4, eyeSmile: .3, smile: .62 }], [2.3, { browSmile: .25, eyeSmile: .2, smile: .4 }]], { arc: { tuck: .25, out: .5 } }),
+    R: [[0, lowR], [.4, LEGACY_GESTURES.wave.keys.R[1][1]], [.7, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.15, 17.65, 1.3], shrug: .045 })], [.88, pose(LEGACY_GESTURES.wave.keys.R[3][1], { hand: [3.45, 17.6, 1.3], shrug: .04 })], [1.06, pose(LEGACY_GESTURES.wave.keys.R[4][1], { hand: [3.05, 17.65, 1.3], shrug: .035 })], [1.24, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.15, 17.55, 1.3], shrug: .025 }), 'stop'], [1.65, pose(LEGACY_GESTURES.wave.keys.R[2][1], { hand: [3.15, 17.55, 1.3], shrug: .025 }), 'stop'], [2.3, LEGACY_GESTURES.wave.keys.R[1][1], 'stop']],
+    L: [[0, lowL], [.7, pose(openL, { hand: [2.2, 12.95, 1.85], curl: .24, spread: .2 })], [1.06, pose(openL, { hand: [2.4, 13.15, 2.0], curl: .19, spread: .24 }), 'stop'], [1.65, pose(lowL, { hand: [1.55, 12.2, 1.6] }), 'stop']],
+  }, [[.28, { browUp: .18, browSmile: .2, smile: .25 }], [.88, { browSmile: .5, eyeSmile: .4, smile: .74 }], [1.3, { browSmile: .4, eyeSmile: .3, smile: .62 }], [1.7, { browSmile: .25, eyeSmile: .2, smile: .4 }]], { arc: { tuck: .25, out: .5 }, phases: { prepare: [0, .7], stroke: [.7, 1.24], hold: [1.24, 1.65], recover: [1.65, 2.65] } }),
   listen: performance('认真倾听', '收住手，向你靠近，慢慢点一次头', 4, 1.1, 2.95, {
     body: [
       [0,{}],
@@ -408,7 +409,7 @@ const EXPRESSIVE_GESTURES = {
 // envelopes as well so older playback and scheduler clients gain face/body linkage.
 const legacyExpressions = {
   explain: [[.35, { browUp: .12 }], [.9, { browSmile: .22, eyeSmile: .15, smile: .3 }], [1.7, { browSmile: .16, smile: .23 }]],
-  wave: [[.3, { browUp: .18, smile: .2 }], [.8, { browSmile: .42, eyeSmile: .32, smile: .65 }], [1.9, { browSmile: .25, smile: .42 }]],
+  wave: [[.3, { browUp: .18, smile: .2 }], [.72, { browSmile: .42, eyeSmile: .32, smile: .65 }], [1.5, { browSmile: .25, smile: .42 }]],
   shrug: [[.25, { browAsym: .25, browUp: .15 }], [.5, { browAsym: .36, browSad: .2, smile: .24 }], [.9, { browSmile: .13, smile: .22 }]],
   chest: [[.35, { browSad: .12 }], [.85, { browSmile: .25, eyeSmile: .2, smile: .36 }], [2, { browSmile: .18, smile: .3 }]],
 };

@@ -12,11 +12,13 @@ node realtime/avatar-server.mjs --port 18768
 
 打开 <http://127.0.0.1:18768/performance/>。沿用项目已有本地 PMX、贴图与前端依赖，不下载新模型、不连接云服务、不采集麦克风。模型资源仍需按项目原有方式在本机准备。
 
-页面默认循环“身体联动”：解释 → 挥手 → 耸肩 → 抚胸 → 俯身微笑 → 仰头。可以点单个动作，切上身、侧前、侧面、全身或面部视角，暂停观察，以及在任意阶段打断收势。动作面板单独滚动，人物画面保持可见。
+页面默认循环“近身挥手”：挥手 → 完整收回 → 轻快招呼 → 完整收回，便于检查肘部与袖发间距。“身体联动”等原有连播仍可选择。可以点单个动作，切上身、侧前、侧面、全身或面部视角，暂停观察，以及在任意阶段打断收势。动作面板单独滚动，人物画面保持可见。
 
 “叠加测试口型”是无声音的合成元音压力测试，用于观察微笑与张嘴能否共存；它不是语音识别或真实语音生成。
 
 ## 本分支特点
+
+第三版 `codex/close-elbows-crisp-wave-20261016` 进一步收近肘部，高位挥手采用向前弯肘；手部挥动加快，保持上一版胸腰与头部幅度。实际五条左袖骨链加入有上限的衣料姿态约束，修正收回时扫入后辫子的路径。它仍是**实验性动作系统**，衣料约束不是布料物理。此次连续运动、全阶段打断和真实模型浏览器验收见 [CRISP-WAVE-REVISION.md](./CRISP-WAVE-REVISION.md)。
 
 第二版 `codex/natural-elbows-body-20261016` 针对实际观看反馈修正肘部外张与身体反应过小。低位对话手势的肘部加入自然下垂方向，高位挥手仍保留抬臂空间；16 个身体轨道分别加入准备、转身或倾身、停留中的变化与收回。验收直接测量实际胸部旋转及肘部相对肩的位置，不再用“任意骨骼有非零移动”作为身体参与合格的条件。前后对比和本轮限制见 [ELBOW-BODY-REVISION.md](./ELBOW-BODY-REVISION.md)。
 
@@ -54,8 +56,11 @@ node realtime/avatar-server.mjs --port 18768
 node --test tests/motion.test.mjs tests/motion-dynamics.test.mjs tests/motion-library.test.mjs tests/coordinated-motion.test.mjs realtime/tests/*.test.mjs
 node scripts/check-coordinated-motion.mjs
 node realtime/browser-performance-acceptance.cjs
+node --test tests/crisp-wave-tempo.test.mjs tests/near-elbows-clearance.test.mjs tests/wave-recovery-regression.test.mjs
+node scripts/check-wave-clearance.mjs --mesh
+node realtime/browser-wave-acceptance.cjs
 ```
 
-浏览器验收需要本地 Chrome 和 Playwright；脚本只创建、关闭自己的浏览器。第一版历史结果保留在 [VALIDATION.md](./VALIDATION.md)，第二版的新证据见 [ELBOW-BODY-REVISION.md](./ELBOW-BODY-REVISION.md)。
+浏览器验收需要本地 Chrome 和 Playwright；脚本只创建、关闭自己的浏览器。密集网格对照需要本地 PMX、Three.js 依赖和 Git 中的 `69ba756` 基线，运行耗时数分钟，原始结果写入被忽略的 `outputs/`。第一版历史结果保留在 [VALIDATION.md](./VALIDATION.md)，第二版证据见 [ELBOW-BODY-REVISION.md](./ELBOW-BODY-REVISION.md)，第三版见 [CRISP-WAVE-REVISION.md](./CRISP-WAVE-REVISION.md)。
 
 衣发物理仍关闭。网格启发式检查不能证明全角度无穿模；右肩飘带与侧发仍有少量接触。动作自然程度保留人为观感判断，测试通过只说明被测行为和数值满足条件。
