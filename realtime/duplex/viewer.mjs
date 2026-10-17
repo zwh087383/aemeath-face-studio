@@ -105,13 +105,14 @@ function frame(time) {
     if (frameRows.length > 15000) frameRows.shift();
     if (!trace.length || time-trace.at(-1).at>40) { trace.push({at:time,turnId:t?.id,audio:{status:audio.status,time:audio.time,sources:audio.sourceCount},mouth:rendered.mouthOpen,
       gestures:motion.gestures,reactions:motion.reactions,pose:motion.interactionPose,bones:rendered.bones}); if(trace.length>10000)trace.shift(); }
-    paintRecording();
     if (time-lastUi>250) { updateUI(); lastUi=time; }
   } catch (e) { reportError(e); client.cancel('render_error'); }
   requestAnimationFrame(frame);
 }
-async function connect() {
-  await context.resume(); const reply = await client.connect();
+async function connect(variant=$('variant')?.value ?? 'full-cold') {
+  const url = new URL('/api/duplex', location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';
+  url.searchParams.set('variant',variant);
+  await context.resume(); const reply = await client.connect(url.href);
   clearInterval(silenceTimer);
   silenceTimer = setInterval(()=>{ if(client.ready&&!client.blocked&&!feeding&&!microphone)client.sendAudio(new Int16Array(1600),{source:'silence'}); },100);
   $('status').textContent = '已连接持续监听。可以送入测试问题，或开启麦克风自由对话。'; return reply;
@@ -149,27 +150,27 @@ function close() { stopMic();clearInterval(silenceTimer);client?.close(); }
 function snapshot() {return {client:client.snapshot(),audio:session.audio.snapshot(),session:session.snapshot(),motion:scene.motion.snapshot(),rendered,
   trace:structuredClone(trace),frames:structuredClone(frameRows),environment:scene.environment,
   acousticVerified:false,syntheticMemory:true,source:'actual_WAI_D_duplex'};}
-function paintRecording() {
-  if(!recording)return;
-  const {canvas,g}=recording, model=$('stage').querySelector('canvas');g.fillStyle='#eee7ef';g.fillRect(0,0,canvas.width,canvas.height);
-  g.fillStyle='#51405d';g.font='20px sans-serif';g.fillText('D · 记忆检索与连续双工 · '+recording.label,24,34);
-  const scale=Math.min(950/model.width,720/model.height);g.drawImage(model,(1000-model.width*scale)/2,60,model.width*scale,model.height*scale);
-  const wrap=(text,y)=>{g.font='19px sans-serif';let line='';for(const c of text){if(g.measureText(line+c).width>930){g.fillText(line,26,y);line='';y+=27;}line+=c;}g.fillText(line,26,y);};
-  wrap('你：'+$('input').textContent,790);wrap('爱弥斯：'+(client.current?.transcript??''),850);
-}
 function startRecording(label='真实对话') {
   if(recording)throw Error('already_recording');
-  const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=1020;
-  const g=canvas.getContext('2d'), stream=canvas.captureStream(30);capture.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+  // Capture the submitted WebGL canvas directly. Copying it to a second 2D
+  // canvas can record transparent frames on the WebGPU renderer's GL backend.
+  const canvas=$('stage').querySelector('canvas'),stream=canvas.captureStream(30);
+  capture.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
   const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8,opus',videoBitsPerSecond:2000000}),parts=[];
   let resolve;const done=new Promise(r=>resolve=r);recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data);};
   recorder.onstop=()=>{recordingBlob=new Blob(parts,{type:recorder.mimeType});stream.getVideoTracks().forEach(t=>t.stop());resolve();};
-  recording={canvas,g,recorder,done,label,startedAt:now()};paintRecording();recorder.start(250);return recording.startedAt;
+  recording={canvas,recorder,done,label,startedAt:now()};recorder.start(250);return recording.startedAt;
 }
-async function stopRecording() {if(!recording)return null;const r=recording;r.recorder.stop();await r.done;recording=null;return {bytes:recordingBlob.size,startedAt:r.startedAt,endedAt:now()};}
+async function stopRecording() {if(!recording)return null;const r=recording;r.recorder.stop();await r.done;recording=null;return {bytes:recordingBlob.size,startedAt:r.startedAt,endedAt:now(),capture:'renderer_canvas_direct',width:r.canvas.width,height:r.canvas.height};}
 async function videoBase64(){if(!recordingBlob)return null;return await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result.slice(r.result.indexOf(';base64,')+8));r.readAsDataURL(recordingBlob);});}
 async function boot(){
   service=await(await fetch('/api/duplex/status')).json();
+  if($('variant')){
+    const labels={'full-cold':'完整前置 · 原连接方式','full-warm':'完整前置 · 连接预热','memory-warm':'记忆快答 · 连接预热'};
+    $('variant').replaceChildren(...(service.variants??['full-cold']).map(v=>{const o=document.createElement('option');o.value=v;o.textContent=labels[v];return o;}));
+    $('variant').value=(service.variants??[]).includes('memory-warm')?'memory-warm':'full-cold';
+    if(service.variants)document.querySelector('a[href="./results.html"]')?.setAttribute('href','./fast-results.html');
+  }
   context=new AudioContext({sampleRate:24000,latencyHint:'interactive'});mix=context.createGain();mix.gain.value=.16;mix.connect(context.destination);
   capture=context.createMediaStreamDestination();mix.connect(capture);
   const host={get state(){return context.state;},get currentTime(){return context.currentTime;},destination:mix,resume:()=>context.resume(),createBuffer:(...a)=>context.createBuffer(...a),createBufferSource:()=>context.createBufferSource(),createGain:()=>context.createGain()};

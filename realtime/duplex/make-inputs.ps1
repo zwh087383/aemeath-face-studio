@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Speech
 $clips = [ordered]@{
   'memory-drink' = '你还记得我在星桥咖啡店最喜欢喝什么吗？'
+  'social' = '早上好呀，今天见到你很开心。'
   'followup' = '那刚才说的这杯饮料适合什么时候喝呢？'
   'memory-appointment' = '星桥读书会预约几点座位是几号？'
   'greet' = '好呀先跟我挥挥手打个招呼吧。'

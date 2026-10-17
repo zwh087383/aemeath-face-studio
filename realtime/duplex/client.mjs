@@ -44,8 +44,8 @@ export class DuplexClient {
     if (message.type === 'ready') {
       if (!validId(message.connectionId) || this.ready) throw Error('invalid_ready');
       if (!this.session.setConnection(message.connectionId)) throw Error('connection_rejected');
-      this.connectionId = message.connectionId; this.ready = true; this.budget = message.budget;
-      this.emit('ready', { mode: message.listenerConfiguration?.turn_detection, connectionId: this.connectionId }); return;
+      this.connectionId = message.connectionId; this.ready = true; this.budget = message.budget; this.variant = message.variant ?? 'full-cold';
+      this.emit('ready', { mode: message.listenerConfiguration?.turn_detection, variant: this.variant, connectionId: this.connectionId }); return;
     }
     if (message.connectionId !== this.connectionId) { this.emit('stale_connection_drop'); return; }
     this.budget = message.budget ?? this.budget;
@@ -71,10 +71,14 @@ export class DuplexClient {
       this.cancel('new_turn', false);
       const input = this.inputs.find(i => i.itemId === message.itemId);
       const trial = { id: message.turnId, itemId: message.itemId, input: input ?? null, text: message.text,
-        startedAt: this.now(), sequence: 0, frames: 0, transcript: '', tools: [], stages: [], revoked: false, owner: null };
+        startedAt: this.now(), variant: this.variant, sequence: 0, frames: 0, transcript: '', tools: [], stages: [], fastStages: [], revoked: false, owner: null };
       this.trials.push(trial); this.current = trial;
     } else if (message.type === 'context_ready' && t) {
       t.contextReadyAt = this.now(); t.context = message;
+    } else if (message.type === 'fast_reply' && t) {
+      t.fastStages.push({ at: this.now(), ...message });
+    } else if (message.type === 'reply_connecting' && t) {
+      t.prewarmed = message.prewarmed;
     } else if (message.type === 'request_sent' && t) {
       t.requestAt = this.now(); t.providerConnectionId = message.providerConnectionId;
     } else if (message.type === 'response_created' && t) {

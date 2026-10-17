@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>记忆快答与连接预热 · 真实对照</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+<style>.report{display:block}.report td{white-space:pre-line;vertical-align:top}.video-grid p{overflow-wrap:anywhere}#conclusion{font-size:19px;font-weight:600;max-width:1000px}.failure{color:#934c50}.report video{background:#e4dbe9}</style>
+<body><header><p class="eyebrow">EXPERIMENTAL / MEMORY FIRST / QWEN D</p><h1>快答通道，实际省了多少等待？</h1><p>相同用户问题、独立合成记忆库。快答模型判断、Qwen 口播与动作的耗时全部计入。</p><a href="./">进入人物互动与离线回放 →</a></header>
+<main class="report"><section class="panel"><h2>本批结论</h2><p id="conclusion">正在读取实测记录…</p><p id="budget"></p><p>实验性：自动语音输入与真实云端回复；未测物理麦克风、扬声器回声或长期稳定性。</p></section>
+<section class="panel"><h2>同题短答对照</h2><p>仅比较三组中最终转写完全相同的“饮料记忆”和“早上好”两题，中位数如下。长句被云端切分成不同内容，不纳入同题延迟。每组只有 2 条，不能据此承诺稳定提速。</p><div style="overflow:auto"><table><thead><tr><th>通道</th><th>样本数</th><th>说完→开播</th><th>WAI 准备（含快答）</th><th>上下文就绪→请求</th><th>请求→首音频</th></tr></thead><tbody id="summary"></tbody></table></div></section>
+<section class="panel"><h2>每一轮，包括失败</h2><div style="overflow:auto"><table><thead><tr><th>通道 / 问题 / 回答</th><th>路由与结果</th><th>说完→开播</th><th>快答模型</th><th>动作 / 表情晚于声音</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section class="panel"><h2>本批真实语音与动作的离线重播</h2><p>以下使用保存的原始 PCM、字幕和原生动作事件重新渲染，未再次请求模型。现场录像的画布采集有误，原件保留；这里展示修复采集后的离线重播，延迟表仍来自原始现场记录。</p><div id="videos" class="video-grid"></div></section>
+<section class="panel"><h2>打断与后台维护</h2><p class="failure">云端长句被提前分段，后半句取消正在生成的回复；缺少取消用量后全批停止。计划中的“正在出声时插话并回答新问题”未完成。下面把现场失败与保存真实事件的离线打断分开列出。</p><div id="interrupts"></div><p id="maintenance"></p><p>快答 DONE 后后台解析继续；只有完整播放确认才写入完整助手历史。预热连接不提前生成或预填用户答案。</p></section>
+<section class="panel"><h2>测试说明</h2><p>完整流程：WAI 前置完成后 Qwen 自由回复。快答流程：现有文本模型先返回 DONE/HANDOFF；DONE 的短答交 Qwen 口播并尝试同轮动作，HANDOFF 转完整流程。后台辅助模型照常调用，不能把不等待理解成没有费用。</p><p>全链路从用户音频最后有声样本算到 WebAudio 开播。WAI 准备使用服务器时钟；其它阶段使用同一浏览器时钟，不能把不同钟的所有列相加。动作记录到渲染观察，不把工具到达当作动作展示。</p><p id="preserved"></p><a href="./MEMORY-FAST-VALIDATION.md">完整验收说明</a> · <a href="./memory-fast-summary.json">脱敏逐轮统计</a></section></main>
+<script type="module">
+const $=id=>document.getElementById(id),fmt=x=>Number.isFinite(x)?`${(x/1000).toFixed(2)} s`:'—';
+const labels={'full-cold':'完整前置 · 原连接','full-warm':'完整前置 · 预热连接','memory-warm':'记忆快答 · 预热连接'};
+const cell=(row,text)=>{const c=document.createElement('td');c.textContent=text;row.append(c);};
+try{const response=await fetch('./memory-fast-summary.json');if(!response.ok)throw Error('本批报告尚未生成');const d=await response.json();
+ $('conclusion').textContent=d.conclusion??'请结合逐轮路由与失败记录判断，不能只比较两个汇总数字。';
+ $('budget').textContent=d.budgets.map(b=>`${labels[b.arm]}：${b.turns}/${b.turnLimit} 次输入，${b.responses}/${b.responseLimit} 次 Qwen 响应，未知 ${b.unknown}${b.blocked?'，暂停新调用':''}`).join('；');
+ for(const s of d.matchedShortSummary){const tr=document.createElement('tr');[labels[s.arm],s.successfulN,fmt(s.inputEndToPlaybackMs),fmt(s.preparationMs),fmt(s.contextSetupMs),fmt(s.requestToPcmMs)].forEach(x=>cell(tr,x));$('summary').append(tr);}
+ for(const r of d.rows){const tr=document.createElement('tr');cell(tr,`${labels[r.arm]}\n${r.input}\n${r.transcript||'未生成完整语音'}`);cell(tr,`${r.route==='memory_done'?'快答 DONE':r.fastDecision==='§HANDOFF§'?'快答转交':r.fastDecision?'快答未获程序采纳 → 完整流程':'完整流程'} · ${r.acknowledged?'播完并写入历史':r.error??(r.revoked?'撤销':'未结算')}`);cell(tr,fmt(r.inputEndToPlaybackMs));cell(tr,fmt(r.fastModelMs));cell(tr,`${fmt(r.motionAfterPlaybackMs)} / ${fmt(r.expressionAfterPlaybackMs)}`);$('rows').append(tr);}
+ for(const c of d.cases.filter(c=>c.failure&& !d.rows.some(r=>r.case===c.name))){const tr=document.createElement('tr');[`${labels[c.arm]} / ${c.name}`,`未发起本次模型请求：${c.failure}`,'—','—','—'].forEach(x=>cell(tr,x));$('rows').append(tr);}
+ const videos=[];for(const c of d.presentationVideos??[]){const box=document.createElement('div'),v=document.createElement('video'),p=document.createElement('p');v.controls=true;v.preload='metadata';v.src=c.videoUrl;if(c.posterUrl)v.poster=c.posterUrl;v.volume=.8;v.addEventListener('play',()=>videos.forEach(other=>{if(other!==v)other.pause();}));videos.push(v);p.textContent=`${c.label}\n${c.transcript??''}`;box.append(v,p);$('videos').append(box);}
+ for(const x of d.interruptions){const p=document.createElement('p');p.textContent=`现场 / ${labels[x.arm]} / ${x.reason}：音源 ${x.sourcesBefore}→${x.sourcesAfter}，${x.activeMotion?'有动作':'当时没有正在播放的动作'}。该记录不能替代成功的出声中插话验收。`; $('interrupts').append(p);}
+ for(const r of d.localReplays){const x=r.interrupt,p=document.createElement('p');p.textContent=`离线回放真实挥手 / ${r.passed?'通过':'未通过'}：音源 ${x.sourcesBefore}→${x.sourcesAfter}，撤销返回 ${x.returnMs.toFixed(1)} ms，收口 ${x.mouthClosedMs.toFixed(1)} ms，收势 ${x.motionStoppedMs.toFixed(1)} ms。没有新增云端响应或写入历史。`; $('interrupts').append(p);}
+ $('maintenance').textContent=d.maintenanceNote??'各组原始后台排空与持久化证据留在本机输出目录。';
+ $('preserved').textContent=d.allProtectedUnchanged?'本批七个受保护文件哈希一致：身体幅度、近身肘部与利落挥手轨迹保持原样。':'动作源码哈希需要进一步核对。';
+}catch(error){$('conclusion').textContent=error.message;}
+</script></body></html>

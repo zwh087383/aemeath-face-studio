@@ -1,0 +1,1345 @@
+{
+  "experimental": true,
+  "physicalAcousticsVerified": false,
+  "syntheticMemory": true,
+  "fastPath": "existing text DONE/HANDOFF followed by Qwen speech and native action; both costs included",
+  "rows": [
+    {
+      "arm": "full-cold",
+      "case": "cold-memory",
+      "turnId": "turn-563ccd7d545c4462b8c092cedb3d7325",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "记得呀，是无糖柠檬水。你当时还特意告诉我，那是你在星桥咖啡店最喜欢的饮料呢。",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": null,
+      "fastNeeds": [],
+      "fastStages": [],
+      "fastModelMs": null,
+      "fastDraft": null,
+      "prewarmed": false,
+      "preparationMs": 1281.9999999992433,
+      "contextChars": 4193,
+      "inputEndToPlaybackMs": 3095.675,
+      "endpointAndAdmissionMs": 1035.275,
+      "contextSetupMs": 188.7,
+      "requestToPcmMs": 568.3,
+      "pcmToPlaybackMs": 43.2,
+      "motionAfterPlaybackMs": 772.8,
+      "expressionAfterPlaybackMs": 695.7,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseBeforeReceipt": true,
+      "status": "completed",
+      "error": null,
+      "source": "cold-memory-browser.json"
+    },
+    {
+      "arm": "full-cold",
+      "case": "cold-social",
+      "turnId": "turn-5ebecdbeb14f46f5a46b638665b210ba",
+      "input": "早上好呀，今天见到你很开心。",
+      "transcript": "早上好呀，见到你我也很开心。今天有什么想聊的吗？",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": null,
+      "fastNeeds": [],
+      "fastStages": [],
+      "fastModelMs": null,
+      "fastDraft": null,
+      "prewarmed": false,
+      "preparationMs": 1655.9999999954016,
+      "contextChars": 4262,
+      "inputEndToPlaybackMs": 3634.688,
+      "endpointAndAdmissionMs": 1106.587,
+      "contextSetupMs": 201,
+      "requestToPcmMs": 580.6,
+      "pcmToPlaybackMs": 59.3,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "plans": [],
+      "sameResponseBeforeReceipt": false,
+      "status": "completed",
+      "error": null,
+      "source": "cold-social-browser.json"
+    },
+    {
+      "arm": "full-cold",
+      "case": "cold-long",
+      "turnId": "turn-05af6474fc294251be6d33d11fa4f3e8",
+      "input": "请详细讲讲星桥练习项目里3张角色表情草图的绘制步骤，大概说20秒。",
+      "transcript": "先定好角色性格，再画出基础轮廓；接着细化五官，突出情绪特征；最后调整线条，让表情更生动自然。",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": null,
+      "fastNeeds": [],
+      "fastStages": [],
+      "fastModelMs": null,
+      "fastDraft": null,
+      "prewarmed": false,
+      "preparationMs": 1983.9999999967404,
+      "contextChars": 4342,
+      "inputEndToPlaybackMs": 4440.387,
+      "endpointAndAdmissionMs": 1225.087,
+      "contextSetupMs": 276.4,
+      "requestToPcmMs": 813.7,
+      "pcmToPlaybackMs": 111.3,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "plans": [],
+      "sameResponseBeforeReceipt": false,
+      "status": "completed",
+      "error": null,
+      "source": "cold-long-browser.json"
+    },
+    {
+      "arm": "full-warm",
+      "case": "warm-social-connected",
+      "turnId": "turn-7e3b5f2eecf145259bc152525f9a48e6",
+      "input": "早上好呀，今天见到你很开心。",
+      "transcript": "早上好呀，见到你我也很开心。今天有什么想聊的吗？",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": null,
+      "fastNeeds": [],
+      "fastStages": [],
+      "fastModelMs": null,
+      "fastDraft": null,
+      "prewarmed": true,
+      "preparationMs": 1578.9999999979045,
+      "contextChars": 4241,
+      "inputEndToPlaybackMs": 3550.587,
+      "endpointAndAdmissionMs": 1214.488,
+      "contextSetupMs": 89.1,
+      "requestToPcmMs": 603.2,
+      "pcmToPlaybackMs": 62.6,
+      "motionAfterPlaybackMs": 590.7,
+      "expressionAfterPlaybackMs": 537.8,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "greet"
+        }
+      ],
+      "sameResponseBeforeReceipt": true,
+      "status": "completed",
+      "error": null,
+      "source": "warm-social-connected-browser.json"
+    },
+    {
+      "arm": "full-warm",
+      "case": "warm-long",
+      "turnId": "turn-4af1ebda748b427094a56e89238134db",
+      "input": "请详细讲讲星桥练习项目里3张角色表情草图的绘制步骤，大概。",
+      "transcript": "先定好角色的基础脸型，再画出三种不同情绪的大致轮廓，比如开心、惊讶和难过。接着细化五官，调整线条让表情更生动。最后加上一些阴影或高光，让草图更有层次感。",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": null,
+      "fastNeeds": [],
+      "fastStages": [],
+      "fastModelMs": null,
+      "fastDraft": null,
+      "prewarmed": true,
+      "preparationMs": 1421.0000000020955,
+      "contextChars": 4313,
+      "inputEndToPlaybackMs": 2863.062,
+      "endpointAndAdmissionMs": 554.562,
+      "contextSetupMs": 34.6,
+      "requestToPcmMs": 743.4,
+      "pcmToPlaybackMs": 81.9,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "plans": [],
+      "sameResponseBeforeReceipt": false,
+      "status": "completed",
+      "error": null,
+      "source": "warm-long-browser.json"
+    },
+    {
+      "arm": "full-warm",
+      "case": "warm-memory",
+      "turnId": "turn-c67132e29a03455b8b865efec08bb2de",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "记得呀，你最喜欢喝无糖柠檬水。",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": null,
+      "fastNeeds": [],
+      "fastStages": [],
+      "fastModelMs": null,
+      "fastDraft": null,
+      "prewarmed": true,
+      "preparationMs": 1375.0,
+      "contextChars": 4193,
+      "inputEndToPlaybackMs": 3315.675,
+      "endpointAndAdmissionMs": 1310.375,
+      "contextSetupMs": 84.0,
+      "requestToPcmMs": 486.0,
+      "pcmToPlaybackMs": 51.7,
+      "motionAfterPlaybackMs": 497.0,
+      "expressionAfterPlaybackMs": 425.7,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseBeforeReceipt": true,
+      "status": "completed",
+      "error": null,
+      "source": "warm-memory-browser.json"
+    },
+    {
+      "arm": "memory-warm",
+      "case": "fast-memory",
+      "turnId": "turn-b46a9d1ea65c45d4a503edbf4d72f1e5",
+      "input": "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+      "transcript": "记得呀，你在星桥咖啡店最喜欢喝的是无糖柠檬水。",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "memory_done",
+      "fastDecision": "§DONE§",
+      "fastNeeds": [],
+      "fastStages": [
+        {
+          "stage": "model_started",
+          "serverMs": 6062.0,
+          "memoryIds": [
+            "81001",
+            "81002",
+            "81003"
+          ]
+        },
+        {
+          "stage": "model_decided",
+          "serverMs": 7046.0,
+          "reason": "ok"
+        },
+        {
+          "stage": "accepted",
+          "serverMs": 7046.0,
+          "usedMemoryIds": [
+            "81001"
+          ]
+        }
+      ],
+      "fastModelMs": 984.0,
+      "fastDraft": "记得呀，你在星桥咖啡店最喜欢喝的是无糖柠檬水。",
+      "prewarmed": true,
+      "preparationMs": 1578.0000000013388,
+      "contextChars": 193,
+      "inputEndToPlaybackMs": 3738.475,
+      "endpointAndAdmissionMs": 1195.975,
+      "contextSetupMs": 153.8,
+      "requestToPcmMs": 752.3,
+      "pcmToPlaybackMs": 52.1,
+      "motionAfterPlaybackMs": 371.9,
+      "expressionAfterPlaybackMs": 303.1,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "nod"
+        }
+      ],
+      "sameResponseBeforeReceipt": true,
+      "status": "completed",
+      "error": null,
+      "source": "fast-memory-browser.json"
+    },
+    {
+      "arm": "memory-warm",
+      "case": "fast-social",
+      "turnId": "turn-6277065c25b1480fa09734abd9846832",
+      "input": "早上好呀，今天见到你很开心。",
+      "transcript": "早上好呀，见到你我也很开心。今天想聊点什么，还是先说说你今天的安排？",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "memory_done",
+      "fastDecision": "§DONE§",
+      "fastNeeds": [],
+      "fastStages": [
+        {
+          "stage": "model_started",
+          "serverMs": 45828.0,
+          "memoryIds": [
+            "f60b2238-8410-519f-ba97-667251dc813c",
+            "81002",
+            "81001"
+          ]
+        },
+        {
+          "stage": "model_decided",
+          "serverMs": 46718.0,
+          "reason": "ok"
+        },
+        {
+          "stage": "accepted",
+          "serverMs": 46734.0,
+          "usedMemoryIds": []
+        }
+      ],
+      "fastModelMs": 890.0,
+      "fastDraft": "早上好呀，见到你我也很开心。今天想聊点什么，还是先说说你今天的安排？",
+      "prewarmed": true,
+      "preparationMs": 1452.9999999940628,
+      "contextChars": 199,
+      "inputEndToPlaybackMs": 3622.188,
+      "endpointAndAdmissionMs": 1187.588,
+      "contextSetupMs": 156.9,
+      "requestToPcmMs": 777.0,
+      "pcmToPlaybackMs": 52.5,
+      "motionAfterPlaybackMs": 418.5,
+      "expressionAfterPlaybackMs": 418.5,
+      "plans": [
+        {
+          "expression": "smile",
+          "gesture": "greet"
+        }
+      ],
+      "sameResponseBeforeReceipt": true,
+      "status": "completed",
+      "error": null,
+      "source": "fast-social-browser.json"
+    },
+    {
+      "arm": "memory-warm",
+      "case": "fast-greet",
+      "turnId": "turn-2d455b4e0b674f1b9de2f2a7ac48538b",
+      "input": "好呀，先跟我挥挥手打个招呼吧。",
+      "transcript": "好呀，我在这儿跟你挥挥手啦。今天有什么想做的事吗？",
+      "acknowledged": true,
+      "revoked": false,
+      "route": "full",
+      "fastDecision": "§DONE§",
+      "fastNeeds": [],
+      "fastStages": [
+        {
+          "stage": "model_started",
+          "serverMs": 77234.0,
+          "memoryIds": [
+            "f8f355da-12cc-56ba-8be2-db529f54d889",
+            "f60b2238-8410-519f-ba97-667251dc813c",
+            "81004"
+          ]
+        },
+        {
+          "stage": "model_decided",
+          "serverMs": 78312.0,
+          "reason": "ok"
+        },
+        {
+          "stage": "fallback",
+          "serverMs": 78312.0
+        }
+      ],
+      "fastModelMs": 1078.0,
+      "fastDraft": null,
+      "prewarmed": true,
+      "preparationMs": 1875.0,
+      "contextChars": 4266,
+      "inputEndToPlaybackMs": 3864.95,
+      "endpointAndAdmissionMs": 1313.25,
+      "contextSetupMs": 35.1,
+      "requestToPcmMs": 570.5,
+      "pcmToPlaybackMs": 66.8,
+      "motionAfterPlaybackMs": 595.3,
+      "expressionAfterPlaybackMs": 515.8,
+      "plans": [
+        {
+          "expression": "happy",
+          "gesture": "wave"
+        }
+      ],
+      "sameResponseBeforeReceipt": true,
+      "status": "completed",
+      "error": null,
+      "source": "fast-greet-browser.json"
+    },
+    {
+      "arm": "memory-warm",
+      "case": "fast-long-barge",
+      "turnId": "turn-e64e9a460508469aa3df1a59a5d28ee1",
+      "input": "请详细讲讲星桥练习项目里3张角色表情草图的绘制步骤",
+      "transcript": "先确定角色的",
+      "acknowledged": false,
+      "revoked": true,
+      "route": "full",
+      "fastDecision": "§HANDOFF§",
+      "fastNeeds": [
+        "long_answer"
+      ],
+      "fastStages": [
+        {
+          "stage": "model_started",
+          "serverMs": 114453.0,
+          "memoryIds": [
+            "81004",
+            "81001",
+            "f60b2238-8410-519f-ba97-667251dc813c"
+          ]
+        },
+        {
+          "stage": "model_decided",
+          "serverMs": 115093.0,
+          "reason": "ok"
+        },
+        {
+          "stage": "fallback",
+          "serverMs": 115093.0
+        }
+      ],
+      "fastModelMs": 640.0,
+      "fastDraft": null,
+      "prewarmed": true,
+      "preparationMs": 1688.0000000019209,
+      "contextChars": 4345,
+      "inputEndToPlaybackMs": null,
+      "endpointAndAdmissionMs": 296.9,
+      "contextSetupMs": 16.5,
+      "requestToPcmMs": null,
+      "pcmToPlaybackMs": null,
+      "motionAfterPlaybackMs": null,
+      "expressionAfterPlaybackMs": null,
+      "plans": [],
+      "sameResponseBeforeReceipt": false,
+      "status": "cancelled",
+      "error": "usage_unknown_admission_blocked",
+      "source": "fast-long-barge-browser.json"
+    }
+  ],
+  "cases": [
+    {
+      "arm": "full-cold",
+      "name": "cold-long",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18773/duplex-data/cold-long.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "full-cold",
+      "name": "cold-memory",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18773/duplex-data/cold-memory.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "full-cold",
+      "name": "cold-social",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18773/duplex-data/cold-social.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "full-warm",
+      "name": "warm-long",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18774/duplex-data/warm-long.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "full-warm",
+      "name": "warm-memory",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18774/duplex-data/warm-memory.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "full-warm",
+      "name": "warm-social",
+      "failure": "input_not_ready",
+      "videoUrl": "http://127.0.0.1:18774/duplex-data/warm-social.webm",
+      "videoAvailable": false
+    },
+    {
+      "arm": "full-warm",
+      "name": "warm-social-connected",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18774/duplex-data/warm-social-connected.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "memory-warm",
+      "name": "fast-greet",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/fast-greet.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "memory-warm",
+      "name": "fast-long-barge",
+      "failure": "usage_or_protocol_blocked",
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/fast-long-barge.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "memory-warm",
+      "name": "fast-memory",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/fast-memory.webm",
+      "videoAvailable": true
+    },
+    {
+      "arm": "memory-warm",
+      "name": "fast-social",
+      "failure": null,
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/fast-social.webm",
+      "videoAvailable": true
+    }
+  ],
+  "budgets": [
+    {
+      "arm": "full-cold",
+      "blocked": false,
+      "reasons": [],
+      "turns": 3,
+      "turnLimit": 3,
+      "responses": 6,
+      "responseLimit": 6,
+      "unknown": 0,
+      "reserved": 0,
+      "reportedTokens": 10592
+    },
+    {
+      "arm": "full-warm",
+      "blocked": false,
+      "reasons": [],
+      "turns": 3,
+      "turnLimit": 3,
+      "responses": 6,
+      "responseLimit": 6,
+      "unknown": 0,
+      "reserved": 0,
+      "reportedTokens": 10450
+    },
+    {
+      "arm": "memory-warm",
+      "blocked": true,
+      "reasons": [
+        "provider_usage_missing_or_invalid"
+      ],
+      "turns": 4,
+      "turnLimit": 6,
+      "responses": 9,
+      "responseLimit": 14,
+      "unknown": 1,
+      "reserved": 0,
+      "reportedTokens": 6236
+    }
+  ],
+  "summary": [
+    {
+      "arm": "full-cold",
+      "successfulN": 3,
+      "inputEndToPlaybackMs": 3634.688,
+      "preparationMs": 1656.0,
+      "contextSetupMs": 201,
+      "requestToPcmMs": 580.6
+    },
+    {
+      "arm": "full-warm",
+      "successfulN": 3,
+      "inputEndToPlaybackMs": 3315.675,
+      "preparationMs": 1421.0,
+      "contextSetupMs": 84.0,
+      "requestToPcmMs": 603.2
+    },
+    {
+      "arm": "memory-warm",
+      "successfulN": 3,
+      "inputEndToPlaybackMs": 3738.475,
+      "preparationMs": 1578.0,
+      "contextSetupMs": 153.8,
+      "requestToPcmMs": 752.3
+    }
+  ],
+  "matchedShortSummary": [
+    {
+      "arm": "full-cold",
+      "successfulN": 2,
+      "inputEndToPlaybackMs": 3365.182,
+      "preparationMs": 1469.0,
+      "contextSetupMs": 194.85,
+      "requestToPcmMs": 574.45
+    },
+    {
+      "arm": "full-warm",
+      "successfulN": 2,
+      "inputEndToPlaybackMs": 3433.131,
+      "preparationMs": 1477.0,
+      "contextSetupMs": 86.55,
+      "requestToPcmMs": 544.6
+    },
+    {
+      "arm": "memory-warm",
+      "successfulN": 2,
+      "inputEndToPlaybackMs": 3680.332,
+      "preparationMs": 1515.5,
+      "contextSetupMs": 155.35,
+      "requestToPcmMs": 764.65
+    }
+  ],
+  "matchedShortInputs": [
+    "你还记得我在星桥咖啡店最喜欢喝什么吗？",
+    "早上好呀，今天见到你很开心。"
+  ],
+  "maintenance": [
+    {
+      "arm": "full-cold",
+      "quiescent": true,
+      "timed_out": false,
+      "successful_drain": true,
+      "history": {
+        "count": 6,
+        "by_role": {
+          "assistant": 3,
+          "user": 3
+        },
+        "complete_assistant": 3
+      },
+      "diary": {
+        "buffer_entries": 6,
+        "archive_files": {
+          "small": 0,
+          "daily": 0,
+          "weekly": 0
+        }
+      },
+      "queues": {
+        "reply_effects": {
+          "done": 8
+        },
+        "input_maintenance": {
+          "done": 9
+        }
+      },
+      "runtime": {
+        "turns": {
+          "completed": 3
+        },
+        "active_acks": 0,
+        "deliveries": {
+          "delivered": 3
+        }
+      },
+      "memoryCount": 7
+    },
+    {
+      "arm": "full-warm",
+      "quiescent": true,
+      "timed_out": false,
+      "successful_drain": true,
+      "history": {
+        "count": 6,
+        "by_role": {
+          "assistant": 3,
+          "user": 3
+        },
+        "complete_assistant": 3
+      },
+      "diary": {
+        "buffer_entries": 6,
+        "archive_files": {
+          "small": 0,
+          "daily": 0,
+          "weekly": 0
+        }
+      },
+      "queues": {
+        "reply_effects": {
+          "done": 8
+        },
+        "input_maintenance": {
+          "done": 9
+        }
+      },
+      "runtime": {
+        "turns": {
+          "completed": 3
+        },
+        "active_acks": 0,
+        "deliveries": {
+          "delivered": 3
+        }
+      },
+      "memoryCount": 7
+    },
+    {
+      "arm": "memory-warm",
+      "quiescent": true,
+      "timed_out": false,
+      "successful_drain": true,
+      "history": {
+        "count": 7,
+        "by_role": {
+          "assistant": 3,
+          "user": 4
+        },
+        "complete_assistant": 3
+      },
+      "diary": {
+        "buffer_entries": 7,
+        "archive_files": {
+          "small": 0,
+          "daily": 0,
+          "weekly": 0
+        }
+      },
+      "queues": {
+        "reply_effects": {
+          "done": 7
+        },
+        "input_maintenance": {
+          "done": 12
+        }
+      },
+      "runtime": {
+        "turns": {
+          "completed": 3,
+          "cancelled": 1
+        },
+        "active_acks": 0,
+        "deliveries": {
+          "delivered": 3
+        }
+      },
+      "memoryCount": 7
+    }
+  ],
+  "modelRequests": [
+    {
+      "arm": "full-cold",
+      "requests": 20,
+      "byClient": [
+        {
+          "client": "deepseek_generation",
+          "count": 20
+        }
+      ],
+      "byStatus": [
+        {
+          "count": 20,
+          "status": "completed"
+        }
+      ],
+      "models": [
+        "deepseek-flash"
+      ],
+      "individual": [
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.6559999999954016
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7030000000013388
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7660000000032596
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0630000000019209
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8439999999973224
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.1559999999954016
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.4530000000013388
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8439999999973224
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9850000000005821
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7659999999959837
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9850000000005821
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0469999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.264999999999418
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.014999999999418
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.875
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8899999999994179
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.2180000000007567
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.187000000005355
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.1090000000040163
+        }
+      ]
+    },
+    {
+      "arm": "full-warm",
+      "requests": 20,
+      "byClient": [
+        {
+          "client": "deepseek_generation",
+          "count": 20
+        }
+      ],
+      "byStatus": [
+        {
+          "count": 20,
+          "status": "completed"
+        }
+      ],
+      "models": [
+        "deepseek-flash"
+      ],
+      "individual": [
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8279999999940628
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.6719999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.110000000000582
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9060000000026776
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9219999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7809999999954016
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7660000000032596
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8129999999946449
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8439999999973224
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9379999999946449
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0159999999959837
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0619999999980791
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.875
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7029999999940628
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7339999999967404
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.1559999999954016
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9219999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.125
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0789999999979045
+        }
+      ]
+    },
+    {
+      "arm": "memory-warm",
+      "requests": 28,
+      "byClient": [
+        {
+          "client": "deepseek_generation",
+          "count": 28
+        }
+      ],
+      "byStatus": [
+        {
+          "count": 28,
+          "status": "completed"
+        }
+      ],
+      "models": [
+        "deepseek-flash"
+      ],
+      "individual": [
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.875
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9069999999992433
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7190000000045984
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9839999999967404
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9840000000040163
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.875
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.6410000000032596
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.6719999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.75
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0630000000019209
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.1719999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.875
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0789999999979045
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7189999999973224
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.6410000000032596
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7810000000026776
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.7969999999986612
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.3280000000013388
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0780000000013388
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8130000000019209
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.0630000000019209
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 1.2030000000013388
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8280000000013388
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.6399999999994179
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.8910000000032596
+        },
+        {
+          "client": "deepseek_generation",
+          "model": "deepseek-flash",
+          "status": "completed",
+          "elapsed_s": 0.9690000000045984
+        }
+      ]
+    }
+  ],
+  "sessionFailures": [
+    {
+      "arm": "full-warm",
+      "source": "duplex-90439d9641b54f8b9c0e7b8bf6e54ccb.json",
+      "type": "blocked",
+      "code": "provider_error",
+      "serverMs": 185641.0
+    },
+    {
+      "arm": "memory-warm",
+      "source": "duplex-49beff354c6a4e8cba9d9b68a6423582.json",
+      "type": "blocked",
+      "code": "usage_unknown_admission_blocked",
+      "serverMs": 115812.0
+    },
+    {
+      "arm": "memory-warm",
+      "source": "duplex-49beff354c6a4e8cba9d9b68a6423582.json",
+      "type": "blocked",
+      "code": "input_admission_blocked",
+      "serverMs": 115843.0
+    }
+  ],
+  "localReplays": [
+    {
+      "source": "saved_native_events_only",
+      "first": "ended",
+      "second": "ended",
+      "firstCall": "e1.c1",
+      "secondCall": "e2.c1",
+      "interrupt": {
+        "turnId": "turn-2d455b4e0b674f1b9de2f2a7ac48538b",
+        "at": 36167.39999999851,
+        "reason": "explicit_user_interrupt",
+        "mediaTime": 0.6533333333333339,
+        "sourcesBefore": 5,
+        "queuedBefore": 1.7466666666666661,
+        "sourcesAfter": 0,
+        "returnMs": 1.5,
+        "activeMotion": true,
+        "mouthClosedMs": 18.200000002980232,
+        "sourcesRemain": 0,
+        "motionStoppedMs": 819.5
+      },
+      "audio": {
+        "epoch": 3,
+        "status": "cancelled",
+        "time": 0.6533333333333339,
+        "receivedDuration": 2.4,
+        "queuedSeconds": 0,
+        "retainedSeconds": 0,
+        "sourceActive": false,
+        "sourceCount": 0,
+        "context": "running",
+        "finished": true,
+        "nextSequence": 6,
+        "sampleRate": 24000,
+        "volume": 1,
+        "fault": null,
+        "lastError": null
+      },
+      "noProviderCall": true,
+      "noSettlement": true,
+      "passed": true
+    }
+  ],
+  "interruptions": [
+    {
+      "arm": "memory-warm",
+      "turnId": "turn-e64e9a460508469aa3df1a59a5d28ee1",
+      "at": 123031.89999999851,
+      "reason": "confirmed_voice_barge_in",
+      "mediaTime": 4.96,
+      "sourcesBefore": 0,
+      "queuedBefore": 0,
+      "sourcesAfter": 0,
+      "returnMs": 0.10000000149011612,
+      "activeMotion": false,
+      "mouthClosedMs": 15.700000002980232,
+      "motionStoppedMs": 15.700000002980232,
+      "sourcesRemain": 0
+    }
+  ],
+  "preservation": {
+    "preview/core/motion-controller.js": true,
+    "preview/core/motion-math.js": true,
+    "preview/core/motion-profile.js": true,
+    "preview/core/controller.js": true,
+    "preview/core/expression-choreography.js": true,
+    "preview/studio/motion-rig.js": true,
+    "realtime/qwen/scene.mjs": true
+  },
+  "allProtectedUnchanged": true,
+  "conclusion": "快答已接通，但这版没有变快：相同两题中位数为原流程 3.37 秒、连接预热 3.43 秒、记忆快答 3.68 秒。连接准备约省 108 毫秒；快答模型再转 Qwen 口播增加了串行等待。云端长句误分段导致取消用量未知，本批已停止新调用。",
+  "maintenanceNote": "三组后台全部排空。原连接与预热组各 3 条完整助手历史；快答组 4 条用户输入、3 条完整助手历史，取消回复未记为送达。另有 68 条 WAI 文本模型请求元数据，包含 4 次快答决策；不是零成本后台。",
+  "recordedReplay": {
+    "source": "saved_real_events_no_cloud",
+    "activeAtInterrupt": true,
+    "interrupted": true,
+    "recording": {
+      "bytes": 1447816,
+      "startedAt": 164471.30000000447,
+      "endedAt": 170364.8999999985,
+      "capture": "renderer_canvas_direct",
+      "width": 842,
+      "height": 678
+    },
+    "interruption": {
+      "turnId": "turn-2d455b4e0b674f1b9de2f2a7ac48538b",
+      "at": 168507.5,
+      "reason": "explicit_user_interrupt",
+      "mediaTime": 1.4106666666666399,
+      "sourcesBefore": 10,
+      "queuedBefore": 3.54933333333336,
+      "sourcesAfter": 0,
+      "returnMs": 0.5,
+      "activeMotion": true,
+      "mouthClosedMs": 13.100000001490116,
+      "sourcesRemain": 0,
+      "motionStoppedMs": 827.6000000014901
+    },
+    "noProviderCall": true
+  },
+  "presentationVideos": [
+    {
+      "label": "记忆快答 · 微笑点头",
+      "transcript": "记得呀，你在星桥咖啡店最喜欢喝的是无糖柠檬水。",
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/memory-visible-preview.webm",
+      "posterUrl": "http://127.0.0.1:18776/duplex-data/memory-visible-poster.jpg",
+      "source": "saved_real_events_no_cloud"
+    },
+    {
+      "label": "记忆快答 · 社交招呼",
+      "transcript": "早上好呀，见到你我也很开心。今天想聊点什么，还是先说说你今天的安排？",
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/social-visible-preview.webm",
+      "posterUrl": "http://127.0.0.1:18776/duplex-data/social-visible-poster.jpg",
+      "source": "saved_real_events_no_cloud"
+    },
+    {
+      "label": "快答校验转完整路径 · 利落挥手",
+      "transcript": "好呀，我在这儿跟你挥挥手啦。今天有什么想做的事吗？",
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/wave-visible-preview.webm",
+      "posterUrl": "http://127.0.0.1:18776/duplex-data/wave-visible-poster.jpg",
+      "source": "saved_real_events_no_cloud"
+    },
+    {
+      "label": "挥手进行中打断 · 保存真实事件重播",
+      "transcript": "不调用模型；停声、收口、从当前姿态收回。",
+      "videoUrl": "http://127.0.0.1:18776/duplex-data/wave-interrupt-visible-v2-preview.webm",
+      "posterUrl": "http://127.0.0.1:18776/duplex-data/wave-interrupt-visible-v2-poster.jpg",
+      "source": "saved_real_events_no_cloud"
+    }
+  ],
+  "captureLimitation": "Original WebGL-to-2D recordings have blank avatar frames; preserved as raw evidence, not visual acceptance. The report presents direct-canvas offline replays of original PCM/tool events."
+}

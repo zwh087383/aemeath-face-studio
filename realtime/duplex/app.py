@@ -33,6 +33,7 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn"):
     async def status(request):
         allow(request)
         return web.json_response({"experimental": True, "mode": mode, "budget": budget.snapshot(),
+            "variants": ["full-cold", "full-warm", "memory-warm"],
             "connected": bool(active), "model": "qwen-audio-3.1-realtime-plus",
             "memory": "actual_WAI_with_isolated_synthetic_state", "defaultStrength": .65,
             "savedSessions": [p.stem for p in sorted(output.glob("duplex-*.json"))]},
@@ -52,8 +53,11 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn"):
         allow(request)
         if active or budget.data["blocked"]:
             raise web.HTTPConflict(text="Busy or usage blocked")
+        variant = request.query.get("variant", "full-cold")
+        if variant not in {"full-cold", "full-warm", "memory-warm"}:
+            raise web.HTTPBadRequest(text="Unsupported reply variant")
         ws = web.WebSocketResponse(max_msg_size=100_000, heartbeat=15)
-        session = DuplexSession(runtime, main, budget, output, ws.send_json, mode=mode)
+        session = DuplexSession(runtime, main, budget, output, ws.send_json, mode=mode, variant=variant)
         active.add(session)
         try:
             await ws.prepare(request)
@@ -122,6 +126,7 @@ def main():
     parser.add_argument("--max-turns", type=int, default=8)
     parser.add_argument("--max-responses", type=int, default=16)
     parser.add_argument("--mode", choices=("smart_turn", "server_vad"), default="smart_turn")
+    parser.add_argument("--batch-id", default="duplex-d-20261017")
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
         parser.error("invalid_port")
@@ -130,9 +135,10 @@ def main():
     from tools.voice_avatar.duplex_transport import DurableBudget, save_json
     from tools.voice_avatar.bootstrap import configure, bootstrap_runtime
     budget = DurableBudget(args.output / "ledger.json", max_turns=args.max_turns, max_responses=args.max_responses)
-    config = configure(args.env_file, args.data_dir, batch_id="duplex-d-20261017")
+    config = configure(args.env_file, args.data_dir, batch_id=args.batch_id)
     runtime, wai_main = bootstrap_runtime(config)
     save_json(args.output / "manifest.json", {"experimental": True, "mode": args.mode,
+        "batchId": args.batch_id, "variants": ["full-cold", "full-warm", "memory-warm"],
         "maxTurns": args.max_turns, "maxResponses": args.max_responses,
         "topology": "continuous listener / final ASR / WAI retrieval+context / D response / playback ACK",
         "syntheticMemory": True, "spontaneousReply": True, "prerecordedAnswer": False,

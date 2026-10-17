@@ -7,7 +7,7 @@ async page => {
   if (!config?.directory || !/^[A-Za-z]:[\\/]/.test(config.directory) || !/^[a-z0-9-]+$/.test(config.name)) throw Error('invalid_case');
   await page.setViewportSize({width:1440,height:1080});
   await page.waitForFunction(() => window.__duplex?.ready);
-  const result = await page.evaluate(async ({name,mode='normal',input=name}) => {
+  const result = await page.evaluate(async ({name,mode='normal',input=name,variant='full-cold'}) => {
     const api=window.__duplex, start=performance.now(), before=api.snapshot().client.trials.length;
     const wait=async(predicate,timeout=45000)=>{
       const end=performance.now()+timeout;
@@ -22,7 +22,7 @@ async page => {
     let failure=null;
     api.startRecording(name);
     try {
-      if(!api.state.ready)await api.connect();
+      if(!api.state.ready)await api.connect(variant);
       await api.fixture(input);
       await wait(()=>api.snapshot().client.trials.length>before && api.state.current?.playbackAt!==undefined);
       if(mode==='barge'){

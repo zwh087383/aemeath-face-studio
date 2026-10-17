@@ -2,7 +2,10 @@ param(
     [Parameter(Mandatory=$true)][string]$WaiRoot,
     [Parameter(Mandatory=$true)][string]$DataDirectory,
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
-    [int]$Port = 18772
+    [int]$Port = 18772,
+    [int]$MaxTurns = 8,
+    [int]$MaxResponses = 16,
+    [string]$BatchId = 'duplex-d-20261017'
 )
 $ErrorActionPreference = 'Stop'
 $WaiRoot = (Resolve-Path -LiteralPath $WaiRoot).Path
@@ -21,5 +24,5 @@ if (-not (Test-Path -LiteralPath (Join-Path $OutputDirectory 'input-fixtures.jso
     & (Join-Path $PSScriptRoot 'make-inputs.ps1') -OutputDirectory $OutputDirectory
 }
 $env:PYTHONIOENCODING = 'utf-8'
-& $VoicePython -u (Join-Path $PSScriptRoot 'app.py') --wai-root $WaiRoot --env-file $VoiceConfiguration --data-dir $DataDirectory --output $OutputDirectory --port $Port --max-turns 8 --max-responses 16
+& $VoicePython -u (Join-Path $PSScriptRoot 'app.py') --wai-root $WaiRoot --env-file $VoiceConfiguration --data-dir $DataDirectory --output $OutputDirectory --port $Port --max-turns $MaxTurns --max-responses $MaxResponses --batch-id $BatchId
 exit $LASTEXITCODE
