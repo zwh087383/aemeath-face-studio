@@ -1,0 +1,305 @@
+{
+  "experimental": true,
+  "date": "2026-10-22",
+  "cloudCalls": 0,
+  "counts": {
+    "body": {
+      "before": 16,
+      "added": 40,
+      "total": 56
+    },
+    "faces": {
+      "before": 8,
+      "added": 32,
+      "total": 40
+    },
+    "headActions": {
+      "before": 5,
+      "added": 12,
+      "total": 17
+    },
+    "stories": {
+      "before": 7,
+      "added": 16,
+      "total": 23
+    },
+    "schedulerCommands": 113,
+    "storySteps": 149,
+    "quietSteps": 49
+  },
+  "tests": {
+    "finalBody": {
+      "passed": 6,
+      "failed": 0,
+      "cancellationCases": 264
+    },
+    "integration": {
+      "passed": 136,
+      "failed": 0,
+      "note": "Final micro-additive changes are additionally covered by final body tests and the subsequent 21 director tests."
+    },
+    "finalDirector": {
+      "passed": 21,
+      "failed": 0
+    },
+    "oldMotionRegression": {
+      "passed": 40,
+      "failed": 0,
+      "note": "Before last changes limited to 12 new micro actions and reset_and_resolve; final affected actions separately retested. Do not add overlapping test counts."
+    }
+  },
+  "browser": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "real_model_loaded",
+        "passed": true
+      },
+      {
+        "name": "catalog_expanded",
+        "passed": true
+      },
+      {
+        "name": "start_wave",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_wave",
+        "passed": true
+      },
+      {
+        "name": "start_greet",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_greet",
+        "passed": true
+      },
+      {
+        "name": "start_micro_ack",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_micro_ack",
+        "passed": true
+      },
+      {
+        "name": "start_offer_turn",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_offer_turn",
+        "passed": true
+      },
+      {
+        "name": "start_relieved",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_relieved",
+        "passed": true
+      },
+      {
+        "name": "start_warm_welcome",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_warm_welcome",
+        "passed": true
+      },
+      {
+        "name": "start_explain_sequence",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_explain_sequence",
+        "passed": true
+      },
+      {
+        "name": "start_celebration_compact",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_celebration_compact",
+        "passed": true
+      },
+      {
+        "name": "start_storytelling_arc",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_storytelling_arc",
+        "passed": true
+      },
+      {
+        "name": "start_reset_and_resolve",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_reset_and_resolve",
+        "passed": true
+      },
+      {
+        "name": "start_farewell_linger",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_farewell_linger",
+        "passed": true
+      },
+      {
+        "name": "start_grateful",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_grateful",
+        "passed": true
+      },
+      {
+        "name": "start_clarify",
+        "passed": true
+      },
+      {
+        "name": "actual_pose_clarify",
+        "passed": true
+      },
+      {
+        "name": "head_action_start",
+        "passed": true
+      },
+      {
+        "name": "head_action_visible",
+        "passed": true
+      },
+      {
+        "name": "face_preset",
+        "passed": true
+      },
+      {
+        "name": "face_visible",
+        "passed": true
+      },
+      {
+        "name": "paused_test_mouth_closed",
+        "passed": true
+      },
+      {
+        "name": "interrupted_test_mouth_closed",
+        "passed": true
+      },
+      {
+        "name": "continuous_scene_start",
+        "passed": true
+      },
+      {
+        "name": "first_step_label",
+        "passed": true
+      },
+      {
+        "name": "pause_freezes_sequence_and_pose",
+        "passed": true
+      },
+      {
+        "name": "interrupt_retires_sequence",
+        "passed": true
+      },
+      {
+        "name": "recorded_local_preview",
+        "passed": true
+      },
+      {
+        "name": "search_filters_cards",
+        "passed": true
+      },
+      {
+        "name": "search_empty_state",
+        "passed": true
+      },
+      {
+        "name": "mobile_no_horizontal_overflow",
+        "passed": true
+      },
+      {
+        "name": "no_browser_errors",
+        "passed": true
+      },
+      {
+        "name": "source_frozen",
+        "passed": true
+      }
+    ],
+    "sourceHashes": {
+      "preview/core/motion-profile.js": "5799633ae7bd911c4d8b57c420befcd3ce04fe053ed775792d8e225ed3aac9cd",
+      "preview/core/expanded-motion-library.js": "e32edba1af72f4627d480fd68c4490fa6f5b16a9e04f6c3e314b40c44988be63",
+      "preview/core/profile.js": "c2d9a369ae83e1d861fd6e01e497f0bf089df7cee5a269c78babed5eae1747ab",
+      "preview/core/expanded-expression-library.js": "d595566aa04da5099503bb27e18441f05a99336e469a1df766bfe09227dc2fc5",
+      "preview/core/controller.js": "a94771ac584e9821262613ef0d8fa233b467fa46701756d6a5e3de49aa5b2433",
+      "preview/core/motion-controller.js": "4a107730f7b6657fcf729dce6dfd0fe10fe2c79f5e6459973c8d3107b866d5dd",
+      "preview/core/motion-skeleton.js": "a9aac1cebba74486e6806dca2907279b6bba37ba71891d0cfb70ef6ab2b84c37",
+      "preview/core/motion-math.js": "68ed394a8ed4bd863084c45364a10dadaee472e518086d8a48d747eb070b7985",
+      "preview/core/continuity-math.js": "dc6ee109b39097cd5e85d13280b7e8dc392d2e22d5ed4945f46644c7e6d9c433",
+      "preview/core/expression-choreography.js": "487f8efb7f4ceb8d8e8c37ebba14be2fce97fdecb6c383fe2f22bc2bd86f1101",
+      "preview/studio/motion-rig.js": "63d78687d5c526a01b01c522339b35086dbc4908f925db225dc8305dcce7f0ff",
+      "realtime/qwen/scene.mjs": "a925fbd9bb8e71ddaf4a137a037341469f13a726e593e8be6e5068593f7351b2",
+      "realtime/performance/director.mjs": "4bba868de79ecbd080b2823d26a2b8753d68076c4640faa731bf5a4305ae05cf",
+      "realtime/performance/expanded-sequences.mjs": "c814a9d5c25c2f97a5e25bffcbe4cfefe4c3bf1bf239a081ce8dbbe24b01f5dc",
+      "realtime/performance/library/viewer.mjs": "3591b6d1e5ec7ae685460d0beb03a56da5bb4bff8d43ed9fb6f407fb24c03d37",
+      "realtime/performance/library/index.html": "dd0343f1417de67cc1ec8223d6b7564979c5bde07ab7cc391daef870638ecc1c",
+      "realtime/performance/library/style.css": "7f23c4484d1fe4f9d19ca4fd40b87a815ca60b179cb30dcc8307014de4beb1d6",
+      "realtime/avatar/controller-bridge.mjs": "892d821d233d182f9bf9327d76947212d2c8218c7387efbb1928e025418c6024",
+      "realtime/browser-expanded-library.cjs": "5c12b3ee02fbdc8c991af3d60e9e11f2912e4d9e26f42e68553c787193d9edcc"
+    },
+    "environment": {
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "physics": false
+    }
+  },
+  "performance": {
+    "wallMs": 8016.199999999255,
+    "frames": 900,
+    "fps": 131.19151045159032,
+    "driverP95Ms": 0.8999999985098839,
+    "renderP95Ms": 8.300000000745058,
+    "frameP95Ms": 10.099999999998545,
+    "environment": {
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "physics": false
+    },
+    "note": "3.5 s warmup; 8 s observation, last 900 frames; no screenshot or recording in this window; physics disabled; one-machine sample."
+  },
+  "clearance": {
+    "effectivePoses": 217,
+    "newMotionPoses": 200,
+    "handFlags": 0,
+    "sleeveFlags": 0,
+    "otherFlaggedPoses": 31,
+    "worstDepth": 0.117,
+    "gratefulArmResidual": {
+      "phase": "hold",
+      "seconds": 2.5,
+      "vertices": 1,
+      "depth": 0.033
+    },
+    "method": "Rigid PMX skinning including grants and pelvis translations; nearest vertex-normal surface heuristic; physics disabled",
+    "limitations": "Apex and 0.5 s dynamic samples, plus 0.2 s interrupted recovery; may miss between-sample collisions; thin cloth layers may produce false positives; no physical contact/cloth simulation claim",
+    "combination": "217 base poses with superseded 13 actions excluded and 46 updated samples substituted, yielding 217 effective poses."
+  },
+  "preview": {
+    "fullBodyUnobstructed": true,
+    "video": {
+      "readyState": 4,
+      "width": 724,
+      "height": 722,
+      "currentTime": 0.5876,
+      "duration": 9.013106
+    }
+  },
+  "limitations": [
+    "Authored procedural motions, feet planted; no locomotion or object contact.",
+    "Qwen tool schema and prompts unchanged; no real voice testing.",
+    "No general collision-free guarantee; remaining ribbon/hair and one arm/torso warning.",
+    "Raw local images, video, mesh samples and model assets excluded from publication."
+  ]
+}

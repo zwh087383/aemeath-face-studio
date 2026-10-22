@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GESTURES, GESTURE_IDS } from '../preview/core/motion-profile.js';
+import { GESTURES, GESTURE_IDS, EXPANDED_GESTURE_IDS } from '../preview/core/motion-profile.js';
 import { C, CHANNELS, VOWELS } from '../preview/core/profile.js';
 import { sampleGestureExpression, ExpressionChoreographer, blendExpressionOverlay } from '../preview/core/expression-choreography.js';
 
 test('public vocabulary remains scheduler-compatible and every performance has a complete expression envelope', () => {
-  assert.equal(GESTURE_IDS.length, 16);
+  assert.equal(GESTURE_IDS.length, 16 + EXPANDED_GESTURE_IDS.length);
   for (const legacy of ['wave', 'chest', 'shrug', 'explain']) assert.ok(GESTURE_IDS.includes(legacy));
   for (const id of GESTURE_IDS) {
     assert.match(id, /^[a-z][a-z0-9_]*$/);

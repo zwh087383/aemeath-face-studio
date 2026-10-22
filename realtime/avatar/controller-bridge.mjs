@@ -1,6 +1,7 @@
 import { createControllerSink } from '../controller-sink.mjs';
 import { DEFAULT_CATALOG } from '../scheduler.mjs';
 import { GESTURES, MOTION_DEFAULTS, OVERLAP } from '../../preview/core/motion-profile.js';
+import { PRESETS, ACTIONS } from '../../preview/core/profile.js';
 
 // MotionController stretches preparation/recovery by at most maxStretch and
 // varies each gesture's rate by ±3%. Its removal tail is authored-time too.
@@ -22,6 +23,12 @@ export const AVATAR_CATALOG = Object.freeze(Object.fromEntries([
   ...Object.entries(GESTURES).filter(([, gesture]) => !gesture.internal).map(([id, gesture]) => [
     `gesture:${id}`, Object.freeze({ duration: bodyDuration(gesture), apex: gesture.apex,
       cooldown: gesture.cooldown, slot: 'body' }),
+  ]),
+  ...PRESETS.filter(p => !Object.hasOwn(DEFAULT_CATALOG, `expression:${p.id}`)).map(p => [
+    `expression:${p.id}`, Object.freeze({ duration: 1.8, apex: 0, cooldown: 0, slot: 'face' }),
+  ]),
+  ...Object.entries(ACTIONS).filter(([id]) => !Object.hasOwn(DEFAULT_CATALOG, `action:${id}`)).map(([id, action]) => [
+    `action:${id}`, Object.freeze({ duration: action.duration, apex: 0, cooldown: .45, slot: 'head' }),
   ]),
 ]));
 

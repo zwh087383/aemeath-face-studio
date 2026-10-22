@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GESTURES, GESTURE_IDS } from '../preview/core/motion-profile.js';
+import { GESTURES, GESTURE_IDS, EXPANDED_GESTURE_IDS } from '../preview/core/motion-profile.js';
 import { makeMotion, poseSample, rotationDistance, distance, summarize } from '../scripts/check-coordinated-motion.mjs';
 
 // Semantic acceptance thresholds in actual PMX forward kinematics, not the
@@ -33,7 +33,7 @@ const chestRange = (id, key) => {
 };
 
 test('all sixteen performances meet purpose-specific visible chest and head travel ranges', () => {
-  assert.deepEqual(Object.keys(INTENT).sort(), [...GESTURE_IDS].sort());
+  assert.deepEqual(Object.keys(INTENT).sort(), GESTURE_IDS.filter(id => !EXPANDED_GESTURE_IDS.includes(id)).sort());
   for (const [id, [minimum, maximum, travel]] of Object.entries(INTENT)) {
     const s = summarize(trace(id)), degrees = s.ranges.upperChest.rotation * 180 / Math.PI;
     assert.ok(degrees >= minimum && degrees <= maximum, `${id}: chest ${degrees.toFixed(2)} degrees, expected ${minimum}..${maximum}`);

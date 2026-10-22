@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { MotionController } from '../preview/core/motion-controller.js';
-import { GESTURES, GESTURE_IDS, MOTION_DEFAULTS, OVERLAP, POSTURES } from '../preview/core/motion-profile.js';
+import { GESTURES, GESTURE_IDS, EXPANDED_GESTURE_IDS, MOTION_DEFAULTS, OVERLAP, POSTURES } from '../preview/core/motion-profile.js';
 import { forwardKinematics, skeletonFromInspection } from '../preview/core/motion-skeleton.js';
 
 const inspection = JSON.parse(readFileSync(new URL('../assets/Aemeath-inspection.json', import.meta.url), 'utf8'));
@@ -112,7 +112,8 @@ test('every gesture from every posture, played out or interrupted in any phase, 
     if (phase) {
       // Step on the gesture's own (authored) clock to the middle of the phase.
       const mid = (def.phases[phase][0] + def.phases[phase][1]) / 2;
-      while (!(c.snapshot().gestures[0]?.age >= mid)) { t = run(c, t, t + 1 / 60, 60, w.step); assert.ok(t < 8, label); }
+      const phaseDeadline = EXPANDED_GESTURE_IDS.includes(gesture) ? 1.6 + def.duration * MOTION_DEFAULTS.maxStretch + 2 : 8;
+      while (!(c.snapshot().gestures[0]?.age >= mid)) { t = run(c, t, t + 1 / 60, 60, w.step); assert.ok(t < phaseDeadline, label); }
       assert.equal(c.snapshot().gestures[0].phase, phase, label);
       assert.equal(c.retract(t), 1, label);
       assert.equal(c.retract(t + .01), 0, `${label} repeated retract`);
@@ -125,7 +126,8 @@ test('every gesture from every posture, played out or interrupted in any phase, 
     } else {
       t = run(c, t, t + 1 / 60, 60, w.step);
       assert.equal(c.snapshot().gestures.length, 1, label);
-      while (c.snapshot().gestures.length) { t = run(c, t, t + 1 / 60, 60, w.step); assert.ok(t < 10, label); }
+      const completionDeadline = EXPANDED_GESTURE_IDS.includes(gesture) ? 1.6 + def.duration * MOTION_DEFAULTS.maxStretch + 2 : 10;
+      while (c.snapshot().gestures.length) { t = run(c, t, t + 1 / 60, 60, w.step); assert.ok(t < completionDeadline, label); }
     }
     assert.ok(onPosture(c, posture), label);
     assert.ok(w.ok(), `${label} ${w}`);

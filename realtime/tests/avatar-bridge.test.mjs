@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { AVATAR_CATALOG, createAvatarSink } from '../avatar/controller-bridge.mjs';
 import { DEFAULT_CATALOG, RealtimeScheduler } from '../scheduler.mjs';
 import { FaceController } from '../../preview/core/controller.js';
+import { PRESETS, ACTIONS } from '../../preview/core/profile.js';
 import { MotionController } from '../../preview/core/motion-controller.js';
 import { GESTURES, GESTURE_IDS, MOTION_DEFAULTS, OVERLAP } from '../../preview/core/motion-profile.js';
 import { skeletonFromInspection } from '../../preview/core/motion-skeleton.js';
@@ -61,7 +62,8 @@ function fixture({ start = true, seed = 20261014 } = {}) {
 }
 
 test('avatar catalog preserves non-body timing/order and follows current public gesture timing', () => {
-  const expectedKeys = [...new Set([...Object.keys(DEFAULT_CATALOG), ...GESTURE_IDS.map(id => `gesture:${id}`)])];
+  const expectedKeys = [...new Set([...Object.keys(DEFAULT_CATALOG), ...GESTURE_IDS.map(id => `gesture:${id}`),
+    ...PRESETS.map(p => `expression:${p.id}`), ...Object.keys(ACTIONS).map(id => `action:${id}`)])];
   assert.deepEqual(Object.keys(AVATAR_CATALOG), expectedKeys);
   assert.equal(AVATAR_CATALOG['gesture:beat'], undefined);
   const tail = Math.max(...Object.values(OVERLAP.enter)) + .02;
@@ -69,11 +71,34 @@ test('avatar catalog preserves non-body timing/order and follows current public 
     const original = DEFAULT_CATALOG[key];
     assert.ok(Object.isFrozen(actual));
     if (original && original.slot !== 'body') { assert.deepEqual(actual, original); continue; }
+    if (key.startsWith('expression:')) {
+      assert.deepEqual(actual, { duration: 1.8, apex: 0, cooldown: 0, slot: 'face' }); continue;
+    }
+    if (key.startsWith('action:')) {
+      assert.deepEqual(actual, { duration: ACTIONS[key.slice(7)].duration, apex: 0, cooldown: .45, slot: 'head' }); continue;
+    }
     const def = GESTURES[key.slice('gesture:'.length)], p = def.phases.prepare[1], r = def.phases.recover[0];
     const bound = (p * MOTION_DEFAULTS.maxStretch + r - p
       + (def.duration + tail - r) * MOTION_DEFAULTS.maxStretch) / .97;
     assert.ok(actual.duration >= bound && actual.duration < bound + .052, key);
     assert.deepEqual(actual, { duration: actual.duration, apex: def.apex, cooldown: def.cooldown, slot: 'body' });
+  }
+});
+
+test('expanded expressions and head reactions enter the real controllers through the scheduler', () => {
+  const cases = [
+    ...PRESETS.filter(p => !DEFAULT_CATALOG[`expression:${p.id}`]).map(p => ({kind:'expression',preset:p.id})),
+    ...Object.keys(ACTIONS).filter(id => !DEFAULT_CATALOG[`action:${id}`]).map(action => ({kind:'action',action})),
+  ];
+  assert.ok(cases.length >= 40);
+  for (const [i, cue] of cases.entries()) {
+    const f = fixture();
+    assert.equal(f.scheduler.enqueue({...A,...cue,id:`expanded-${i}`,at:0}).accepted,true);
+    f.dispatch();f.advance(.12);
+    assert.ok(f.face.executedCues.some(c => c.id===`expanded-${i}`),JSON.stringify(cue));
+    assert.equal(f.scheduler.fault,null);
+    f.scheduler.interrupt(A);
+    assert.equal(f.face.cues.length,0);
   }
 });
 

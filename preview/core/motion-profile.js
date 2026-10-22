@@ -5,6 +5,7 @@
 // thing for both arms. Positions are bind-pose model units (Aemeath is ~20.5 tall;
 // the shoulder joint sits near [1.25, 16.19, -0.84], chest front z ~1.26 at y 15).
 // `hand` is the wrist target unless `anchor: 'palm'`, which targets the palm surface.
+import { createExpandedMotionLibrary } from './expanded-motion-library.js';
 
 const finger = (prefix, name, count) => Array.from({ length: count }, (_, i) => `${prefix}${name}${'０１２３'[i + (name === '親指' ? 0 : 1)]}`);
 const sideNames = prefix => ({
@@ -413,9 +414,17 @@ const legacyExpressions = {
   shrug: [[.25, { browAsym: .25, browUp: .15 }], [.5, { browAsym: .36, browSad: .2, smile: .24 }], [.9, { browSmile: .13, smile: .22 }]],
   chest: [[.35, { browSad: .12 }], [.85, { browSmile: .25, eyeSmile: .2, smile: .36 }], [2, { browSmile: .18, smile: .3 }]],
 };
+const expandedGestures = createExpandedMotionLibrary({ arm, postures: POSTURES });
+export const EXPANDED_GESTURE_IDS = Object.freeze(Object.keys(expandedGestures));
 export const GESTURES = Object.freeze({
   ...Object.fromEntries(Object.entries(LEGACY_GESTURES).map(([id, def]) => [id,
     legacyExpressions[id] ? { ...def, expression: faceTrack(def.duration, legacyExpressions[id]) } : def])),
   ...EXPRESSIVE_GESTURES,
+  ...expandedGestures,
 });
 export const GESTURE_IDS = Object.freeze(Object.keys(GESTURES).filter(id => !GESTURES[id].internal));
+export const GESTURE_METADATA = Object.freeze(Object.fromEntries(GESTURE_IDS.map(id => [id, Object.freeze({
+  id, name: GESTURES[id].name, category: GESTURES[id].category ?? 'original',
+  description: GESTURES[id].description ?? GESTURES[id].note ?? GESTURES[id].name,
+  duration: GESTURES[id].duration,
+})])));

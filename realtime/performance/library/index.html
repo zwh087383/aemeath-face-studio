@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>爱弥斯 · 表达图书馆</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+</head>
+<body>
+  <header><a href="../">AEMEATH <span>表达图书馆</span></a><span class="edition">LOCAL EXPERIMENT / 2026.10</span></header>
+  <main>
+    <section class="theatre">
+      <div id="stage" aria-label="人物实时预览">
+        <div id="loading"><strong>正在准备爱弥斯</strong><span id="load-note">读取人物与贴图…</span></div>
+        <div class="stage-top"><span id="phase">安静陪伴</span><nav id="views" aria-label="观察视角"></nav></div>
+        <div class="caption"><span id="kind">让小反应，也有自己的节奏</span><h1 id="title">不止是一个姿势。</h1><p id="description">从一瞬的眼神，到一段完整的交流。</p></div>
+        <div class="stage-bottom"><span id="fps">— FPS</span><span id="driver">驱动 — ms</span></div>
+      </div>
+      <div class="transport"><button id="play-feature" class="primary" disabled>播放精选片段</button><button id="pause" disabled>暂停</button><button id="stop" class="stop" disabled>打断收势</button><label><input id="loop" type="checkbox">循环</label></div>
+      <div id="sequence" hidden><div><span id="sequence-step"></span><span id="sequence-time"></span></div><progress id="sequence-progress" max="1" value="0"></progress></div>
+      <p id="status" role="status">选择右侧卡片开始。切换动作时会从当前姿态接续。</p>
+      <details class="tuning"><summary>力度、速度与表情联动</summary><div class="sliders">
+        <label>身体力度 <input id="intensity" type="range" min=".2" max="1" value="1" step=".05"><output id="intensity-value">100%</output></label>
+        <label>动作速度 <input id="speed" type="range" min=".6" max="1.4" value="1" step=".05"><output id="speed-value">1.00×</output></label>
+        <label>表情力度 <input id="face-strength" type="range" min=".2" max="1" value=".8" step=".05"><output id="face-value">80%</output></label>
+      </div><div class="checks"><label><input id="expression" type="checkbox" checked>表情随动作变化</label><label><input id="natural" type="checkbox" checked>呼吸与微动</label><label><input id="mouth" type="checkbox">测试口型（无声）</label></div></details>
+    </section>
+    <aside>
+      <div class="library-head"><span class="eyebrow">THE EXPRESSION COLLECTION</span><h2>每次回应，多一点不同。</h2><p id="counts">正在读取动作库</p></div>
+      <nav id="tabs" aria-label="内容分类"></nav>
+      <div class="filters"><input id="search" type="search" placeholder="搜索：倾听、开心、解释…" aria-label="搜索动作与表情"><label><input id="new-only" type="checkbox">本轮新增</label></div>
+      <div id="categories" aria-label="细分类别"></div><p id="result-count" class="hint"></p>
+      <div id="cards" class="cards"></div><p id="empty" hidden>没有匹配的内容，换一个词试试。</p>
+      <footer>本地实时预览 · 无云端调用与麦克风采集<br>人物衣发物理关闭；大动作请同时观察侧前视角。<details><summary>查看运行数据</summary><pre id="diagnostics"></pre></details></footer>
+    </aside>
+  </main>
+  <script type="module" src="./viewer.mjs"></script>
+</body>
+</html>
