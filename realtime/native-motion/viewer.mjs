@@ -16,7 +16,10 @@ async function stage(id) {
   for(const [c,n,p] of [[0xfff5e5,2,[-12,28,20]],[0xc7e0fa,1,[15,15,-8]]]) {const l=new THREE.DirectionalLight(c,n);l.position.set(...p);scene.add(l);}
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:'#d8dfd0',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.05;scene.add(floor);
   const grid=new THREE.GridHelper(40,20,'#a7b3a3','#c5cebd');grid.position.y=-.02;scene.add(grid);
-  const resize=()=>{renderer.setSize(host.clientWidth,host.clientHeight);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();};new ResizeObserver(resize).observe(host);resize();
+  const resize=()=>{
+    renderer.setSize(host.clientWidth,host.clientHeight);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();
+    if(window.nativeMotion){cameraView();window.nativeMotion.seek(window.nativeMotion.snapshot().time);}
+  };new ResizeObserver(resize).observe(host);resize();
   const row={scene,camera,renderer};stages.push(row);return row;
 }
 function cameraView() {
@@ -48,13 +51,18 @@ try {
   function snapshot() {return {ready,playing,time,duration,frame,lastStepMs,view,environment,sourceName:data.name,sourceFrames:data.frameCount,sourceBones:data.bones.length,target:retarget.snapshot()};}
   function pause(value){playing=!value;$('play').textContent=playing?'暂停':'播放';last=performance.now();}
   function seek(t){time=Math.max(0,Math.min(duration,Number(t)));render();return snapshot();}
+  function setView(v){
+    if(!['front','angle','side','back'].includes(v))throw Error('Unknown view');
+    view=v;for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',String(b.dataset.view===v));
+    cameraView();render();
+  }
   $('play').onclick=()=>pause(playing);$('restart').onclick=()=>{time=0;pause(false);};
   $('timeline').oninput=()=>{pause(true);seek($('timeline').value);};$('speed').onchange=()=>{speed=Number($('speed').value);};
-  for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>{view=button.dataset.view;for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',String(b===button));cameraView();render();};
+  for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>setView(button.dataset.view);
   ready=true;for(const id of ['play','restart','timeline'])$(id).disabled=false;
   status.textContent=`已加载 ${data.name} · ${data.frameCount} 帧 · ${data.bones.length} 原骨骼 → ${retarget.mapping.length} 映射骨骼。两侧共用时间轴。`;
   $('diagnostics').textContent=JSON.stringify({clip:data.name,sourceAsset:data.sourceAsset,sourceArchive:data.sourceArchive,duration,frames:data.frameCount,sourceBoneCount:data.bones.length,mappedBoneCount:retarget.mapping.length,scale:retarget.scale,ik:false,physics:false,comparison:'Native skeletal replay; not an in-game recording'},null,2);
-  window.nativeMotion={snapshot,pause,seek,setView(v){view=v;cameraView();render();},source,mesh,clip,retarget};
+  window.nativeMotion={snapshot,pause,seek,setView,source,mesh,clip,retarget};
   render();last=performance.now();
   function loop(now){const dt=Math.max(0,Math.min(.1,(now-last)/1000));last=now;if(playing){time=(time+dt*speed)%duration;render();}requestAnimationFrame(loop);}
   requestAnimationFrame(loop);
