@@ -1,0 +1,589 @@
+{
+  "schema": 1,
+  "clips": [
+    {
+      "id": "aimisi-stand01",
+      "name": "自然站立",
+      "category": "待机",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Stand01.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-breath01",
+      "name": "呼吸姿态",
+      "category": "待机",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Breath01.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需确认是否为可独立播放的完整身体动画，不能将 additive 呼吸直接当绝对姿态。"
+    },
+    {
+      "id": "aimisi-relax01",
+      "name": "放松姿态",
+      "category": "待机",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Relax01.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-salut01",
+      "name": "致意姿态",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Salut01.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-liaofa",
+      "name": "拨发姿态",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Liaofa.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 手靠近头发，验收袖子和头发穿插。"
+    },
+    {
+      "id": "aimisi-cheek01",
+      "name": "面颊手势",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Cheek01.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 具体碰脸或托腮方式待观察；验收手、袖子与面部距离。"
+    },
+    {
+      "id": "aimisi-turn-left90",
+      "name": "左转 90 度",
+      "category": "转身",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Turn_L90D.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 保留并核对根旋转和位移，不将姿态变化误当原地循环。"
+    },
+    {
+      "id": "aimisi-turn-right90",
+      "name": "右转 90 度",
+      "category": "转身",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Turn_R90D.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 保留并核对根旋转和位移，不将姿态变化误当原地循环。"
+    },
+    {
+      "id": "aimisi-talk01-start",
+      "name": "说话姿态一·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Talk01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-talk01-loop",
+      "name": "说话姿态一·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Talk01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-talk01-end",
+      "name": "说话姿态一·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Talk01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-talk02-start",
+      "name": "说话姿态二·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Talk02_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-talk02-loop",
+      "name": "说话姿态二·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Talk02_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-talk02-end",
+      "name": "说话姿态二·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Talk02_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking01-start",
+      "name": "思考姿态一·起势",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking01-loop",
+      "name": "思考姿态一·循环",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking01-end",
+      "name": "思考姿态一·收势",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking02-start",
+      "name": "思考姿态二·起势",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking02_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking02-loop1",
+      "name": "思考姿态二·循环一",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking02_Loop1.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking02-loop2",
+      "name": "思考姿态二·循环二",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking02_Loop2.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-thinking02-end",
+      "name": "思考姿态二·收势",
+      "category": "思考",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking02_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-calm01-start",
+      "name": "平静姿态·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Calm01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-calm01-loop",
+      "name": "平静姿态·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Calm01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-calm01-end",
+      "name": "平静姿态·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Calm01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-however01-start",
+      "name": "转折说明姿态·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/However01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-however01-loop",
+      "name": "转折说明姿态·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/However01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-however01-end",
+      "name": "转折说明姿态·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/However01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-showhand01-start",
+      "name": "展手姿态·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Showhand01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 验收手臂与袖子穿插，具体展手含义待观察。"
+    },
+    {
+      "id": "aimisi-showhand01-loop",
+      "name": "展手姿态·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Showhand01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 验收手臂与袖子穿插，具体展手含义待观察。"
+    },
+    {
+      "id": "aimisi-showhand01-end",
+      "name": "展手姿态·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Showhand01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 验收手臂与袖子穿插，具体展手含义待观察。"
+    },
+    {
+      "id": "aimisi-whisper01-start",
+      "name": "低声交流姿态·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Whisper01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 手可能靠近嘴或脸，需观察与头发、袖子距离；不预先绑定口型或表情。"
+    },
+    {
+      "id": "aimisi-whisper01-loop",
+      "name": "低声交流姿态·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Whisper01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 手可能靠近嘴或脸，需观察与头发、袖子距离；不预先绑定口型或表情。"
+    },
+    {
+      "id": "aimisi-whisper01-end",
+      "name": "低声交流姿态·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Whisper01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 手可能靠近嘴或脸，需观察与头发、袖子距离；不预先绑定口型或表情。"
+    },
+    {
+      "id": "aimisi-angry01-start",
+      "name": "生气姿态·起势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Angry01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-angry01-loop",
+      "name": "生气姿态·循环",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Angry01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-angry01-end",
+      "name": "生气姿态·收势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Angry01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-embarrassment01-start",
+      "name": "尴尬姿态·起势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Embarrassment01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-embarrassment01-loop",
+      "name": "尴尬姿态·循环",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Embarrassment01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-embarrassment01-end",
+      "name": "尴尬姿态·收势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Embarrassment01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-shy01-start",
+      "name": "害羞姿态·起势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Shy01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-shy01-loop",
+      "name": "害羞姿态·循环",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Shy01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-shy01-end",
+      "name": "害羞姿态·收势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Shy01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-complain01-start",
+      "name": "抱怨姿态·起势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-complain01-loop",
+      "name": "抱怨姿态·循环",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-complain01-end",
+      "name": "抱怨姿态·收势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-finger-snap-start",
+      "name": "响指手势·起势",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Finger_Snap_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需近景检查手指适配，不能只验收手腕轨迹。"
+    },
+    {
+      "id": "aimisi-finger-snap-loop",
+      "name": "响指手势·循环",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Finger_Snap_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需近景检查手指适配，不能只验收手腕轨迹。"
+    },
+    {
+      "id": "aimisi-finger-snap-end",
+      "name": "响指手势·收势",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Finger_Snap_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需近景检查手指适配，不能只验收手腕轨迹。"
+    },
+    {
+      "id": "aimisi-tsundere01-start",
+      "name": "别扭反应姿态·起势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Tsundere01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-tsundere01-loop",
+      "name": "别扭反应姿态·循环",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Tsundere01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-tsundere01-end",
+      "name": "别扭反应姿态·收势",
+      "category": "情绪",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Tsundere01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-zhixiang01-start",
+      "name": "指向手势·起势",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Zhixiang01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 具体指向需结合当前朝向；不自动推断指向目标。"
+    },
+    {
+      "id": "aimisi-zhixiang01-loop",
+      "name": "指向手势·循环",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Zhixiang01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 具体指向需结合当前朝向；不自动推断指向目标。"
+    },
+    {
+      "id": "aimisi-zhixiang01-end",
+      "name": "指向手势·收势",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Zhixiang01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 具体指向需结合当前朝向；不自动推断指向目标。"
+    },
+    {
+      "id": "aimisi-sit01-start",
+      "name": "基础坐姿·起势",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Sit01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit01-loop",
+      "name": "基础坐姿·循环",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Sit01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit01-end",
+      "name": "基础坐姿·收势",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Sit01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit-talk01-start",
+      "name": "坐姿交流·起势",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/SitTalk01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit-talk01-loop",
+      "name": "坐姿交流·循环",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/SitTalk01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit-talk01-end",
+      "name": "坐姿交流·收势",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/SitTalk01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit-thinking01-start",
+      "name": "坐姿思考·起势",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/SitThinking01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit-thinking01-loop",
+      "name": "坐姿思考·循环",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/SitThinking01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-sit-thinking01-end",
+      "name": "坐姿思考·收势",
+      "category": "坐姿",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/SitThinking01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需要匹配座面高度和坐姿锚点，尚不适合作为无座椅场景的默认快捷动作。"
+    },
+    {
+      "id": "aimisi-hi01-start",
+      "name": "招呼手势·起势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Hi01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-hi01-loop",
+      "name": "招呼手势·循环",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Hi01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-hi01-end",
+      "name": "招呼手势·收势",
+      "category": "交流",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Hi01_End.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。"
+    },
+    {
+      "id": "aimisi-liaotoufa01-start",
+      "name": "撩发手势·起势",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Liaotoufa01_Start.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 未发现同名 End，不能假定自然回到待机；验收手、袖子和头发穿插。"
+    },
+    {
+      "id": "aimisi-liaotoufa01-loop",
+      "name": "撩发手势·循环",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Liaotoufa01_Loop.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 未发现同名 End，不能假定自然回到待机；验收手、袖子和头发穿插。"
+    },
+    {
+      "id": "aimisi-baobi-laugh01",
+      "name": "抱臂笑姿态",
+      "category": "小动作",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Baobi_laugh01.uasset",
+      "loop": false,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 抱臂含义按拼音推断，需检查袖子和躯干接触。"
+    },
+    {
+      "id": "aimisi-walk-talk01",
+      "name": "边走边交流姿态",
+      "category": "行走",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Walk_Talk01.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需验证是否循环以及根运动，不能只保留骨骼摆动而丢失行走位移。"
+    },
+    {
+      "id": "aimisi-walk-thinking01",
+      "name": "边走边思考姿态",
+      "category": "行走",
+      "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Walk_Thinking01.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 需验证是否循环以及根运动，不能只保留骨骼摆动而丢失行走位移。"
+    },
+    {
+      "id": "female-m-walk-forward",
+      "name": "女性中体型共用前行",
+      "category": "行走",
+      "sourceAsset": "Client/Content/Aki/Character/Role/FemaleM/BaseAnim/Walk_F.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 共用 FemaleM 动画，不是爱弥斯专属；骨架兼容尚待验证，需验证根运动和脚底接触。"
+    },
+    {
+      "id": "female-m-walk-backward",
+      "name": "女性中体型共用后退",
+      "category": "行走",
+      "sourceAsset": "Client/Content/Aki/Character/Role/FemaleM/BaseAnim/Walk_B.uasset",
+      "loop": true,
+      "notes": "中文用途按资源名推断，尚未逐段确认实际动作；需验证 UAnimSequence、additive 状态、骨架和切换衔接，loop=true 仅表示循环候选。 共用 FemaleM 动画，不是爱弥斯专属；骨架兼容尚待验证，需验证根运动和脚底接触。"
+    }
+  ]
+}

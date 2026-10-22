@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>爱弥斯 · 原生常用动作库</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+</head>
+<body>
+  <header>
+    <a href="/native-motion/">AEMEATH / NATIVE MOTION</a>
+    <span>常用动作 · 本地实验</span>
+  </header>
+  <main>
+    <div class="intro">
+      <div>
+        <span class="eyebrow">ONE CLIP, TWO SKELETONS</span>
+        <h1>爱弥斯的原生常用动作。</h1>
+        <p id="library-summary">读取动作目录中…</p>
+      </div>
+      <div class="views" role="group" aria-label="观察视角">
+        <button data-view="front" aria-pressed="true">正面</button>
+        <button data-view="angle" aria-pressed="false">斜侧</button>
+        <button data-view="side" aria-pressed="false">侧面</button>
+        <button data-view="back" aria-pressed="false">背面</button>
+      </div>
+    </div>
+    <div class="workspace">
+      <aside class="library" aria-label="原生动作目录">
+        <label class="search-label" for="search">查找动作</label>
+        <input id="search" type="search" placeholder="动作名、类别或资源名" autocomplete="off">
+        <div id="categories" class="categories" role="group" aria-label="按类别筛选"></div>
+        <p id="list-summary" class="list-summary" aria-live="polite"></p>
+        <div id="clip-list" class="clip-list" role="group" aria-label="选择一个动作"></div>
+      </aside>
+      <div class="viewer">
+        <div class="current">
+          <div><span id="current-category" class="eyebrow">正在准备</span><h2 id="current-name">加载两套模型…</h2></div>
+          <span id="clip-kind" class="clip-kind"></span>
+        </div>
+        <div class="comparison">
+          <section>
+            <div class="label"><b>01 / 游戏资源原骨架</b><span>原生骨架重放，非游戏录屏</span></div>
+            <div class="stage" id="source-stage" aria-label="原生骨架动作预览"></div>
+          </section>
+          <section>
+            <div class="label"><b>02 / 当前 PMX 模型</b><span>同一时间轴 · 绑定姿态校准</span></div>
+            <div class="stage" id="target-stage" aria-label="当前模型动作预览"></div>
+          </section>
+        </div>
+        <div class="controls">
+          <button id="play" disabled>暂停</button>
+          <button id="restart" disabled>重播本段</button>
+          <input id="timeline" aria-label="两侧共用时间轴" type="range" min="0" max="1" step="0.001" value="0" disabled>
+          <output id="time">0.00 / 0.00 s</output>
+          <select id="speed" aria-label="播放速度"><option value=".25">0.25×</option><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select>
+        </div>
+        <div class="sequence-controls">
+          <label title="只移动观察相机，保留原生世界位移"><input id="follow" type="checkbox" checked> 跟随人物</label>
+          <label><input id="sequence" type="checkbox"> 顺序观看筛选结果</label>
+          <button id="next" disabled>下一段</button>
+          <span>单次动作播到末尾停下；可随时重播。</span>
+        </div>
+        <p id="status" role="status" aria-live="polite">正在读取本地目录和两套模型…</p>
+        <p id="clip-notes" class="clip-notes"></p>
+        <div class="notes">
+          <p><b>比较范围：</b>左侧用游戏原生网格和动画重放；灰模没有游戏灯光、材质及完整表情图层。跟随人物只移动相机，关闭后可对照原生世界位移。</p>
+          <p><b>资源限制：</b>动作名称沿用目录标签，不据此推断剧情含义。道具、独立衣发动画和运行时物理可能缺失；本页关闭额外 IK 与布料物理。</p>
+        </div>
+        <details><summary>当前片段与适配数据</summary><pre id="diagnostics"></pre></details>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="./viewer.mjs"></script>
+</body>
+</html>

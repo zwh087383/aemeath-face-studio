@@ -22,7 +22,7 @@ var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 for (var i = 1; i + 1 < args.Length; i += 2) options[args[i]] = args[i + 1];
 if (args.Length == 0 || !options.TryGetValue("--paks", out var paks) ||
     !options.TryGetValue("--keys", out var keyFile) || !options.TryGetValue("--out", out var output))
-    throw new ArgumentException("index|inspect --paks DIRECTORY --keys LOCAL_JSON --out DIRECTORY [--asset EXACT_PATH]");
+    throw new ArgumentException("index|inspect|export-one|export-list --paks DIRECTORY --keys LOCAL_JSON --out DIRECTORY [--asset EXACT_PATH | --manifest ALLOWLIST_JSON]");
 Directory.CreateDirectory(output);
 var watch = Stopwatch.StartNew();
 Log.Logger = new LoggerConfiguration().MinimumLevel.Error().WriteTo.Console().CreateLogger();
@@ -67,45 +67,9 @@ else if (args[0] is "inspect" or "export-one")
     if (args[0] == "export-one")
     {
         var anim = objects.OfType<UAnimSequence>().Single();
-        if (anim.AdditiveAnimType != EAdditiveAnimationType.AAT_None)
-            throw new NotSupportedException("This single-clip pilot requires a full-pose, non-additive animation.");
-        var set = anim.ConvertAnims();
-        var sequence = set.Sequences.Single();
-        var skeleton = set.Skeleton.ReferenceSkeleton;
-        var bones = skeleton.FinalRefBoneInfo.Select((b, i) => new {
-            name = b.Name.Text, parent = b.ParentIndex,
-            p = V(skeleton.FinalRefBonePose[i].Translation),
-            q = Q(skeleton.FinalRefBonePose[i].Rotation),
-            s = V(skeleton.FinalRefBonePose[i].Scale3D)
-        }).ToArray();
-        var frames = new List<object>();
-        for (var frame = 0; frame < sequence.NumFrames; frame++)
-        {
-            var transforms = new List<object>();
-            for (var i = 0; i < bones.Length; i++)
-            {
-                var rest = skeleton.FinalRefBonePose[i];
-                var p = rest.Translation; var q = rest.Rotation; var s = rest.Scale3D;
-                if (i < sequence.Tracks.Count && sequence.Tracks[i].HasKeys())
-                {
-                    sequence.Tracks[i].GetBoneTransform(frame, sequence.NumFrames, ref q, ref p, ref s);
-                    sequence.RetargetBoneTransform(i, rest, ref q, ref p, ref s);
-                }
-                transforms.Add(new { p = V(p), q = Q(q), s = V(s) });
-            }
-            frames.Add(transforms);
-        }
-        var file = provider.Files[asset];
-        var clip = new { schema = 1, name = anim.Name, sourceAsset = asset,
-            sourceArchive = file is VfsEntry vfs ? Path.GetFileName(vfs.Vfs.Path) : "loose",
-            sourceSkeleton = set.Skeleton.Name, frameCount = sequence.NumFrames,
-            duration = anim.SequenceLength, rateScale = anim.RateScale,
-            sourceFrameRate = (sequence.NumFrames - 1) / anim.SequenceLength,
-            compression = anim.CompressedDataStructure?.GetType().Name,
-            additive = false, units = "Unreal centimeters; native axes; local bone transforms",
-            bones, frames };
-        File.WriteAllText(Path.Combine(output, "native-clip.json"), JsonSerializer.Serialize(clip));
-        Console.WriteLine($"Exported one clip: {anim.Name}, {sequence.NumFrames} frames, {bones.Length} bones, {anim.SequenceLength:F3} seconds");
+        var clip = DecodeClip(anim, provider, asset);
+        File.WriteAllText(Path.Combine(output, "native-clip.json"), JsonSerializer.Serialize(clip.Data));
+        Console.WriteLine($"Exported one clip: {anim.Name}, {clip.Frames} frames, {clip.Bones} bones, {anim.SequenceLength:F3} seconds");
         if (options.TryGetValue("--mesh", out var meshPath))
         {
             if (meshPath.Contains('*')) throw new ArgumentException("Exactly one companion mesh is allowed.");
@@ -117,7 +81,81 @@ else if (args[0] is "inspect" or "export-one")
         }
     }
 }
+else if (args[0] == "export-list")
+{
+    if (!options.TryGetValue("--manifest", out var allowlist)) throw new ArgumentException("An explicit --manifest allowlist is required.");
+    if (File.Exists(Path.Combine(output, "manifest.json"))) throw new InvalidOperationException("Preserve earlier evidence: use a new output directory.");
+    using var list = JsonDocument.Parse(File.ReadAllText(allowlist));
+    var entries = list.RootElement.GetProperty("clips").EnumerateArray().Select(x=>x.Clone()).ToArray();
+    if (entries.Length is < 1 or > 160) throw new ArgumentException("The reviewed common-motion allowlist must contain 1–160 clips.");
+    var ids = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var entry in entries)
+    {
+        var id = entry.GetProperty("id").GetString()!;
+        var source = entry.GetProperty("sourceAsset").GetString()!;
+        if (!Regex.IsMatch(id, "^[a-z][a-z0-9-]{0,79}$") || !ids.Add(id) || source.Contains('*')) throw new ArgumentException("Invalid or duplicate clip id/path.");
+        if (Regex.IsMatch(source, "attack|skill|burst|execute|dodge|death|weapon|fight|rogue|(?:^|[/_])hit(?:[_0-9.]|$)", RegexOptions.IgnoreCase))
+            throw new ArgumentException("Combat asset rejected by common-motion allowlist guard.");
+    }
+    await OodleHelper.InitializeAsync();provider.LoadVirtualPaths();
+    Directory.CreateDirectory(Path.Combine(output, "clips"));
+    var ready = new List<Dictionary<string, object?>>();var rejected = new List<object>();
+    foreach (var entry in entries)
+    {
+        var id = entry.GetProperty("id").GetString()!;var source = entry.GetProperty("sourceAsset").GetString()!;
+        try
+        {
+            var anim = provider.LoadPackage(source).GetExports().OfType<UAnimSequence>().Single();
+            if (anim.SequenceLength > 30) throw new NotSupportedException("Long scene clip exceeds this common-motion batch's 30-second limit.");
+            var clip = DecodeClip(anim, provider, source);
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(clip.Data);
+            File.WriteAllBytes(Path.Combine(output, "clips", id + ".json"), bytes);
+            var row = entry.EnumerateObject().ToDictionary(p=>p.Name,p=>(object?)p.Value.Clone());
+            row["duration"] = anim.SequenceLength;row["frameCount"] = clip.Frames;row["boneCount"] = clip.Bones;row["sourceSkeleton"] = clip.Skeleton;
+            row["status"] = "ready";row["sha256"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant();
+            ready.Add(row);Console.WriteLine($"OK {id}: {anim.SequenceLength:F3}s, {clip.Frames} frames, {clip.Bones} bones");
+        }
+        catch (Exception error)
+        {
+            rejected.Add(new {id,sourceAsset=source,error=error.Message});Console.WriteLine($"SKIP {id}: {error.GetType().Name}");
+        }
+    }
+    File.WriteAllText(Path.Combine(output,"manifest.json"),JsonSerializer.Serialize(new {schema=1,experimental=true,clips=ready}));
+    File.WriteAllText(Path.Combine(output,"export-results.json"),JsonSerializer.Serialize(new {requested=entries.Length,ready=ready.Count,rejected}));
+    Console.WriteLine($"Common-motion batch: {ready.Count}/{entries.Length} exported; {rejected.Count} rejected.");
+}
 else throw new ArgumentException("Unknown command.");
+
+static (object Data, int Frames, int Bones, string Skeleton) DecodeClip(UAnimSequence anim, DefaultFileProvider provider, string asset)
+{
+    if (anim.AdditiveAnimType != EAdditiveAnimationType.AAT_None)
+        throw new NotSupportedException("Only full-pose non-additive animation is supported.");
+    var set=anim.ConvertAnims();var sequence=set.Sequences.Single();var skeleton=set.Skeleton.ReferenceSkeleton;
+    var bones=skeleton.FinalRefBoneInfo.Select((b,i)=>new {name=b.Name.Text,parent=b.ParentIndex,
+        p=V(skeleton.FinalRefBonePose[i].Translation),q=Q(skeleton.FinalRefBonePose[i].Rotation),s=V(skeleton.FinalRefBonePose[i].Scale3D)}).ToArray();
+    var frames=new List<object>();
+    for(var frame=0;frame<sequence.NumFrames;frame++)
+    {
+        var transforms=new List<object>();
+        for(var i=0;i<bones.Length;i++)
+        {
+            var rest=skeleton.FinalRefBonePose[i];var p=rest.Translation;var q=rest.Rotation;var s=rest.Scale3D;
+            if(i<sequence.Tracks.Count&&sequence.Tracks[i].HasKeys())
+            {
+                sequence.Tracks[i].GetBoneTransform(frame,sequence.NumFrames,ref q,ref p,ref s);
+                sequence.RetargetBoneTransform(i,rest,ref q,ref p,ref s);
+            }
+            transforms.Add(new {p=V(p),q=Q(q),s=V(s)});
+        }
+        frames.Add(transforms);
+    }
+    var file=provider.Files[asset];
+    var data=new {schema=1,name=anim.Name,sourceAsset=asset,sourceArchive=file is VfsEntry vfs?Path.GetFileName(vfs.Vfs.Path):"loose",
+        sourceSkeleton=set.Skeleton.Name,frameCount=sequence.NumFrames,duration=anim.SequenceLength,rateScale=anim.RateScale,
+        sourceFrameRate=(sequence.NumFrames-1)/anim.SequenceLength,compression=anim.CompressedDataStructure?.GetType().Name,
+        additive=false,units="Unreal centimeters; native axes; local bone transforms",bones,frames};
+    return(data,sequence.NumFrames,bones.Length,set.Skeleton.Name);
+}
 
 static float[] V(CUE4Parse.UE4.Objects.Core.Math.FVector v) => [v.X, v.Y, v.Z];
 static float[] Q(CUE4Parse.UE4.Objects.Core.Math.FQuat q) => [q.X, q.Y, q.Z, q.W];
