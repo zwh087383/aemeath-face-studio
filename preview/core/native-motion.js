@@ -102,12 +102,15 @@ function basis(forward, across) {
 export class NativeRetarget {
   constructor(clip, mesh) {
     this.clip=clip;this.mesh=mesh;mesh.updateMatrixWorld(true);
-    this.bones=new Map(mesh.skeleton.bones.map(b=>[b.name,b]));
+    // Runtime cloth palette bones are owned by NativeClothBinding and updated
+    // after body/layer playback. They must not enter body calibration or reset.
+    const targetBones=mesh.skeleton.bones.filter(b=>!b.userData.nativeClothVirtual);
+    this.bones=new Map(targetBones.map(b=>[b.name,b]));
     for(const name of ['腰','頭','上半身','上半身2','首',...Object.keys(CHILD),...Object.values(CHILD),
       ...['左','右'].flatMap(jp=>['手首','中指１','人指１','小指１'].map(n=>jp+n))]) {
       if(!this.bones.has(name))throw Error('Missing target bone '+name);
     }
-    this.rest=new Map(mesh.skeleton.bones.map(b=>[b.name,{
+    this.rest=new Map(targetBones.map(b=>[b.name,{
       p:b.position.clone(),q:b.quaternion.clone(),s:b.scale.clone(),
       wp:b.getWorldPosition(new THREE.Vector3()),wq:b.getWorldQuaternion(new THREE.Quaternion()),
     }]));
@@ -150,7 +153,7 @@ export class NativeRetarget {
     }
     const depth=b=>b.parent?1+depth(b.parent):0;
     this.mapping=[];
-    for(const bone of mesh.skeleton.bones) {
+    for(const bone of targetBones) {
       const hair=nativeHairSource(bone.name);
       const name=BODY[bone.name]??(clip.indices.has(bone.name)?bone.name:hair&&clip.indices.has(hair)?hair:null);
       if(!name)continue;
@@ -159,7 +162,7 @@ export class NativeRetarget {
         correction:(calibration.get(bone.name)??new THREE.Quaternion()).clone().multiply(this.rest.get(bone.name).wq)});
     }
     this.mapping.sort((a,b)=>depth(a.bone)-depth(b.bone));
-    this.orderedBones=[...mesh.skeleton.bones].sort((a,b)=>depth(a)-depth(b));
+    this.orderedBones=[...targetBones].sort((a,b)=>depth(a)-depth(b));
     this.byBone=new Map(this.mapping.map(row=>[row.bone,row]));
     this.pelvis=clip.indices.get('Bip001Pelvis');
     this.pelvisOffset=this.rest.get('腰').wp.clone().sub(clip.restWorld[this.pelvis].p.clone().multiplyScalar(this.scale));

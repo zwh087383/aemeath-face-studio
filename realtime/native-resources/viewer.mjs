@@ -16,6 +16,7 @@ const kinds = [
 const pageSize = 40, cache = new Map(), resourceCache = new Map(), stages = [];
 let entries = [], clips = [], resources = [], filtered = [], kind = 'body', query = '', category = '', page = 0;
 let source, mesh, sourceRest, targetRest, current = null, selected = null, selectedData = null;
+let cloth = null, clothError = null, clothSources = new Set();
 let layers = new Map(), faceLayers = new Map(), faceBinding = null, faceResult = null, prop = null, propGroup = null, propDescriptor = null, propAnimation = null;
 let ready = false, modelsReady = false, loading = false, playing = true, error = null;
 let pendingId = null, requestSequence = 0, controller, time = 0, cycleOffset = 0, speed = 1, view = 'front', last = performance.now();
@@ -90,16 +91,19 @@ function render() {
     if (current) {current.clip.sample(clipTime(current.clip,current.descriptor));current.clip.applyToGLTF(source);current.retarget.apply();}
     else if (source && mesh) {restorePose(sourceRest,source);restorePose(targetRest,mesh);}
     for (const row of layers.values()) {const at=clipTime(row.clip,row.descriptor);row.native.apply(at);row.target.apply(at);}
+    // Consume the composed source pose once, keeping cloth on the body clock.
+    if(cloth)cloth.apply({availableSourceNames:clothSources});
     if(faceBinding && faceLayers.size) {
       const weights={};
       for(const type of ['default-face','expression','mouth']) {const row=faceLayers.get(type);if(row)Object.assign(weights,row.expression.sample(time+cycleOffset,{loop:Boolean(row.descriptor.loop)}));}
       faceResult=faceBinding.apply(mesh,weights);
     }else if(faceBinding){faceBinding.clear(mesh);faceResult=null;}
   }
-  cameraView();for (const row of stages) {if (prop && row.id==='target-stage') continue;row.renderer.render(row.scene,row.camera);}
+  updateClothStatus();cameraView();for (const row of stages) {if (prop && row.id==='target-stage') continue;row.renderer.render(row.scene,row.camera);}
   lastStepMs=performance.now()-begin;frame++;$('timeline').max=String(Math.max(.001,duration()));$('timeline').value=String(time);$('time').textContent=`${time.toFixed(2)} / ${duration().toFixed(2)} s`;
 }
 function updateLayers() {
+  clothSources=new Set([...(current?.clip.indices.keys()??[]),...(layers.get('ribbon')?.clip.indices.keys()??[])]);
   $('body-layer').textContent='身体：'+nameOf(current?.descriptor);
   for (const name of ['look','ribbon']) $(''+name+'-layer').textContent=(name==='look'?'注视：':'衣发：')+(layers.has(name)?nameOf(layers.get(name).descriptor)+(layers.get(name).automatic?'（自动配套）':''):'关闭');
   $('face-layer').textContent='面部：'+([...faceLayers.values()].map(row=>nameOf(row.descriptor)).join(' + ')||'关闭');
@@ -110,13 +114,27 @@ function updateControls() {
   $('next').disabled=loading || !modelsReady || filtered.length<2;
   $('page-prev').disabled=page===0;$('page-next').disabled=(page+1)*pageSize>=filtered.length;
   $('prop-spin-label').hidden=!prop;
+  $('native-skirt').disabled=!cloth || loading || Boolean(prop);
+}
+function updateClothStatus() {
+  const state=cloth?.snapshot();
+  const text=clothError?`裙摆适配未启用：${clothError}`:!state?'':state.active?
+    `裙摆：原生动画已接入 · ${state.matchedVertices} 个裙片顶点 · 与身体共用时间轴`:
+    !state.enabled?'裙摆：旧版未适配状态，用于同一动作对照':state.missingSourceCount?
+    `裙摆：当前片段缺少 ${state.missingSourceCount} 个原生通道，已保留原绑定`:
+    `裙摆：当前片段保留原绑定（${state.reason||'等待原生裙摆轨迹'}）`;
+  if($('cloth-status').textContent!==text)$('cloth-status').textContent=text;
+}
+function setClothEnabled(value) {
+  $('native-skirt').checked=Boolean(value);cloth?.setEnabled(Boolean(value));
+  if(modelsReady)render();else updateClothStatus();return snapshot();
 }
 function setView(value) {if (!['front','angle','side','back','face'].includes(value)) throw Error('Unknown view');view=value;for (const button of document.querySelectorAll('[data-view]')) button.setAttribute('aria-pressed',String(button.dataset.view===value));cameraView();if(modelsReady)render();return snapshot();}
 function setFollow(value) {$('follow').checked=Boolean(value);if(modelsReady)render();return snapshot();}
 function pause(value=true) {playing=!value;$('play').textContent=playing?'暂停':'播放';last=performance.now();return snapshot();}
 function seek(value) {const number=Number(value);if(!Number.isFinite(number))throw Error('Invalid playback time');time=Math.max(0,Math.min(duration(),number));cycleOffset=0;if(modelsReady)render();last=performance.now();return snapshot();}
 function snapshot() {
-  return {ready,modelsReady,loading,playing,time,cycleOffset,playbackClock:time+cycleOffset,duration:duration(),frame,lastStepMs,view,speed,environment,pendingId,error,selectedId:selected?.id??null,currentId:current?.descriptor.id??null,resourceKind:selected?resourceKind(selected):null,kind,query,category,page,pageSize,total:entries.length,filteredCount:filtered.length,pageIds:filtered.slice(page*pageSize,(page+1)*pageSize).map(row=>row.id),filteredIds:filtered.map(row=>row.id),cacheIds:[...cache.keys()],resourceCacheIds:[...resourceCache.keys()],clips:clips.map(({id,name,resourceKind,category,duration,loop,status})=>({id,name,resourceKind,category,duration,loop,status})),resources:resources.map(({id,name,kind,status})=>({id,name,kind,status})),layers:[...layers].map(([kind,row])=>({kind,id:row.descriptor.id,automatic:Boolean(row.automatic),native:row.native.snapshot(),target:row.target.snapshot()})),faceLayers:[...faceLayers].map(([kind,row])=>({kind,id:row.descriptor.id,duration:row.expression.duration,curves:row.expression.data.curves.length})),faceResult,inspection,prop:prop?{id:propDescriptor.id,rotation:propGroup.rotation.y,bounds:new THREE.Box3().setFromObject(prop).getSize(new THREE.Vector3()).toArray()}:null,target:current?.retarget.snapshot()??null};
+  return {cloth:cloth?.snapshot()??{error:clothError},ready,modelsReady,loading,playing,time,cycleOffset,playbackClock:time+cycleOffset,duration:duration(),frame,lastStepMs,view,speed,environment,pendingId,error,selectedId:selected?.id??null,currentId:current?.descriptor.id??null,resourceKind:selected?resourceKind(selected):null,kind,query,category,page,pageSize,total:entries.length,filteredCount:filtered.length,pageIds:filtered.slice(page*pageSize,(page+1)*pageSize).map(row=>row.id),filteredIds:filtered.map(row=>row.id),cacheIds:[...cache.keys()],resourceCacheIds:[...resourceCache.keys()],clips:clips.map(({id,name,resourceKind,category,duration,loop,status})=>({id,name,resourceKind,category,duration,loop,status})),resources:resources.map(({id,name,kind,status})=>({id,name,kind,status})),layers:[...layers].map(([kind,row])=>({kind,id:row.descriptor.id,automatic:Boolean(row.automatic),native:row.native.snapshot(),target:row.target.snapshot()})),faceLayers:[...faceLayers].map(([kind,row])=>({kind,id:row.descriptor.id,duration:row.expression.duration,curves:row.expression.data.curves.length})),faceResult,inspection,prop:prop?{id:propDescriptor.id,rotation:propGroup.rotation.y,bounds:new THREE.Box3().setFromObject(prop).getSize(new THREE.Vector3()).toArray()}:null,target:current?.retarget.snapshot()??null};
 }
 function renderTabs() {
   $('tabs').replaceChildren();
@@ -282,7 +300,8 @@ async function select(id) {
 }
 async function next() {if(!filtered.length||loading)return snapshot();const rows=filtered.slice(page*pageSize,(page+1)*pageSize),index=rows.findIndex(row=>row.id===selected?.id);return select(rows[(index+1)%rows.length].id);}
 function clearLayers() {const clock=time+cycleOffset;layers.clear();faceLayers.clear();faceBinding?.clear(mesh);faceResult=null;if(!prop&&current){const length=current.clip.data.duration;time=current.descriptor.loop&&length>0?clock%length:Math.min(clock,length);cycleOffset=0;}updateLayers();if(modelsReady)render();return snapshot();}
-window.nativeResources={snapshot,pause,seek,select,setView,setFollow,setKind,next,clearLayers,get mesh(){return mesh;},get source(){return source;},get clip(){return current?.clip;},get retarget(){return current?.retarget;},get selectedData(){return selectedData;}};
+window.nativeResources={snapshot,pause,seek,select,setView,setFollow,setKind,next,clearLayers,setClothEnabled,get cloth(){return cloth;},get mesh(){return mesh;},get source(){return source;},get clip(){return current?.clip;},get retarget(){return current?.retarget;},get selectedData(){return selectedData;}};
+$('native-skirt').onchange=()=>setClothEnabled($('native-skirt').checked);
 $('search').oninput=()=>{query=$('search').value;page=0;renderList();};
 $('page-prev').onclick=()=>{page=Math.max(0,page-1);renderList();};$('page-next').onclick=()=>{page++;renderList();};
 $('play').onclick=()=>{if(!playing&&time>=duration()){time=0;cycleOffset=0;}pause(playing);render();};$('restart').onclick=()=>{time=0;cycleOffset=0;pause(false);render();};$('timeline').oninput=()=>{pause(true);seek($('timeline').value);};$('speed').onchange=()=>{speed=Number($('speed').value);last=performance.now();};$('next').onclick=()=>void next();$('follow').onchange=()=>setFollow($('follow').checked);$('clear-layers').onclick=clearLayers;
@@ -306,6 +325,7 @@ try {
   renderTabs();renderCategories();renderList();message('目录已读取，正在准备两侧渲染器…','loading');
   const [left,right]=await Promise.all([stage('source-stage'),stage('target-stage')]);cameraView();message('正在读取原生网格、当前 PMX 与贴图…','loading');
   const [gltf,target]=await Promise.all([new GLTFLoader().loadAsync(base+'/source.glb'),new MMDLoader().loadAsync('/model/'+encodeURIComponent('鸣潮_爱弥斯1.05.pmx'))]);source=gltf.scene;mesh=target;mesh.frustumCulled=false;faceBinding=new NativeExpressionBinding(mesh);sourceRest=capturePose(source);targetRest=capturePose(mesh);left.scene.add(source);right.scene.add(mesh);
+  try{const {NativeClothBinding}=await import('/preview/core/native-cloth-binding.js');cloth=new NativeClothBinding(source,mesh);}catch(problem){clothError=problem.message;console.warn('Native skirt binding unavailable:',problem.message);}
   source.traverse(node=>{if(node.isMesh){node.frustumCulled=false;node.material=new THREE.MeshStandardMaterial({color:'#889c8e',roughness:.72,metalness:0,side:THREE.DoubleSide});}});
   message('模型已读取，正在准备材质和着色器…','loading');await Promise.all(stages.map(row=>row.renderer.compileAsync(row.scene,row.camera)));
   const gl=right.renderer.backend.gl,debug=gl.getExtension('WEBGL_debug_renderer_info');environment={renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):'unknown'};modelsReady=true;updateControls();
