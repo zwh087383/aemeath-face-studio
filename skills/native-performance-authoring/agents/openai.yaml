@@ -1,0 +1,4 @@
+interface:
+  display_name: "原生资源优先的交流表演制作"
+  short_description: "核对原生资源缺口，制作自然动作与表情，并在真实角色上验证衔接和打断"
+  default_prompt: "使用 $native-performance-authoring，为当前角色制作不与已有资源重复的交流反应，并运行真实模型预览与打断验收。"
