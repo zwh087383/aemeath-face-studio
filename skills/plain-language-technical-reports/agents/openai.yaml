@@ -1,0 +1,4 @@
+interface:
+  display_name: "人话技术报告"
+  short_description: "面向非专业读者讲清技术方案的判断责任、依据、具体过程、失败处理与验收边界"
+  default_prompt: "使用 $plain-language-technical-reports，结合现有资料用人话写清方案怎样实现、由谁判断、依据是什么、判断不出怎么办，并区分现状与待做。"
