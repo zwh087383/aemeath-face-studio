@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>爱弥斯 · 原生资源审阅</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+</head>
+<body>
+<header><a href="./">AEMEATH / NATIVE RESOURCES</a><span>本机资源 · 实验性适配</span></header>
+<main>
+  <div class="intro"><div><span class="eyebrow">BODY / FACE / GAZE / RIBBON / PROPS</span><h1>爱弥斯的原生资源。</h1><p id="library-summary">读取资源目录中…</p></div><div class="views" aria-label="观察视角"><button data-view="front" aria-pressed="true">正面</button><button data-view="angle" aria-pressed="false">斜侧</button><button data-view="side" aria-pressed="false">侧面</button><button data-view="back" aria-pressed="false">背面</button><button data-view="face" aria-pressed="false">面部</button></div></div>
+  <div id="tabs" class="tabs" role="tablist" aria-label="资源类型"></div>
+  <div class="workspace">
+    <aside class="library"><label class="search-label" for="search">查找当前类别</label><input id="search" type="search" placeholder="名称、类别或源资源" autocomplete="off"><div id="categories" class="categories"></div><p id="list-summary" class="list-summary" aria-live="polite"></p><div id="resource-list" class="resource-list"></div><div class="pagination"><button id="page-prev">上一页</button><span id="page-label"></span><button id="page-next">下一页</button></div></aside>
+    <div class="viewer">
+      <div class="current"><div><span id="current-category" class="eyebrow">正在准备</span><h2 id="current-name">读取模型…</h2></div><span id="resource-status" class="badge"></span></div>
+      <div id="comparison" class="comparison"><section><div class="label"><b id="source-label">01 / 游戏资源原骨架</b><span id="source-subtitle">原生数据重放，非游戏录屏</span></div><div class="stage" id="source-stage"></div></section><section id="target-section"><div class="label"><b>02 / 当前 PMX 模型</b><span>同一时间轴 · 绑定姿态校准</span></div><div class="stage" id="target-stage"></div></section></div>
+      <div class="controls"><button id="play" disabled>暂停</button><button id="restart" disabled>重播</button><input id="timeline" aria-label="共用时间轴" type="range" min="0" max="1" step="0.001" value="0" disabled><output id="time">0.00 / 0.00 s</output><select id="speed" aria-label="播放速度"><option value=".25">0.25×</option><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></div>
+      <div class="sequence-controls"><label><input id="follow" type="checkbox" checked>跟随人物</label><label><input id="sequence" type="checkbox">顺序观看当前页</label><button id="next" disabled>下一项</button><label id="prop-spin-label" hidden><input id="prop-spin" type="checkbox" checked>道具缓慢旋转</label></div>
+      <div id="layers" class="layers"><b>正在播放</b><span id="body-layer">身体：未选择</span><span id="face-layer">面部：关闭</span><span id="look-layer">注视：关闭</span><span id="ribbon-layer">衣带：关闭</span><button id="clear-layers">清除叠加层</button></div>
+      <p id="status" role="status" aria-live="polite">正在准备两套模型和目录…</p><p id="resource-notes" class="resource-notes"></p>
+      <section id="resource-inspector" class="inspector" hidden><h3>原生数据与适配情况</h3><div id="data-overview" class="data-overview"></div><div id="curve-view" class="curve-view"></div><p id="inspector-notes"></p><div id="converted-files" class="converted-files" aria-label="已转换的材质与配套文件"></div></section>
+      <div class="notes"><p><b>资源审阅：</b>身体片段同步比较；注视与衣带独立叠加。灰模保留原骨架，运行时物理与游戏渲染效果仍需另外还原。</p><p><b>真实状态：</b>默认面部库包含共用和其他角色控制；无对应 morph 时仅查看数据。台词口型来自全游戏静态台词库，尚未配套语音，也不是实时语音驱动。道具当前独立展示。</p></div>
+      <details><summary>当前资源的可读数据</summary><pre id="diagnostics"></pre></details>
+    </div>
+  </div>
+</main><script type="module" src="./viewer.mjs"></script>
+</body></html>

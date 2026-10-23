@@ -29,6 +29,14 @@ test('reject additive, incomplete, cyclic and corrupt clips',()=>{
   f=fixture();f.frames[0].pop();assert.throws(()=>new NativeClip(f),/Incomplete/);
   f=fixture();f.frames[0][0].p[0]=NaN;assert.throws(()=>new NativeClip(f),/Nonfinite/);
 });
+test('a native single-pose sample remains stable at both endpoints and reverse seeking',()=>{
+  const data=fixture();data.frames=[data.frames[1]];data.frameCount=1;
+  const clip=new NativeClip(data).sample(0),first=clip.world.map(t=>({p:t.p.toArray(),q:t.q.toArray(),s:t.s.toArray()}));
+  for(const time of [data.duration,.7,0]){
+    clip.sample(time);assert.deepEqual(clip.world.map(t=>({p:t.p.toArray(),q:t.q.toArray(),s:t.s.toArray()})),first);
+  }
+  data.frames=[];data.frameCount=0;assert.throws(()=>new NativeClip(data),/Unsupported/);
+});
 test('single-clip server exposes exact aliases, rejects unknown files, writes and foreign hosts',async()=>{
   const dir=await mkdtemp(path.join(os.tmpdir(),'aemeath-native-'));
   await writeFile(path.join(dir,'native-clip.json'),JSON.stringify(fixture()));

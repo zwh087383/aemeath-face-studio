@@ -9,7 +9,8 @@ if (-not (Test-Path -LiteralPath (Join-Path $cueRoot 'CUE4Parse/CUE4Parse.csproj
     throw 'Cue4ParseRoot must point to the CUE4Parse source checkout.'
 }
 New-Item -ItemType Directory -Path $BuildDirectory -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Program.cs'),(Join-Path $PSScriptRoot 'NativeMotionProbe.csproj') -Destination $BuildDirectory
+Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.cs' | Copy-Item -Destination $BuildDirectory
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'NativeMotionProbe.csproj') -Destination $BuildDirectory
 & $DotNetExe build (Join-Path $BuildDirectory 'NativeMotionProbe.csproj') -c Release "-p:Cue4ParseRoot=$cueRoot" -p:CUE4PARSE_SKIP_NATIVE=true --nologo
 if ($LASTEXITCODE -ne 0) { throw "Probe build failed: $LASTEXITCODE" }
 $native = Join-Path $cueRoot 'CUE4Parse-Natives/bin/Release/CUE4Parse-Natives.dll'

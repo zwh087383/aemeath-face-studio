@@ -11,7 +11,7 @@ const convert = t => ({
 export class NativeClip {
   constructor(data) {
     if (data.schema !== 1 || data.additive || !(data.duration > 0) ||
-        data.frames.length !== data.frameCount || data.frameCount < 2) throw Error('Unsupported native clip');
+        data.frames.length !== data.frameCount || data.frameCount < 1) throw Error('Unsupported native clip');
     this.data = data;
     this.indices = new Map(data.bones.map((b, i) => [b.name, i]));
     if (this.indices.size !== data.bones.length) throw Error('Duplicate source bone names');
