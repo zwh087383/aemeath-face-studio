@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {nativeHairSource} from './native-hair-binding.js';
 
 // Same handedness change as CUE4Parse's glTF mesh writer: (X,Y,Z) -> (X,Z,Y).
 const convert = t => ({
@@ -96,7 +97,7 @@ function basis(forward, across) {
 
 /** Bind-pose calibrated rotation retarget. Target bone lengths are never changed.
  * MMD grant/IK/physics must be OFF in this isolated host; duplicate D legs are
- * explicitly driven, and exact-name hair/ribbon tracks retain their native timing.
+ * explicitly driven. Exact-name and audited rebuilt-hair aliases retain native timing.
  */
 export class NativeRetarget {
   constructor(clip, mesh) {
@@ -150,7 +151,8 @@ export class NativeRetarget {
     const depth=b=>b.parent?1+depth(b.parent):0;
     this.mapping=[];
     for(const bone of mesh.skeleton.bones) {
-      const name=BODY[bone.name]??(clip.indices.has(bone.name)?bone.name:null);
+      const hair=nativeHairSource(bone.name);
+      const name=BODY[bone.name]??(clip.indices.has(bone.name)?bone.name:hair&&clip.indices.has(hair)?hair:null);
       if(!name)continue;
       const source=clip.indices.get(name);if(source===undefined)throw Error('Missing native bone '+name);
       this.mapping.push({bone,source,inv:clip.restWorld[source].q.clone().invert(),
@@ -188,6 +190,7 @@ export class NativeRetarget {
   snapshot() {
     const names=['腰','頭','左腕','左ひじ','左手首','右腕','右ひじ','右手首','左足','左ひざ','左足首','右足','右ひざ','右足首'];
     return {scale:this.scale,mapped:this.mapping.length,time:this.clip.time,
+      nativeLongHairMapped:this.mapping.filter(row=>nativeHairSource(row.bone.name)).length,
       bones:Object.fromEntries(names.map(n=>[n,this.bones.get(n).getWorldPosition(new THREE.Vector3()).toArray()])),
       maxLengthError:Math.max(...[...this.bones].filter(([n])=>n!=='腰').map(([n,b])=>Math.abs(b.position.length()-this.rest.get(n).p.length()))),
     };

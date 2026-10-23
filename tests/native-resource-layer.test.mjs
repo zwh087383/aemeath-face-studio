@@ -101,3 +101,15 @@ test('ribbon overlays move only cloth/hair, preserving base movement and source 
   restore(base);layer.apply(0);restore(base);layer.apply(1);
   nearQuaternion(bones[2].getWorldQuaternion(new THREE.Quaternion()), world);
 });
+test('a full-pose companion replaces an existing hair track once and preserves the head base',()=>{
+  const c=clip([{name:'Bip001Head',parent:-1},{name:'Bone_Hair071_R',parent:0}],
+    [transform(rotation('x',.8)),transform(rotation('y',.35))]);
+  const {root,bones}=rig([['頭',-1],['右侧发A1',0]]),bind=pose(root);
+  bones[0].quaternion.copy(rotation('z',.2));bones[1].quaternion.copy(rotation('y',.35));
+  const layer=new NativeResourceLayer(c,root,{kind:'ribbon',bindPose:bind,composition:'replace'});
+  assert.deepEqual(layer.snapshot().bones,['右侧发A1']);layer.apply(1);
+  nearQuaternion(bones[0].quaternion,rotation('z',.2));
+  nearQuaternion(bones[1].quaternion,rotation('y',.35));
+  layer.apply(1);nearQuaternion(bones[1].quaternion,rotation('y',.35));
+  assert.match(layer.snapshot().composition,/replace/);
+});

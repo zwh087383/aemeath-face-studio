@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {nativeHairTargets} from './native-hair-binding.js';
 
 // The source skeleton also has facial-mouth, cheek and Facial_Elbow helpers.
 // Only these explicitly identified head/neck/eye bones belong to a look layer.
@@ -15,16 +16,17 @@ const filters = {
 };
 const depth = bone => bone.parent ? depth(bone.parent) + 1 : 0;
 
-/** Restricted, rest-relative additive overlay.
+/** Restricted rest-relative bone layer: additive look or authored track replacement.
  * The host must apply/restore its body pose before every call, including seeks.
  * Capture every base world rotation before changing any layer bone. Only each
  * bone's local-track delta is added; its parent's delta is inherited once.
  * PMX rotations preserve target positions, lengths and scale. */
 export class NativeResourceLayer {
-  constructor(clip, root, {kind, native = false, bindPose = []} = {}) {
+  constructor(clip, root, {kind, native = false, bindPose = [], composition = 'additive'} = {}) {
     const filter = filters[kind];
     if (!filter) throw Error('Unsupported resource layer ' + kind);
-    this.clip = clip;this.root = root;this.kind = kind;this.native = native;
+    if(!['additive','replace'].includes(composition))throw Error('Unsupported layer composition');
+    this.clip = clip;this.root = root;this.kind = kind;this.native = native;this.composition=composition;
     root.updateMatrixWorld(true);
     const binds = new Map(bindPose.map(row => [row.node.name, row]));
     const mapped = new Set();
@@ -32,7 +34,7 @@ export class NativeResourceLayer {
     for (let index = 0; index < clip.data.bones.length; index++) {
       const name = clip.data.bones[index].name;
       if (!filter(name)) continue;
-      const names = native ? [name] : [name, ...(lookAliases[name] ?? [])];
+      const names = native ? [name] : [name, ...(lookAliases[name] ?? []), ...nativeHairTargets(name)];
       const bone = names.map(candidate => root.getObjectByName(candidate)).find(candidate => candidate?.isBone);
       if (!bone || mapped.has(bone)) continue;
       mapped.add(bone);
@@ -41,6 +43,9 @@ export class NativeResourceLayer {
       const axes = native ? new THREE.Quaternion() : bindWorld.invert().multiply(clip.restWorld[index].q).normalize();
       this.rows.push({bone, index, axes, axesInv: axes.clone().invert(),
         restInv: clip.rest[index].q.clone().invert(),
+        bindLocal:binds.get(bone.name)?.q?.clone()??bone.quaternion.clone(),
+        bindPosition:binds.get(bone.name)?.p?.clone()??bone.position.clone(),
+        bindScale:binds.get(bone.name)?.s?.clone()??bone.scale.clone(),
         baseWorld: new THREE.Quaternion(), baseLocal: new THREE.Quaternion(),
         basePosition: new THREE.Vector3(), baseScale: new THREE.Vector3(),
       });
@@ -67,14 +72,17 @@ export class NativeResourceLayer {
       // Keep the exact captured local rotation: decomposing base world matrices
       // back into rotations can introduce shear errors under nonuniform scale.
       // The current parent supplies its layered rotation by inheritance once.
-      this.q.copy(row.baseLocal).multiply(this.delta).normalize();
+      // A full-pose ribbon companion owns these local tracks. Replace the
+      // body's hair tracks rather than adding the same authored motion twice.
+      const replace=this.composition==='replace';
+      this.q.copy(replace?row.bindLocal:row.baseLocal).multiply(this.delta).normalize();
       bone.quaternion.copy(this.q);
       if (this.native) {
         this.translation.copy(local.p).sub(rest.p).multiplyScalar(.01);
-        bone.position.copy(row.basePosition).add(this.translation);
+        bone.position.copy(replace?row.bindPosition:row.basePosition).add(this.translation);
         this.scaleRatio.set(rest.s.x === 0 ? 1 : local.s.x / rest.s.x,
           rest.s.y === 0 ? 1 : local.s.y / rest.s.y, rest.s.z === 0 ? 1 : local.s.z / rest.s.z);
-        bone.scale.copy(row.baseScale).multiply(this.scaleRatio);
+        bone.scale.copy(replace?row.bindScale:row.baseScale).multiply(this.scaleRatio);
       }
     }
     this.root.updateMatrixWorld(true);
@@ -82,6 +90,6 @@ export class NativeResourceLayer {
   }
   snapshot() {return {kind:this.kind, native:this.native, mapped:this.rows.length,
     bones:this.rows.map(row => row.bone.name), time:this.clip.time,
-    composition:'rest-local delta on a freshly applied body base',
+    composition:this.composition==='replace'?'authored local tracks replace the body hair/cloth tracks':'rest-local delta on a freshly applied body base',
     translations:this.native?'source local deltas':'preserved target positions'};}
 }

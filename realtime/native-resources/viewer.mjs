@@ -5,6 +5,7 @@ import {MMDLoader} from '@takahirox/three-mmd';
 import {NativeClip, NativeRetarget} from '/preview/core/native-motion.js';
 import {NativeResourceLayer} from '/preview/core/native-resource-layer.js';
 import {NativeExpression, NativeExpressionBinding} from '/preview/core/native-expression.js';
+import {findNativeRibbonCompanion} from '/preview/core/native-companion.js';
 
 const $ = id => document.getElementById(id);
 const base = '/native-resources-data';
@@ -100,7 +101,7 @@ function render() {
 }
 function updateLayers() {
   $('body-layer').textContent='身体：'+nameOf(current?.descriptor);
-  for (const name of ['look','ribbon']) $(''+name+'-layer').textContent=(name==='look'?'注视：':'衣带：')+(layers.has(name)?nameOf(layers.get(name).descriptor):'关闭');
+  for (const name of ['look','ribbon']) $(''+name+'-layer').textContent=(name==='look'?'注视：':'衣发：')+(layers.has(name)?nameOf(layers.get(name).descriptor)+(layers.get(name).automatic?'（自动配套）':''):'关闭');
   $('face-layer').textContent='面部：'+([...faceLayers.values()].map(row=>nameOf(row.descriptor)).join(' + ')||'关闭');
 }
 function updateControls() {
@@ -115,7 +116,7 @@ function setFollow(value) {$('follow').checked=Boolean(value);if(modelsReady)ren
 function pause(value=true) {playing=!value;$('play').textContent=playing?'暂停':'播放';last=performance.now();return snapshot();}
 function seek(value) {const number=Number(value);if(!Number.isFinite(number))throw Error('Invalid playback time');time=Math.max(0,Math.min(duration(),number));cycleOffset=0;if(modelsReady)render();last=performance.now();return snapshot();}
 function snapshot() {
-  return {ready,modelsReady,loading,playing,time,cycleOffset,playbackClock:time+cycleOffset,duration:duration(),frame,lastStepMs,view,speed,environment,pendingId,error,selectedId:selected?.id??null,currentId:current?.descriptor.id??null,resourceKind:selected?resourceKind(selected):null,kind,query,category,page,pageSize,total:entries.length,filteredCount:filtered.length,pageIds:filtered.slice(page*pageSize,(page+1)*pageSize).map(row=>row.id),filteredIds:filtered.map(row=>row.id),cacheIds:[...cache.keys()],resourceCacheIds:[...resourceCache.keys()],clips:clips.map(({id,name,resourceKind,category,duration,loop,status})=>({id,name,resourceKind,category,duration,loop,status})),resources:resources.map(({id,name,kind,status})=>({id,name,kind,status})),layers:[...layers].map(([kind,row])=>({kind,id:row.descriptor.id,native:row.native.snapshot(),target:row.target.snapshot()})),faceLayers:[...faceLayers].map(([kind,row])=>({kind,id:row.descriptor.id,duration:row.expression.duration,curves:row.expression.data.curves.length})),faceResult,inspection,prop:prop?{id:propDescriptor.id,rotation:propGroup.rotation.y,bounds:new THREE.Box3().setFromObject(prop).getSize(new THREE.Vector3()).toArray()}:null,target:current?.retarget.snapshot()??null};
+  return {ready,modelsReady,loading,playing,time,cycleOffset,playbackClock:time+cycleOffset,duration:duration(),frame,lastStepMs,view,speed,environment,pendingId,error,selectedId:selected?.id??null,currentId:current?.descriptor.id??null,resourceKind:selected?resourceKind(selected):null,kind,query,category,page,pageSize,total:entries.length,filteredCount:filtered.length,pageIds:filtered.slice(page*pageSize,(page+1)*pageSize).map(row=>row.id),filteredIds:filtered.map(row=>row.id),cacheIds:[...cache.keys()],resourceCacheIds:[...resourceCache.keys()],clips:clips.map(({id,name,resourceKind,category,duration,loop,status})=>({id,name,resourceKind,category,duration,loop,status})),resources:resources.map(({id,name,kind,status})=>({id,name,kind,status})),layers:[...layers].map(([kind,row])=>({kind,id:row.descriptor.id,automatic:Boolean(row.automatic),native:row.native.snapshot(),target:row.target.snapshot()})),faceLayers:[...faceLayers].map(([kind,row])=>({kind,id:row.descriptor.id,duration:row.expression.duration,curves:row.expression.data.curves.length})),faceResult,inspection,prop:prop?{id:propDescriptor.id,rotation:propGroup.rotation.y,bounds:new THREE.Box3().setFromObject(prop).getSize(new THREE.Vector3()).toArray()}:null,target:current?.retarget.snapshot()??null};
 }
 function renderTabs() {
   $('tabs').replaceChildren();
@@ -202,6 +203,12 @@ function displayInspection(descriptor,data) {
   return inspection;
 }
 
+function makeLayer(clip,descriptor,automatic=false){
+  const kind=resourceKind(descriptor),composition=kind==='ribbon'?'replace':'additive';
+  return {descriptor,clip,automatic,
+    native:new NativeResourceLayer(clip,source,{kind,native:true,bindPose:sourceRest,composition}),
+    target:new NativeResourceLayer(clip,mesh,{kind,native:false,bindPose:targetRest,composition})};
+}
 async function select(id) {
   if(!modelsReady)throw Error('两套模型尚未准备好');
   const descriptor=entries.find(entry=>entry.id===id);if(!descriptor)throw Error('Unknown resource '+id);
@@ -212,9 +219,14 @@ async function select(id) {
     if((isClip(descriptor)&&descriptor.status!=='ready')||(!isClip(descriptor)&&!descriptor.file&&!descriptor.fileUrl&&!descriptor.url)) {
       selected=descriptor;selectedData={...descriptor,note:'此项当前只有归档或失败记录；下面展示实际记录，继续保留已加载的表演。'};displayInspection(descriptor,selectedData);message(`${nameOf(descriptor)} · ${stateLabel(descriptor)} · ${descriptor.error||'当前没有可播放的数据。'}`,descriptor.status==='failed'?'error':'');
     }else if(isClip(descriptor)) {
-      const data=await fetchData(safeURL(descriptor.fileUrl??descriptor.url,`${base}/clips/${encodeURIComponent(id)}.json`),signal,cache,id);
+      const type=resourceKind(descriptor),companion=type==='body'?findNativeRibbonCompanion(descriptor,clips):null;
+      const [data,paired]=await Promise.all([
+        fetchData(safeURL(descriptor.fileUrl??descriptor.url,`${base}/clips/${encodeURIComponent(id)}.json`),signal,cache,id),
+        companion?fetchData(`${base}/clips/${encodeURIComponent(companion.id)}.json`,signal,cache,companion.id)
+          .then(data=>({data})).catch(problem=>{if(signal.aborted)throw problem;return {error:problem.message};}):null,
+      ]);
       if(sequence!==requestSequence)return snapshot();
-      const clip=new NativeClip(data),type=resourceKind(descriptor);
+      const clip=new NativeClip(data);
       if(type==='prop-animation'&&(descriptor.modelUrl||descriptor.propModelId)) {
         const modelId=descriptor.propModelId,model=modelId?entries.find(row=>row.id===modelId):null;
         await displayProp({...descriptor,modelUrl:descriptor.modelUrl??model?.modelUrl??`${base}/models/${encodeURIComponent(modelId)}.glb`},signal);
@@ -223,15 +235,17 @@ async function select(id) {
       } else if(type==='body') {
         hideProp();
         restorePose(targetRest,mesh);restorePose(sourceRest,source);const retarget=new NativeRetarget(clip,mesh);source.scale.setScalar(retarget.scale*100);current={descriptor,clip,retarget};
-        summary={...descriptor,sourceName:data.name,sourceAsset:data.sourceAsset,sourceArchive:data.sourceArchive,sourceSkeleton:data.sourceSkeleton,frames:data.frameCount,sourceBones:data.bones.length,mappedBones:retarget.mapping.length,comparison:'Native data replay; not an in-game recording'};
+        layers.delete('ribbon');
+        if(paired?.data){try{layers.set('ribbon',makeLayer(new NativeClip(paired.data),companion,true));}catch(problem){paired.error=problem.message;cache.delete(companion.id);}}
+        summary={...descriptor,sourceName:data.name,sourceAsset:data.sourceAsset,sourceArchive:data.sourceArchive,sourceSkeleton:data.sourceSkeleton,frames:data.frameCount,sourceBones:data.bones.length,mappedBones:retarget.mapping.length,nativeLongHairMapped:retarget.snapshot().nativeLongHairMapped,companion:companion?.id??null,companionError:paired?.error??null,comparison:'Native data replay; not an in-game recording'};
       } else {
         hideProp();
-        const native=new NativeResourceLayer(clip,source,{kind:type,native:true,bindPose:sourceRest}),target=new NativeResourceLayer(clip,mesh,{kind:type,native:false,bindPose:targetRest});
+        const row=makeLayer(clip,descriptor),{native,target}=row;
         if(!native.rows.length&&!target.rows.length)throw Error('此资源没有可与角色骨架匹配的局部骨骼，请查看资源数据或道具挂接信息');
-        layers.set(type,{descriptor,clip,native,target});summary={...descriptor,sourceAsset:data.sourceAsset,frames:data.frameCount,nativeLayer:native.snapshot(),targetLayer:target.snapshot(),mapping:'Local-only review; unmatched bones are left untouched',notes:target.rows.length?'局部旋转适配为实验性，需要逐动作观察穿插。':'当前 PMX 没有同名骨骼；仅左侧原生骨架播放此层。'};
+        layers.set(type,row);summary={...descriptor,sourceAsset:data.sourceAsset,frames:data.frameCount,nativeLayer:native.snapshot(),targetLayer:target.snapshot(),mapping:'Local-only review; unmatched bones are left untouched',notes:target.rows.length?'局部旋转适配为实验性，需要逐动作观察穿插。':'当前 PMX 没有同名骨骼；仅左侧原生骨架播放此层。'};
       }
       selectedData=data;selected=descriptor;inspection=null;$('resource-inspector').hidden=true;$('diagnostics').textContent=JSON.stringify(summary,null,2);time=0;cycleOffset=0;ready=true;pause(false);
-      message(propAnimation?`已加载 ${nameOf(descriptor)} · ${data.frameCount} 帧 · 独立道具动画预览。`:type==='body'?`已加载 ${nameOf(descriptor)} · ${data.frameCount} 帧 · 两侧共用时间轴。`:`已叠加 ${nameOf(descriptor)} · 保留身体动作 · 原骨架 ${layers.get(type).native.rows.length} / PMX ${layers.get(type).target.rows.length} 个匹配骨骼。`);
+      message(propAnimation?`已加载 ${nameOf(descriptor)} · ${data.frameCount} 帧 · 独立道具动画预览。`:type==='body'?`已加载 ${nameOf(descriptor)} · ${data.frameCount} 帧 · 两侧共用时间轴${layers.get('ribbon')?.automatic?' · 已自动配套原生衣发':''}${paired?.error?' · 配套衣发读取失败，可稍后重试':''}。`:`已叠加 ${nameOf(descriptor)} · 保留身体动作 · 原骨架 ${layers.get(type).native.rows.length} / PMX ${layers.get(type).target.rows.length} 个匹配骨骼。`);
     } else {
       const data=await fetchData(safeURL(descriptor.fileUrl??descriptor.url,`${base}/resources/${encodeURIComponent(id)}.json`),signal,resourceCache,id);
       if(sequence!==requestSequence)return snapshot();

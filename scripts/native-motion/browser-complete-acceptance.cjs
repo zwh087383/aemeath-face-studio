@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const {pathToFileURL}=require('node:url');
 const {chromium} = require(path.join(process.env.APPDATA, 'npm/node_modules/@playwright/cli/node_modules/playwright'));
 
 const root = path.resolve(__dirname, '../..');
@@ -14,7 +15,8 @@ const fractions = [0, .25, .5, .75, 1];
 (async () => {
   fs.mkdirSync(out, {recursive: true});
   const browser = await chromium.launch({channel: 'chrome', headless: true,
-    args: ['--enable-webgl', '--ignore-gpu-blocklist']});
+    args: ['--enable-webgl', '--ignore-gpu-blocklist', '--disable-background-timer-throttling',
+      '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows']});
   const page = await browser.newPage({viewport: {width: 1520, height: 1050}});
   const errors = [], requests = [];
   const result = {schema: 1, startedAt: new Date().toISOString(), url,
@@ -28,7 +30,7 @@ const fractions = [0, .25, .5, .75, 1];
   try {
     await page.goto(url);
     await page.waitForFunction(() => window.nativeResources?.snapshot().ready || window.nativeResourcesError,
-      {}, {timeout: 180000});
+      {}, {timeout: 180000,polling:250});
     assert.equal(await page.evaluate(() => window.nativeResourcesError), undefined);
     const manifest = await page.evaluate(async () => {
       const response = await fetch('/native-resources-data/manifest.json');
@@ -46,7 +48,11 @@ const fractions = [0, .25, .5, .75, 1];
     result.manifest = {schema: manifest.schema, experimental: manifest.experimental,
       clipCount: manifest.clips.length, readyBodyCount: clips.length};
     result.initial = initial;result.initialRequests = [...requests];
-    assert.equal(requests.length, 1, 'Initial loading must request exactly one clip');
+    const {findNativeRibbonCompanion}=await import(pathToFileURL(path.join(root,'preview/core/native-companion.js')).href);
+    const firstBody=clips.find(row=>row.id===initial.currentId),paired=findNativeRibbonCompanion(firstBody,manifest.clips);
+    const expected=[firstBody.id,...(paired?[paired.id]:[])].sort();
+    assert.deepEqual(requests.map(url=>new URL(url).pathname.split('/').at(-1).replace(/\.json$/,'')).sort(),expected,
+      'Initial loading must request only the selected body and its exact authored companion');
     console.log(`Both model renderers ready; auditing ${clips.length} body clips at ${fractions.length} time points.`);
 
     // Helpers stay inside this isolated page. Vertex arrays and complete bone
