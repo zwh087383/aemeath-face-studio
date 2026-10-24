@@ -2,6 +2,8 @@
 
 日期：2026-10-24。实验性、独立数据、站姿空手小范围。入口为 <http://127.0.0.1:18798/idle-activity-demo/>。
 
+同日更新：用户禁用截图中持续抬手的 Stand2。当前版本的初始站姿、暂停、倾听、完成与取消回落都改为原生 Stand01；显式禁用规则在初始化及每次换段检查，不能改名引用旧来源。原素材与旧录像保留为历史。更新验收见本文末尾，后续自主中枢的完整计划见[人物调度中心实施计划](autonomous-character-director-plan-2026-10-24.md)。
+
 本版将实际导入的 WAI ActivityPlanner、LifeThreads 与已有原生动作执行器连起来。它没有接管正式 WAI 进程、正式生活任务、记忆、历史或语音链；也没有调用云端模型。后台工作是实际读取随 demo 附带的公开说明文本，逐段提取标题、字符数与指纹，再经 LifeThreads 保存一份真实段落索引。这里复用了真实生命周期和存储保护，未运行完整 V2 Life Runtime 的模型生成、网络搜索及主动输出。
 
 ## 如何看
@@ -31,7 +33,7 @@ node realtime/idle-activity-demo/server.mjs --port 18798 --wai-root F:/AI-Shared
 | 环节 | 负责方及事实 | 实际行为 |
 | --- | --- | --- |
 | 开始 | WAI ActivityPlanner 接纳一个隔离生活线活动；已有 LifeThreads 登记材料来源 | 实际处理文本，身体进入原生 Thinking01 起势和循环 |
-| 暂停 | 手动暂停或本地开口检测调用 ActivityPlanner.on_user_present | 后台保存剩余时长和已处理段落；身体保存阶段，沿同源 End 收势，回到 Stand2 |
+| 暂停 | 手动暂停或本地开口检测调用 ActivityPlanner.on_user_present | 后台保存剩余时长和已处理段落；身体保存阶段，沿同源 End 收势，回到 Stand01 |
 | 恢复 | 原计划检查恢复条件、活动未取消、交流已结束 | 后台继续剩余段落；身体从保存的片段和时间位置接续，不重演完整起势 |
 | 产物就绪 | LifeThreads.advance 接纳实际段落索引，ActivityPlanner.set_artifact 记录产物 | 显示“成果已就绪”；不伪称模型仍在计算，也不先把计划记成完成 |
 | 完成 | 原计划时间及真实产物条件均满足 | 后台确认 done；身体完整收势，清除恢复点，回到陪伴 |
@@ -52,7 +54,7 @@ node realtime/idle-activity-demo/server.mjs --port 18798 --wai-root F:/AI-Shared
 
 身体仅允许两组已处理资源：
 
-- Stand2：native:8b2e802a90db3da3，body-stand2-84d0c0a158。
+- Stand01：native:c38c5010f63da5b2，aimisi-stand01。此前的抬手 Stand2 已按用户要求禁用。
 - Thinking01：native:ac884e85b5aef5d1，aimisi-thinking01-start/loop/end。
 
 沿用 NativeBehaviorAdapter、NativeBehaviorPlayer、NativeRetarget、NativeClothBinding 和精确配套衣发选择。局部过渡继续带当前姿态和速度；原片段主体不改。没有创作新的身体动作，没有修改现有挥手、身体幅度或肘部配置。新增的是后台阶段适配、有限自动选择、检查点恢复和交流占用控制。
@@ -60,6 +62,8 @@ node realtime/idle-activity-demo/server.mjs --port 18798 --wai-root F:/AI-Shared
 脸部仅用已有轻量 focus 配方表示专注，中性底色作为实验输入；未接正式数学情绪，不把任务成功直接变成高兴。原生待机与思考保持各自源轨迹；它们不是对整个动作库的自动批准。
 
 ## 验收与范围
+
+以下 14 项与原录像是首次交付使用 Stand2 时的历史证据；本次替换的专项证据另列于末尾，不将旧画面冒充新版本画面。后台与语音规则未在此次修改。
 
 本地专项：
 
@@ -92,3 +96,18 @@ playwright-cli -s=idle-activity-demo run-code --filename=scripts/idle-activity-d
 测得的输入响应时间是合成音频到后台确认，不能当作真实麦克风、ASR、云模型或扬声器延迟。连续几何检查不证明全身碰撞、任意姿态兼容或所有人认为自然。当前只验站姿空手这组；坐姿持物、任意环境、主动说话和完整语音回复不在这版内。
 
 正式 WAI 源码、真实运行数据和原有九个脏文件保持原样；独立 demo 的新增文件单独发布在 codex/idle-activity-demo-20261024。
+
+## Stand2 禁用更新的单独验收
+
+2026-10-24 后续批次，分支 `codex/character-director-plan-20261024`。禁用策略的三项 Node 检查通过，覆盖组/片段/源路径识别、保留来源的改名/变速/镜像，以及不误伤其它来源。禁用检查不是自动批准规则；其它资源仍须原有许可。
+
+真实 PMX 浏览器在 0.2、0.9、2.0、3.4、5.1 秒中断工作动作，分别进入倾听、暂停、完成、闲时和再次倾听，再检查恢复。全部回到 Stand01；完成/回到闲时的检查点清除，暂停/倾听的检查点保留。两次直接注入禁用来源均在改变播放前被拒绝。另对新站姿连续采样 8 秒，两侧手腕始终低于胸部检查点，实际衣发仍启用，身体源速与幅度均为 1。有限值和当帧接缝检查通过，不代表全身避碰或审美验收。
+
+本机证据：`outputs/character-director-plan-20261024/motion-exclusion.json`、`stand01-front.png`、`stand01-side.png` 和约 11 秒的 `stand01-interruption.webm`。录像是明确编排的“自然站姿 → 原有工作 → 打断回落”验收，不是自主中枢演示。已核对正侧面静态画面；连续自然度仍供用户判断。没有新增云调用、物理麦克风测试或后台业务变更，也没有重新宣称旧 14 项为本次重跑。
+
+复查命令：
+
+~~~powershell
+node --test tests/character-motion-policy.test.mjs
+playwright-cli -s=idle-activity-demo run-code --filename=scripts/idle-activity-demo/browser-motion-exclusion.cjs
+~~~

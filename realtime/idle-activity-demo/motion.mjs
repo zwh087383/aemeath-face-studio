@@ -1,5 +1,6 @@
-import {NativeBehaviorPlayer,cloneNativePose,nativePoseVelocity} from '/preview/core/native-behavior.js';
+import {NativeBehaviorPlayer,cloneNativePose} from '/preview/core/native-behavior.js';
 import {buildNativeBehaviorPlan} from '/preview/core/native-behavior-adapter.js';
+import {assertMotionAllowed} from '/preview/core/character-motion-policy.js';
 
 /** Small explicit allowlist: only upright, empty-hand native clips in this demo.
  * All source trajectories, body amplitude and phase speed remain unchanged.
@@ -7,11 +8,11 @@ import {buildNativeBehaviorPlan} from '/preview/core/native-behavior-adapter.js'
 export class IdleMotion {
   constructor({adapter,manifest,groups}){
     this.adapter=adapter;
-    const stand=groups.find(g=>g.id==='native:8b2e802a90db3da3');
+    const stand=groups.find(g=>g.id==='native:c38c5010f63da5b2');
     const think=groups.find(g=>g.id==='native:ac884e85b5aef5d1');
     if(!stand||!think)throw Error('缺少本demo的原生站姿/思考来源组');
-    this.stand=buildNativeBehaviorPlan(stand,manifest);
-    this.think=buildNativeBehaviorPlan(think,manifest);
+    this.stand=buildNativeBehaviorPlan(assertMotionAllowed(stand),manifest);
+    this.think=buildNativeBehaviorPlan(assertMotionAllowed(think),manifest);
     this.mode='idle';this.desired='idle';this.checkpoint=null;this.transitions=[];this.clock=0;
     this.player=null;this.exitPending=false;this.serial=0;
   }
@@ -21,6 +22,8 @@ export class IdleMotion {
   }
   clearCheckpoint(){this.checkpoint=null;}
   replace(plan,mode){
+    // Recheck on every handover, including pause, listening, resume and fallback.
+    plan.forEach(assertMotionAllowed);
     const previous=this.player?cloneNativePose(this.player.pose()):cloneNativePose(this.adapter.sample(plan[0].id,plan[0].offset??0));
     const velocity=this.player?cloneNativePose(this.player.velocityAt(this.player.time)):null;
     const segmentMap=new Map(), mapped=plan.map((p,i)=>{
@@ -91,5 +94,5 @@ export class IdleMotion {
   }
   snapshot(){return {mode:this.mode,desired:this.desired,exitPending:this.exitPending,checkpoint:this.checkpoint,
     serial:this.serial,clock:this.clock,phase:this.player?.snapshot(),adapter:this.adapter.snapshot(),
-    transitions:this.transitions.slice(-15),bodyAmplitude:1,sourceSpeed:1};}
+    transitions:this.transitions.slice(-15),restSource:this.stand[0].id,bodyAmplitude:1,sourceSpeed:1};}
 }

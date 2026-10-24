@@ -69,7 +69,7 @@ function renderStep(dt){
   const driverMs=performance.now()-start;placeCamera();renderer.render(scene,camera);
   timings.samples.push({driverMs,submitMs:performance.now()-start,dt});if(timings.samples.length>600)timings.samples.shift();frame++;
   $('motion-state').textContent=motion.exitPending?'正在自然收势…':({idle:'安静陪伴',working:'专注整理资料',paused:'活动已暂停 · 放松保持',listening:'面向你，准备交谈',complete:'活动完成 · 回到陪伴'}[motion.mode]??motion.mode);
-  $('native-label').textContent=motion.mode==='working'||motion.exitPending?'原生 Thinking01':'原生 Stand2';
+  $('native-label').textContent=motion.mode==='working'||motion.exitPending?'原生 Thinking01':'原生 Stand01 · 自然站姿';
   if(frame%40===0)$('diagnostics').textContent=JSON.stringify(snapshot(),null,2);
 }
 function snapshot(){return {ready,frame,view,errors,backend:state,scheduler:scheduler?.snapshot(),motion:motion?.snapshot(),
