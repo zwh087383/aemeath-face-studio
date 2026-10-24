@@ -166,11 +166,11 @@ async function runBatch(){
       if(stopSequence||catalog.blocked||catalog.used>=catalog.limit)break;
       if(catalog.attempted.includes(c.id))continue;
       const result=await runCase(c.id,{live:true,recordVideo:true});
-      if(result.failure)throw Error(result.failure+'。已停止整批；连接失败没有占用模型响应。可先下载结果给 Codex 排查。');
+      if(result.failure)throw Error(result.failure+'。已停止整批；连接失败没有占用模型响应。可先生成结果包给 Codex 排查。');
       if(c.probe)stopSequence=false;
       await sleep(700);
     }
-    $('status').textContent=catalog.blocked?'本批出现未知用量，已停止。请下载结果 ZIP。':'本批运行结束，请下载结果 ZIP；可以继续免费回放。';
+    $('status').textContent=catalog.blocked?'本批出现未知用量，已停止。请点击生成结果 ZIP。':'本批运行结束，请点击生成结果 ZIP；可以继续免费回放。';
   }finally{batchRunning=false;await refresh();}
 }
 
@@ -188,11 +188,11 @@ async function boot(){
   $('batch').onclick=()=>runBatch().catch(e=>$('status').textContent=e.message);
   $('sound').onclick=()=>checkAudio().catch(e=>$('status').textContent=e.message);
   $('export').onclick=async()=>{
-    if(run&&!run.completed){$('status').textContent='请等当前响应结束后再下载结果。';return;}
+    if(run&&!run.completed){$('status').textContent='请等当前响应结束后再生成结果包。';return;}
     $('export').disabled=true;$('status').textContent='正在打包计时、轨迹和代表录像…';
-    try{const response=await fetch('/api/early-action/export');if(!response.ok)throw Error('打包失败，请保留结果目录。');
-      const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Aemeath-early-action-results.zip';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-      $('status').textContent='结果包已准备好，请在浏览器下载列表中保存 ZIP 后发给 Codex。';
+    try{const response=await fetch('/api/early-action/package');if(!response.ok)throw Error('打包失败，请保留结果目录。');
+      const result=await response.json();if(!(result.bytes>0))throw Error('结果包为空，请保留原始目录。');
+      $('status').textContent=`ZIP 已保存在本机（${(result.bytes/1024/1024).toFixed(1)} MB）：${result.path}。将此文件发给 Codex 即可。`;
     }catch(error){$('status').textContent=error.message;}finally{$('export').disabled=false;}
   };
   $('cancel').onclick=()=>cancel();$('pause').onclick=()=>{const a=session.audio.snapshot();if(a.status==='paused')session.audio.play();else if(a.status==='playing')session.audio.pause();};

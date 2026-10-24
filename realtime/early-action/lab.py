@@ -302,7 +302,18 @@ def create_app(lab):
         if lab.busy: raise web.HTTPConflict(text='Wait for the active response to finish before exporting')
         from bundle import create_bundle
         path = await asyncio.to_thread(create_bundle, lab.output)
-        return web.FileResponse(path, headers={'Content-Disposition': 'attachment; filename="Aemeath-early-action-results.zip"', 'Cache-Control': 'no-store'})
+        # A newly built archive is a complete attachment, never a cached/ranged
+        # static file. Explicit bytes also avoid Windows sendfile differences.
+        body = await asyncio.to_thread(path.read_bytes)
+        return web.Response(body=body, content_type='application/zip', headers={
+            'Content-Disposition': 'attachment; filename="Aemeath-early-action-results.zip"', 'Cache-Control': 'no-store'})
+    async def package(request):
+        if not legacy.allowed_request(request): raise web.HTTPForbidden()
+        if lab.busy: raise web.HTTPConflict(text='Wait for the active response to finish before exporting')
+        from bundle import create_bundle
+        path = await asyncio.to_thread(create_bundle, lab.output)
+        return web.json_response({'path': str(path.resolve()), 'bytes': path.stat().st_size,
+            'message': 'ZIP saved locally. No browser download is required.'})
     async def socket(request):
         if not legacy.allowed_request(request, require_origin=True): raise web.HTTPForbidden()
         ws = web.WebSocketResponse(max_msg_size=2048); await ws.prepare(request)
@@ -361,6 +372,7 @@ def create_app(lab):
     app.router.add_get('/api/early-action', catalog)
     app.router.add_get('/api/early-action/summary', summary)
     app.router.add_get('/api/early-action/export', export)
+    app.router.add_get('/api/early-action/package', package)
     app.router.add_get('/api/early-action/run', socket)
     app.router.add_post('/api/early-action/report/{key}', client_report)
     app.router.add_post('/api/early-action/video/{key}', video)

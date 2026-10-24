@@ -89,7 +89,7 @@ if (-not $EarlyStatus) {
 Write-Host "Ready: $EarlyUrl/early-action/"
 Write-Host 'Click the audio-check button, then the full-batch button. The page saves every case.'
 Write-Host 'The maximum is 14 responses in total, including restarts. Unknown usage stops new calls.'
-Write-Host 'Use the Download ZIP button even if a connection fails. Send that ZIP to Codex.'
+Write-Host 'Use the Generate ZIP button even if a connection fails. It saves the file locally; send it to Codex.'
 Write-Host 'If direct connection fails and you already use a local HTTP proxy: rerun this BAT with -UseLocalProxy.'
 if (-not $NoBrowser) { Start-Process "$EarlyUrl/early-action/" }
 if ($StartOnly) { exit 0 }

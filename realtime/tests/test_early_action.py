@@ -5,6 +5,12 @@ from pathlib import Path
 import struct
 import tempfile
 import unittest
+import io
+import sys
+import zipfile
+from aiohttp.test_utils import TestClient, TestServer
+
+sys.path.insert(0, str(Path(__file__).parents[1] / 'early-action'))
 
 spec = importlib.util.spec_from_file_location('early_lab', Path(__file__).parents[1] / 'early-action/lab.py')
 lab = importlib.util.module_from_spec(spec); spec.loader.exec_module(lab)
@@ -83,6 +89,25 @@ class LabTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result['cancelled'])
         self.assertEqual(len(instance.ledger['responses']), 0)
         self.assertFalse(any(e['type'] == 'response.create' for e in provider.sent))
+    async def test_export_is_a_complete_zip_and_excludes_non_evidence_files(self):
+        temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
+        instance = lab.Lab(lab.legacy.Config(), temp.name, cloud=False)
+        (instance.output / '.env').write_text('PRIVATE_FIXTURE=not-for-export', encoding='utf-8')
+        async with TestClient(TestServer(lab.create_app(instance))) as client:
+            response = await client.get('/api/early-action/export')
+            self.assertEqual(response.status, 200)
+            payload = await response.read()
+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                self.assertIsNone(archive.testzip())
+                self.assertIn('summary.json', archive.namelist())
+                self.assertNotIn('.env', archive.namelist())
+            self.assertEqual(len(instance.ledger['responses']), 0)
+            package_response = await client.get('/api/early-action/package')
+            self.assertEqual(package_response.status, 200)
+            package = await package_response.json()
+            self.assertGreater(package['bytes'], 0)
+            with zipfile.ZipFile(package['path']) as archive:
+                self.assertIsNone(archive.testzip())
     def test_matrix_bounds_and_same_tool_schema(self):
         self.assertEqual(len(lab.cases()), 14)
         self.assertEqual(lab.settings('B')['tools'], lab.settings('C')['tools'])
