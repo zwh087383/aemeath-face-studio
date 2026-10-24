@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildAuthoredCatalog, numericEntries, parseArgs, renderNotes, scanActivity, scanGestureKeys, validateTimedDefinition } from '../scripts/action-preparation/prepare-authored.mjs';
+import { ACTIVITY_SEQUENCES } from '../preview/core/activity-library.js';
 
 const fixedPose = (id, time) => ({ id, time, phase: time < .5 ? 'prepare' : 'hold', support: 'standing',
   root: { position: [0, 0, 0], yaw: 0 }, pelvis: { offset: [0, 0, 0] }, body: { lean: time * .1 },
@@ -72,6 +73,37 @@ test('CLI requires explicit paths and bounded numeric sampling frequency', () =>
   assert.throws(() => parseArgs(['--output', 'same', '--notes', 'same']), /different/);
 });
 
+test('every current recipe retains explicit physical setup and references actual child actions', async () => {
+  const catalog = await buildAuthoredCatalog({ fps: 10, cancellation: false,
+    select: Object.keys(ACTIVITY_SEQUENCES).map(id => `sequence:${id}`) });
+  assert.equal(catalog.items.length, Object.keys(ACTIVITY_SEQUENCES).length);
+  for (const item of catalog.items) {
+    const definition = ACTIVITY_SEQUENCES[item.runtimeId], segments = item.measurements.segments;
+    assert.deepEqual(segments.map(row => row.runtimeId), definition.steps.map(step => typeof step === 'string' ? step : step.activity));
+    assert.ok(segments.every(row => Number.isFinite(row.durationSeconds) && row.durationSeconds > 0));
+    definition.steps.forEach((step, i) => {
+      if (typeof step === 'object') {
+        assert.deepEqual(segments[i].setupProps, step.setupProps ?? {});
+        assert.deepEqual(segments[i].context, step.context ?? {});
+        assert.equal(segments[i].satisfiedWhen, step.satisfiedWhen ?? null);
+      }
+    });
+    assert.equal(item.automaticEligible, false);
+  }
+});
+
+test('the prepared inventory distinguishes full-arm empty-hand actions from declared carrying variants', async () => {
+  const catalog = await buildAuthoredCatalog({ fps: 10, cancellation: false, select: ['activity:stretch_up', 'activity:walk_forward'] });
+  const stretch = catalog.items.find(row => row.runtimeId === 'stretch_up'), walk = catalog.items.find(row => row.runtimeId === 'walk_forward');
+  assert.deepEqual(stretch.usage.handRequirement.freeHands, ['L', 'R']);
+  assert.equal(stretch.usage.handRequirement.heldVariant, null);
+  assert.deepEqual(walk.usage.handRequirement.freeHands, []);
+  assert.equal(walk.usage.handRequirement.heldVariant, 'carry-preserving-locomotion');
+  assert.ok(walk.usage.handRequirement.heldVariantDescription.length > 0);
+  assert.ok(stretch.measurements.actuallyVaryingNumericChannels.includes('hands.L.hand.1'));
+  assert.equal(stretch.automaticEligible, false); assert.equal(walk.automaticEligible, false);
+});
+
 test('actual current controllers prepare gestures, expressions, micro-actions, activities and sequence references without opening automatic use', async () => {
   const catalog = await buildAuthoredCatalog({ fps: 30, select: ['gesture:wave', 'expression:startled', 'micro:tiny_agree',
     'activity:jump_vertical', 'activity:read_seated', 'sequence:carry_delivery'] });
@@ -80,6 +112,7 @@ test('actual current controllers prepare gestures, expressions, micro-actions, a
   assert.equal(catalog.summary.total, 6);
   assert.deepEqual(catalog.summary.sourceProfileErrors, []);
   assert.deepEqual(catalog.summary.cancellationFailures, []);
+  assert.deepEqual(catalog.summary.cancellationBlocked, ['authored-activity:read_seated']);
   for (const item of catalog.items) {
     assert.equal(item.automaticEligible, false);
     assert.ok(item.blockers.length >= 2);
@@ -99,7 +132,9 @@ test('actual current controllers prepare gestures, expressions, micro-actions, a
   assert.ok(jump.measurements.airborneSamples > 0);
   assert.ok(jump.measurements.cancellationProbes.some(p => p.immediateStopMode === 'landing'));
   const read = catalog.items.find(i => i.runtimeId === 'read_seated');
-  assert.ok(read.measurements.cancellationProbes.every(p => p.finalSupport === 'seated' && p.finalProps.includes('book')));
+  assert.equal(read.measurements.cancellationProbes.length, 3);
+  assert.ok(read.measurements.cancellationProbes.every(p => p.setupBlocked && !p.setupFailed && p.reachedActiveId === 'take_book_seated' && p.preparationBlocker));
+  assert.ok(read.measurements.cancellationProbes.every(p => p.done === undefined), 'missing real source/receipt must not be reported as a successful read and stop');
   const recipe = catalog.items.find(i => i.kind === 'sequence');
   assert.equal(recipe.measurements.segments.length, 2);
   assert.ok(recipe.measurements.boundaryRequirements[0].rawRootGapModelUnits >= 0);

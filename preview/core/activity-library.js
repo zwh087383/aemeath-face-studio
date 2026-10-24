@@ -2,6 +2,10 @@
 // +X character-left. Planted feet are activity-world targets, never root-relative.
 // This is authored procedural animation, not motion capture or a physics simulation.
 import { POSTURES } from './motion-profile.js';
+import { readingBookPlan, samplePropPlacement, samplePropPickup } from './activity-prop-execution.js';
+import { propGripPair } from './activity-prop-layout.js';
+import { qeuler, qrotate, qmul, qconj } from './motion-math.js';
+import { PARTITIONED_DESK, deskLayout, deskWorldFrame, deskPropState } from './activity-desk-layout.js';
 
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const smooth = x => { const v = clamp(x); return v * v * v * (v * (v * 6 - 15) + 10); };
@@ -219,7 +223,10 @@ function standUp(t, c) {
 }
 
 function standUpFromDesk(t, c) {
-  const retreat = 3.5, shiftBegin = .25, shiftEnd = 2.8, riseBegin = 3.35;
+  // The reading desk has a retained chair behind the exit. Its explicit wider
+  // retreat creates room for the existing side-step without changing the
+  // default clip, moving the desk, or reducing the walking knee/body motion.
+  const retreat = c.deskRetreat === 5.5 ? 5.5 : 3.5, shiftBegin = .25, shiftEnd = 2.8, riseBegin = 3.35;
   const shiftAt = time => retreat * smooth((time - shiftBegin) / (shiftEnd - shiftBegin));
   if (t >= riseBegin) {
     const p = standUp(t - riseBegin, c);
@@ -258,7 +265,7 @@ function standUpFromDesk(t, c) {
   return p;
 }
 
-function reading(p, t, d) {
+function reading(p, t, d, c = {}) {
   const active = smooth(t / .75), seated = d.initialSupport === 'seated';
   const phase = (t % 5) / 5;
   p.hands.L = arm([1.55, 12.85, 3.1], { palm: [.2, .7, .6], point: [0, .1, 1], curl: .2 });
@@ -273,8 +280,34 @@ function reading(p, t, d) {
     p.props.book.pageTurn = smooth(u); p.phase = u > 0 && u < 1 ? 'turn_page' : 'read';
   }
   if (d.kind === 'look_up_book') { const look = Math.sin(Math.PI * clamp((t - 1.5) / 3)) ** 2; p.body.headPitch -= .24 * look; p.body.headYaw += .15 * look; p.phase = look > .1 ? 'look_up' : 'read'; }
-  if (d.kind === 'close_book') { const close = smooth((t - 1.5) / 1.4); p.props.book.openness = .8 * (1 - close); p.hands.L.hand[0] = p.hands.R.hand[0] = 1.55 - .8 * close; p.body.headPitch *= 1 - close; p.phase = close >= 1 ? 'closed_book' : 'close_book'; }
+  if (d.kind === 'close_book') { const close = smooth((t - 1.5) / 1.4); p.props.book.openness = .8 * (1 - close); p.body.headPitch *= 1 - close; p.phase = close >= 1 ? 'closed_book' : 'close_book'; }
   if (d.kind === 'study') { p.props.table = true; p.face = { preset: phase < .5 ? 'considering' : 'understanding', intensity: .65 }; }
+  const plan = readingBookPlan(p.props.book.openness), grips = propGripPair('book', plan.openness);
+  if (d.initialSupport === 'seated' && (p.props.table === true || c.sceneProps?.table || c.initialProps?.table)) plan.frame.position[1] = deskLayout(c) ? 14.4 : 13.9;
+  if (d.kind === 'close_book') {
+    const closure = (1 - plan.openness) * 1.5, change = smooth((closure - .9) / .6);
+    plan.frame.quaternion = qeuler(0, change * Math.PI / 2, 0);
+  }
+  for (const [side, grip] of [['L', grips.left], ['R', grips.right]]) {
+    // Real cover/spine contacts move while closing. The book is rigid in scale;
+    // both hand trajectories are solved to these contacts in the real PMX FK.
+    const target = add(plan.frame.position, qrotate(plan.frame.quaternion, grip));
+    p.hands[side].hand = [(side === 'L' ? 1 : -1) * target[0], target[1], target[2]];
+    p.hands[side].anchor = 'wrist';
+  }
+  const turn = p.props.book.pageTurn;
+  if ((d.pageTurn || d.kind === 'study') && turn > .001 && turn < .999) {
+    const sweep = Math.sin(Math.PI * turn) ** 2;
+    // The left hand carries a fixed book; the right is free to turn a page.
+    plan.attachment = 'left'; plan.hands = ['L']; plan.grip = grips.left;
+    p.props.book.attachment = 'left'; p.props.book.grip = grips.left;
+    p.hands.R.hand = [mix(1.55, -.6, sweep), 12.85 + .43 * sweep, 3.1 + .08 * sweep];
+  }
+  p.propContactPlans = { book: plan };
+  if (deskLayout(c)) {
+    for (const side of ['L', 'R']) p.hands[side].pole = [0, -.3, 1];
+    if (d.kind === 'close_book') p.hands.R.pole = [-.5, -.3, 1];
+  }
 }
 
 function exercise(p, t, d, c) {
@@ -323,30 +356,60 @@ function exercise(p, t, d, c) {
 }
 
 function daily(p, t, d, c) {
+  const desk = deskLayout(c);
   const a = smooth(t / .9), wave = Math.sin(Math.PI * clamp((t - 1) / (d.duration - 2))) ** 2;
   p.phase = t < .9 ? 'prepare' : t > d.duration - 1.4 ? 'settle' : d.kind;
   if (d.kind === 'drink') {
     const lift = Math.sin(Math.PI * clamp((t - .7) / (d.duration - 1.4))) ** 2;
-    p.hands.R = arm([mix(2.1, .65, lift), mix(12.8, 16.4, lift), mix(2.8, 1.3, lift)], { curl: .65, thumb: .5, palm: [-1, 0, 0], point: [0, 1, .2] });
+    const tableSeated = d.initialSupport === 'seated' && (c.sceneProps?.table || c.initialProps?.table);
+    p.hands.R = arm([mix(2.1, .65, lift), mix(tableSeated ? 14.2 : 12.8, 16.4, lift), mix(desk ? 2.25 : 2.8, 1.3, lift)], { curl: .65, thumb: .5, palm: [-1, 0, 0], point: [0, 1, .2] });
     p.props.mug = { visible: true, attachment: 'right', rotation: [lift * -.35, 0, 0] };
+    p.propContactPlans = { mug: { attachment: 'right', hands: ['R'], frame: {
+      position: [-p.hands.R.hand[0] + .95, p.hands.R.hand[1] - .72, p.hands.R.hand[2]],
+      quaternion: qeuler(lift * -.35, Math.PI, 0), space: 'chest' } } };
     p.body.headPitch = -.08 * lift; p.face = { preset: 'relieved', intensity: .4 };
   } else if (d.kind === 'write') {
     p.props.table = true; p.props.paper = { visible: true, attachment: 'table' }; p.props.pencil = { visible: true, attachment: 'right', tipSurface: 'paper' };
     p.hands.L = arm([1.8, 13.95, 3.1], { palm: [0, -1, 0], curl: .1, point: [0, -.2, 1] });
     p.hands.R = arm([.8 + .35 * Math.sin(t * 2.6) * a, 14.5 + .07 * Math.sin(t * 5), 3.1 + .12 * Math.cos(t * 4)], { palm: [-.4, -.7, .1], curl: .7, point: [0, -.2, 1] });
     p.body.lean = .12; p.body.headPitch = .22; p.face = { preset: 'considering', intensity: .6 };
+    p.propContactPlans = { pencil: { attachment: 'right', hands: ['R'], frame: {
+      position: [-.8 - .35 * Math.sin(t * 2.6) * a, 8.961, 3.1 + .12 * Math.cos(t * 4)],
+      quaternion: qeuler(.34, 0, -.28), space: 'activity' } } };
+    if (desk) {
+      p.props.table = deskPropState(c, 'table'); p.props.paper = deskPropState(c, 'paper');
+      const actualPaper = p.props.paper.worldTransform ?? deskWorldFrame(c, PARTITIONED_DESK.paperCenter);
+      const paperPosition = actualPaper.position, paperQuaternion = actualPaper.quaternion;
+      p.propContactPlans.pencil.frame = { position: add(paperPosition, qrotate(paperQuaternion, [-.35 * Math.sin(t * 2.6) * a, .026, .12 * Math.cos(t * 4)])),
+        quaternion: qmul(paperQuaternion, qeuler(.34, 0, -.28)), space: actualPaper.space ?? 'world' };
+      const anchor = c.activityAnchor ?? { position: [0, 0, 0], yaw: 0 }, localPaper = qrotate(qconj(qeuler(0, anchor.yaw ?? 0, 0)), paperPosition.map((v, i) => v - anchor.position[i]));
+      const shift = Math.max(-2.4, Math.min(1.6, localPaper[0] + .8));
+      p.pelvis.offset[0] = .5 * shift; p.body.side = .05 * shift;
+      p.hands.R.pole = [0, -.3, 1];
+    }
   } else if (d.kind === 'keyboard') {
     p.props.table = true; p.props.laptop = { visible: true, attachment: 'table' };
     for (const [s, sign] of [['L', 1], ['R', -1]]) p.hands[s] = arm([1.15 + .08 * Math.sin(t * 4 * sign), 13.95 + .05 * Math.sin(t * 7 + sign), 3.1], { palm: [0, -1, .1], curl: .32 + .12 * Math.sin(t * 8 + sign), point: [0, -.1, 1] });
     p.body.lean = .11; p.body.headPitch = .12; p.face = { preset: 'attentive', intensity: .6 };
-  } else if (d.kind === 'pickup') {
-    p.pelvis.offset = [0, -2.609 * wave, -.25 * wave]; p.body.lean = .075 * wave; p.body.headPitch = .09 * wave;
-    p.hands.L = arm([2.183, 13.5, 3.35], { palm: [1, 0, 0], curl: .45 });
-    p.hands.R = arm([2.183, 13.5, 3.35], { palm: [1, 0, 0], curl: .45 });
-    p.props.table = { visible: true, position: [0, 0, 4.0] };
-    // The takeover pose was checked in actual PMX FK: palms ~[±2.15,10.4,3.33]
-    // meet the box's side grips before attachment changes, with its base at8.9.
-    p.props.box = t < d.duration / 2 ? { visible: true, attachment: 'table', position: [0, 8.9, 3.332] } : { visible: true, attachment: 'both', fitToHands: false };
+    if (desk) {
+      const opening = smooth(t / 1.3), closing = 1 - smooth((t - 6.4) / 1.6), initialOpen = c.initialProps?.laptop?.openness ?? 0;
+      const openness = mix(initialOpen, 1, opening) * closing;
+      p.props.table = deskPropState(c, 'table'); p.props.laptop = deskPropState(c, 'laptop', { openness });
+      const keyboard = Object.fromEntries(['L', 'R'].map((side, index) => {
+        const sign = index ? -1 : 1;
+        return [side, deskWorldFrame(c, [.5 + sign * (1.15 + .08 * Math.sin(t * 4 * sign)), 9.55 + .05 * Math.sin(t * 7 + sign), 3.1]).position];
+      }));
+      const lid = add(PARTITIONED_DESK.laptopCenter, add([0, .22, 1.3], qrotate(qeuler(openness * 1.7, 0, 0), [.8, -.09, -2.2])));
+      const lidHand = deskWorldFrame(c, lid).position;
+      const transfer = t < 1.3 ? 1 : t < 1.8 ? 1 - smooth((t - 1.3) / .5) : t < 5.9 ? 0 : t < 6.4 ? smooth((t - 5.9) / .5) : 1;
+      const lidReach = transfer * openness;
+      p.body.lean = .11 + .25 * lidReach; p.pelvis.offset[2] += .7 * lidReach;
+      const handTargets = { ...keyboard, L: vec(keyboard.L, lidHand, transfer) };
+      p.propContactPlans = { laptop: { attachment: 'both', hands: ['L', 'R'], frame: deskWorldFrame(c, PARTITIONED_DESK.laptopCenter), handTargets } };
+      for (const side of ['L', 'R']) p.hands[side].pole = [0, -.3, 1];
+      p.hands.R.pole = [-.5, -.3, 0];
+      p.phase = t < 1.8 ? 'open-laptop-with-hand' : t < 5.9 ? 'keyboard' : 'close-laptop-with-hand';
+    }
   } else if (d.kind === 'carry') {
     // Back away from the pickup table; forward travel would cross its retained
     // top and frame. Furniture remains in the scene throughout the handoff.
@@ -431,10 +494,49 @@ define('drink_standing', '站着举杯喝水', 'daily', 6, { kind: 'drink', requ
 define('drink_seated', '坐着举杯喝水', 'daily', 6, { kind: 'drink', initialSupport: 'seated', requires: ['chair', 'mug'] });
 define('write_at_desk', '坐着写字', 'daily', 8, { kind: 'write', initialSupport: 'seated', requires: ['chair', 'table', 'paper', 'pencil'] });
 define('type_at_desk', '坐着打字', 'daily', 8, { kind: 'keyboard', initialSupport: 'seated', requires: ['chair', 'table', 'laptop'] });
-define('pickup_box', '从台面抱起物品', 'daily', 5.5, { kind: 'pickup', requires: ['table', 'box'] });
+define('pickup_box', '从台面抱起物品', 'daily', 5.5, { kind: 'take_prop', propId: 'box', takeRequestAt: 1.45,
+  requires: ['table', 'box'], requiresExistingSource: true,
+  description: '明确摆好箱子后靠近真实侧握点，实测接触及静稳通过才抬起，不能按时间直接换手持。' });
 define('carry_box', '抱着物品后退离桌', 'daily', 4.4, { kind: 'carry', requires: ['box'],
   description: '双手托住箱子向后退四步，离开仍保留在原处的桌子。',
   descriptionEn: 'Keep holding the box and take four steps backward, away from the table retained in place.' });
+
+for (const [id, name, propId, seated] of [
+  ['put_book_standing', '站着把书稳放桌面', 'book', false], ['put_book_seated', '坐着把书稳放桌面', 'book', true],
+  ['put_mug_standing', '站着放稳杯子', 'mug', false], ['put_mug_seated', '坐着放稳杯子', 'mug', true],
+  ['put_pencil_seated', '写完后把笔放稳', 'pencil', true],
+]) define(id, name, 'daily', 4.8, { kind: 'put_prop', propId, initialSupport: seated ? 'seated' : 'standing',
+  requires: [...(seated ? ['chair'] : []), 'table', propId], requiresHeld: propId, requiresExistingSurface: 'table',
+  description: `${name}；先携物靠近、减速接触，再由真实位置、朝向与速度验收后移交。缺桌或缺持物时保留当前状态。` });
+for (const id of ['put_book_seated', 'put_mug_seated']) library[id].duration = 6.6;
+
+for (const [id, name, propId, seated] of [
+  ['take_book_standing', '站着从桌面拿书', 'book', false], ['take_book_seated', '坐着从桌面拿书', 'book', true],
+  ['take_mug_standing', '站着拿稳杯子', 'mug', false], ['take_mug_seated', '坐着拿稳杯子', 'mug', true],
+  ['take_pencil_seated', '坐着拿起桌上的笔', 'pencil', true],
+]) define(id, name, 'daily', 4.8, { kind: 'take_prop', propId, takeRequestAt: 1.45, initialSupport: seated ? 'seated' : 'standing',
+  requires: [...(seated ? ['chair'] : []), 'table', propId], requiresExistingSource: true,
+  description: `${name}；物体先在真实桌面，手掌到握点并静稳后才接管，拿到回执后再抬起。缺物或缺桌时保持原状态。` });
+for (const id of ['take_book_seated', 'take_mug_seated', 'take_pencil_seated']) { library[id].duration = 6.6; library[id].takeRequestAt = 2.1; }
+
+// Holding an item is not permission to suppress the main arm action and still
+// report that named activity as performed. These are admission requirements;
+// the controller rejects an occupied hand before changing the current owner.
+for (const definition of Object.values(library)) {
+  if (['exercise', 'running', 'jumping'].includes(definition.category)) definition.freeHands = ['L', 'R'];
+  if (definition.kind === 'sit_stretch' || definition.kind === 'keyboard' || definition.id === 'sit_down_carefully') definition.freeHands = ['L', 'R'];
+  if (definition.kind === 'sit_talk') definition.freeHands = ['R'];
+  if (definition.kind === 'write') definition.freeHands = ['L'];
+  if (definition.kind === 'gait' && definition.category === 'locomotion') {
+    definition.heldVariant = 'carry-preserving-locomotion';
+    definition.heldVariantDescription = '持物版本保留原步幅、落脚和身体运动；持物的手继续承重，不称为空手摆臂版本。';
+  }
+  if (['sit_down', 'stand_up', 'stand_up_from_desk', 'sit_listen', 'sit_relax', 'ankle_cross'].includes(definition.kind)
+    && !definition.freeHands?.length) {
+    definition.heldVariant = 'supported-posture-transfer';
+    definition.heldVariantDescription = '明确的持物坐站/静候版本；保留原座面、脚下支撑与身体幅度，手部保持可靠持物。';
+  }
+}
 
 export const ACTIVITY_LIBRARY = deepFreeze(library);
 export const ACTIVITY_IDS = Object.freeze(Object.keys(ACTIVITY_LIBRARY));
@@ -450,19 +552,21 @@ export function sampleActivity(id, time, context = {}) {
   else if (d.kind === 'sit_down') p = sitDown(t, context, d.slow);
   else if (d.kind === 'stand_up') p = standUp(t, context);
   else if (d.kind === 'stand_up_from_desk') p = standUpFromDesk(t, context);
-  else if (d.reading) reading(p, t, d);
+  else if (d.kind === 'put_prop') p = samplePropPlacement(p, t, d, context);
+  else if (d.kind === 'take_prop') p = samplePropPickup(p, t, d, context);
+  else if (d.reading) reading(p, t, d, context);
   else if (d.category === 'exercise') exercise(p, t, d, context);
   else daily(p, t, d, context);
   return { ...p, id, time: t, duration: d.duration, done: time >= d.duration, endSupport: d.endSupport };
 }
 
 export const ACTIVITY_SEQUENCES = deepFreeze({
-  reading_break: { name: '走来坐下，读书再起身', description: '行走、落座、阅读、翻页、抬头、合书、站起和离开。', steps: ['walk_stop', 'sit_down', 'read_seated', 'page_turn_seated', 'read_look_up', 'close_book', 'stand_up', 'walk_forward'] },
+  reading_break: { name: '走来坐下，读书后绕开桌椅离开', description: '行走、分区阅读桌前落座、从真实桌上拿书，阅读翻页和抬头合书后放回；把椅子退远再起身，向左侧移绕开保留的桌椅，转身后走远。', steps: ['walk_stop', 'sit_down', 'take_book_seated', 'read_seated', 'page_turn_seated', 'read_look_up', 'close_book', 'put_book_seated', 'stand_up_from_desk', 'walk_left', 'turn_around', 'walk_forward'].map((activity, index) => ({ activity, context: { deskLayout: 'partitioned', ...(index === 8 ? { deskRetreat: 5.5 } : {}) }, ...(index < 2 ? { satisfiedWhen: 'already-seated-at-same-desk' } : {}), ...(index === 1 ? { setupProps: PARTITIONED_DESK.setupProps } : {}) })) },
   morning_movement: { name: '晨间舒展与慢跑', description: '肩膀和侧腰热身，深蹲、左右弓步、慢跑，最后拉伸。', steps: ['shoulder_roll', 'stretch_up', 'stretch_left', 'stretch_right', 'squat', 'lunge_left', 'lunge_right', 'jog_forward', 'forward_fold'] },
   agility_practice: { name: '多方向步伐与跳跃', description: '前后左右移动，转向、开合跳、向前跳和缓冲落地。', steps: ['walk_forward', 'walk_backward', 'side_shuffle_left', 'side_shuffle_right', 'turn_left', 'jumping_jack', 'jump_forward', 'balance_right'] },
-  desk_session: { name: '坐下写作与休息', description: '入座、写字、阅读、打字、喝水、伸腰，然后退椅离桌再起身。', steps: ['sit_down', 'write_at_desk', 'study_at_desk', 'type_at_desk', 'drink_seated', 'sit_stretch', 'stand_up_from_desk'] },
-  quiet_afternoon: { name: '安静的午后阅读', description: '慢慢落座，保持坐姿读书、翻页、聆听、喝水和放松。', steps: ['sit_down_carefully', 'read_seated', 'page_turn_seated', 'sit_listen', 'drink_seated', 'sit_relax'] },
+  desk_session: { name: '坐下写作与休息', description: '纸、笔、闭书、电脑与杯从起始就在独立桌区；真实取放，电脑随手开合，物品持续留在原处。', steps: ['sit_down', 'take_pencil_seated', 'write_at_desk', 'put_pencil_seated', 'take_book_seated', 'study_at_desk', 'close_book', 'put_book_seated', 'type_at_desk', 'take_mug_seated', 'drink_seated', 'put_mug_seated', 'sit_stretch', 'stand_up_from_desk'].map((activity, index) => ({ activity, context: { deskLayout: 'partitioned' }, ...(index ? {} : { setupProps: PARTITIONED_DESK.setupProps }) })) },
+  quiet_afternoon: { name: '安静的午后阅读', description: '分区阅读桌前慢慢落座，拿书阅读翻页后合书归位，再聆听、拿杯喝水归位和放松；已放物持续保留。', steps: ['sit_down_carefully', 'take_book_seated', 'read_seated', 'page_turn_seated', 'close_book', 'put_book_seated', 'sit_listen', 'take_mug_seated', 'drink_seated', 'put_mug_seated', 'sit_relax'].map((activity, index) => ({ activity, context: { deskLayout: 'partitioned' }, ...(index ? {} : { setupProps: PARTITIONED_DESK.setupProps }) })) },
   balance_flow: { name: '平衡与重心流动', description: '左右单腿平衡、侧弓步、缓慢转体和推掌。', steps: ['balance_left', 'balance_right', 'side_lunge_left', 'side_lunge_right', 'torso_twist', 'tai_chi_shift', 'stretch_up'] },
   carry_delivery: { name: '取起物品后退离桌', description: '从台面取起箱子，双手保持托举后向后退，避开保留在原处的桌子。',
-    descriptionEn: 'Pick up the box from the table, then keep holding it while stepping backward clear of the retained furniture.', steps: ['pickup_box', 'carry_box'] },
+    descriptionEn: 'Pick up the box from the table after actual palm contact, then keep holding it while stepping backward clear of the retained furniture.', steps: [{ activity: 'pickup_box', setupProps: { table: true, box: { visible: true, attachment: 'table', position: [0, 8.9, 3.8] } } }, 'carry_box'] },
 });

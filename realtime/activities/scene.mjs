@@ -45,9 +45,10 @@ export async function createActivityScene(stage, progress=()=>{}) {
   const gl=renderer.backend.gl,debug=gl.getExtension('WEBGL_debug_renderer_info');
   const environment={renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):'unknown',userAgent:navigator.userAgent,physics:false};
   return {body,face,environment,props,
+    get mesh(){return mesh;},
     setView(next){if(['angle','front','side','back','wide','top'].includes(next)){view=next;positionCamera();}},
     setFollow(value){follow=!!value;},setPropOverride(value){propOverride=value;},
-    step(now,dt,{paused=false,lip=null}={}){
+    step(now,dt,{paused=false,lip=null,render=true}={}){
       const start=performance.now();body.update(now,dt,{paused});const snapshot=body.snapshot(),pose=body.pose;
       const requested=pose?.face??{preset:'neutral',intensity:.7},key=JSON.stringify(requested);
       if(key!==lastFace){face.setPreset(requested.preset,requested.intensity??.7);lastFace=key;}
@@ -60,12 +61,14 @@ export async function createActivityScene(stage, progress=()=>{}) {
       // Bone positions alone are not evidence that the visible skin has updated.
       mesh.skeleton.update();
       const bones={},rotations={};for(const [key,bone] of observed){if(!bone)continue;bones[key]=bone.getWorldPosition(v).toArray();rotations[key]=bone.getWorldQuaternion(q).toArray();}
-      props.update({...pose?.props,...propOverride},{bones,rotations,root:body.root,anchor:pose?.anchor??snapshot.anchor,pose,snapshot});
+      props.update({...pose?.props,...propOverride},{bones,rotations,root:body.root,anchor:pose?.anchor??snapshot.anchor,pose,snapshot,time:body.now});
+      body.setRenderedPropsSnapshot(props.snapshot());
+      body.setPropTransferReceipts(props.snapshot());
       for(let i=0;i<2;i++){const foot=bones[i?'rightAnkle':'leftAnkle'];if(foot){contactShadows[i].position.set(foot[0],.04,foot[2]+.3);contactShadows[i].material.opacity=Math.max(.015,.16-(foot[1]-1.411)*.05);}}
-      positionCamera();const driven=performance.now();renderer.render(scene,camera);const submitted=performance.now();
+      positionCamera();const driven=performance.now();if(render)renderer.render(scene,camera);const submitted=performance.now();
       const finite=[...weights,...Object.values(bones).flat(),...Object.values(rotations).flat(),...body.root.position,body.root.yaw].every(Number.isFinite);
       if(!finite||rig.missing.size)throw Error(`Invalid full-body pose: ${[...rig.missing].join(',')}`);
-      rendered={frame:++frames,finite,bones,rotations,weights:Array.from(weights),mouthOpen:VOWELS.reduce((n,i)=>n+weights[i],0),body:snapshot,props:props.snapshot(),driverMs:driven-start,renderMs:submitted-driven,view};return rendered;
+      rendered={frame:++frames,renderSubmitted:!!render,finite,bones,rotations,weights:Array.from(weights),mouthOpen:VOWELS.reduce((n,i)=>n+weights[i],0),body:snapshot,props:props.snapshot(),driverMs:driven-start,renderMs:render?submitted-driven:0,view};return rendered;
     },snapshot(){return rendered;},dispose(){observer.disconnect();props.dispose();renderer.dispose();}
   };
 }

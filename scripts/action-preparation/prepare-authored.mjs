@@ -271,7 +271,13 @@ function activityCancelProbes(id, skeleton, fps) {
       now += 1 / fps; c.update(now, 1 / fps);
       if (c.activeId === id && !c.bridge) { ready = true; break; }
     }
-    if (!ready) { probes.push({ fraction, setupFailed: true }); continue; }
+    if (!ready) {
+      const sceneGate = ['take_prop', 'put_prop'].includes(c.library[c.activeId]?.kind) && Boolean(c.pose.preparationBlocker);
+      probes.push({ fraction, setupBlocked: sceneGate, setupFailed: !sceneGate, reachedActiveId: c.activeId,
+        reachedPhase: c.pose.phase, preparationBlocker: copy(c.pose.preparationBlocker ?? null),
+        limitation: sceneGate ? '源分析没有提供实际桌面/物体和渲染接触回执，未到达目标活动；保留依赖缺口，不伪造拿放成功。' : '未到达目标活动入口，需要检查前置或过渡。' });
+      continue;
+    }
     for (let i = 0; i < Math.ceil(d.duration * fraction * fps) && !c.done; i++) { now += 1 / fps; c.update(now, 1 / fps); }
     const before = c.snapshot(); c.stop(); const immediate = c.snapshot(); let timeToDone = null, nonFinite = false;
     for (let i = 1; i <= fps * (d.duration + 6); i++) {
@@ -305,15 +311,18 @@ function gestureUsage(id, d) {
 function activityUsage(d, measurement) {
   const props = [...new Set([...(d.requires ?? []), ...Object.keys(measurement.props ?? {})])];
   const moving = ['locomotion', 'running', 'jumping'].includes(d.category), seated = d.initialSupport === 'seated';
+  const freeHands = d.freeHands === true ? ['L', 'R'] : d.freeHands ?? [];
   return { purpose: d.description ?? d.name, trigger: moving || d.category === 'exercise' ? '用户明确请求，或已有活动计划选择；不因普通解释一句话自行跑跳。' : '用户请求或仍有效的闲时活动计划；交谈优先时先检查可停阶段。',
-    preconditions: [`入口支撑为 ${d.initialSupport}，结束要求 ${d.endSupport}。`, ...(props.length ? [`必须确认道具/支撑存在且可达：${props.join('、')}。`] : ['空手且所需身体部位可用。']),
+    preconditions: [`入口支撑为 ${d.initialSupport}，结束要求 ${d.endSupport}。`, ...(props.length ? [`必须确认道具/支撑存在且可达：${props.join('、')}。`] : [d.heldVariant ? '可空手；持物时仅使用已经声明的持物版本，保留当前可靠握点。' : '空手且所需身体部位可用。']),
+      ...(freeHands.length ? [`${freeHands.map(side => side === 'L' ? '左手' : '右手').join('、')}必须空出；不允许用持物覆盖主要手臂或手撑动作，再把原动作记成完成。`] : []),
       ...(moving ? ['路径、落脚区和落地区可用；本次只按默认平地采样，没有场景导航或障碍物检查。'] : []), ...(seated ? ['座椅位置、高度与本次默认体型相容；不能只相信 requires 标签。'] : [])],
+    handRequirement: { freeHands: copy(freeHands), heldVariant: d.heldVariant ?? null, heldVariantDescription: d.heldVariantDescription ?? null },
     prohibited: ['攻击用途。', '其它控制器同时写同一身体、嘴形或持物位置。', '道具失效、路径被占用或入口姿势不明时盲目开始。'],
-    entry: '现有 FullBodyController 会补坐下/站起前置，并用踏步桥接；是否真的应该起身由新调度器判断，不能由文件所需姿态反推用户意图。',
+    entry: '现有 FullBodyController 会检查坐站与持物前置，从当前姿态和速度桥接；拿放必须等真实现场接触回执。是否应该起身仍由新调度器判断，不能由动作需要站姿反推用户意图。',
     exit: '保留动作实际位移、朝向、支撑和仍持有的物品；不能把 ended 解释成自动站回原点或完成放物。',
     cancel: { judge: '本地取消旧活动或切换交谈后调用 FullBodyController.stop。', basis: '实际 support、双脚 contact、骨盆下降量与当前阶段。',
-      behavior: '腾空先落地；已明显下降的落座先坐稳；已坐姿保持当前手和道具；其余进入站姿回稳。', unknown: '保留可信支撑与持物，禁止新危险移动；需要现场恢复，不假设椅子或桌面仍存在。',
-      caveat: 'stop 保护是控制器规则；不是每个道具交接与每个任意帧都已自然。坐姿 holdSeat 可保留运动中手部，仍需补单独收势。' } };
+      behavior: '腾空先落地；已明显下降的落座先坐稳；已坐姿从当前运动减速并保留座面、脚和道具；其余从实际运动收稳。', unknown: '保留可信支撑与持物，禁止新危险移动；需要现场恢复，不假设椅子或桌面仍存在。',
+      caveat: '本项源采样不等于真实渲染后的拿放、速度衔接或连续观感验收；对应执行证据需要另外核对版本和现场。' } };
 }
 
 function checkBlockers(measurement, extras = []) {
@@ -365,19 +374,26 @@ export async function buildAuthoredCatalog({ fps = 60, root = REPOSITORY_ROOT, s
     const d = ACTIVITY_LIBRARY[id], ref = source('preview/core/activity-library.js', `ACTIVITY_LIBRARY.${id}`), measurements = scanActivity(d, sampleActivity, fps);
     activityMeasurements.set(id, measurements); measurements.cancellationProbes = cancellation ? activityCancelProbes(id, skeleton, fps) : [];
     const extras = [];
+    extras.push('生活活动页当前关闭MMD物理；本项不证明头发裙摆次级动态、布料碰撞或原游戏物理已还原。');
     if (Object.keys(measurements.props ?? {}).length) extras.push('道具可见/attachment 标签不证明拿放完成；固定尺寸握点、承接与场景持续性须逐项验收。');
     if (measurements.attachmentChanges.length) extras.push('检测到按时间切换的 attachment；尚未检查松手/抓取是否满足真实接触条件。');
     if (Object.values(measurements.contacts).some(c => c.plantedSlipIntervals)) extras.push('默认参数采样发现双帧均标接触时足目标发生移动；须检查源动作或接触标签。');
-    if (d.reading) extras.push('当前持书显示会按双手距离缩放书；固定尺寸持书与放书过程尚未完成。');
+    if (d.reading) extras.push('固定尺寸持书与真实握点由执行层求解；本项原始采样不证明经过MMD附加变换后的实际握点、跨活动继承或初次取物已通过。');
+    if (['put_prop', 'take_prop'].includes(d.kind)) extras.push('需要真实前置物体、桌面与接触回执；无现场的原始采样只保留条件缺口，不能按时长认定拿放完成。');
     items.push({ id: `authored-activity:${id}`, runtimeId: id, kind: 'activity', name: d.name, category: d.category, sourceRef: ref, measurements,
       usage: activityUsage(d, measurements), blockers: checkBlockers(measurements, extras),
-      evidence: [evidence('sampled-procedural-activity', ref, `sampleActivity 默认模型参数下 ${fps} Hz 全程采样，实际支撑/脚接触/道具/根位移与阶段。`), evidence('real-skeleton-stop-probes', 'preview/core/full-body-controller.js#FullBodyController.stop', '在20%、50%、80%时调用真实控制器 stop；自动前置和桥接也通过现有控制器。')],
+      evidence: [evidence('sampled-procedural-activity', ref, `sampleActivity 默认模型参数下 ${fps} Hz 全程采样，实际支撑/脚接触/道具/根位移与阶段。`), evidence('real-skeleton-stop-probes', 'preview/core/full-body-controller.js#FullBodyController.stop', '能到达目标入口时，在20%、50%、80%调用真实控制器 stop；缺少实际场景或接触回执的前置保留为未覆盖，不伪造成功。')],
       automaticEligible: false, preparationStatus: 'source-and-cpu-sampled-awaiting-scene-and-visual-review' });
   }
   for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) if (use('sequence', id)) {
-    const segments = sequence.steps.map(step => {
+    const segments = sequence.steps.map(definition => {
+      const step = typeof definition === 'string' ? definition : definition.activity;
+      if (!ACTIVITY_LIBRARY[step]) throw Error(`Unknown activity in sequence ${id}: ${step}`);
       if (!activityMeasurements.has(step)) activityMeasurements.set(step, scanActivity(ACTIVITY_LIBRARY[step], sampleActivity, fps));
       const m = activityMeasurements.get(step); return { id: `authored-activity:${step}`, runtimeId: step, durationSeconds: ACTIVITY_LIBRARY[step].duration,
+        setupProps: typeof definition === 'object' ? copy(definition.setupProps ?? {}) : {},
+        context: typeof definition === 'object' ? copy(definition.context ?? {}) : {},
+        satisfiedWhen: typeof definition === 'object' ? definition.satisfiedWhen ?? null : null,
         startSupport: m.entryPose.support, endSupport: m.exitPose.support, startProps: Object.keys(m.entryPose.props ?? {}), endProps: Object.keys(m.exitPose.props ?? {}) };
     });
     const boundaries = segments.slice(0, -1).map((a, i) => {
@@ -407,6 +423,7 @@ export async function buildAuthoredCatalog({ fps = 60, root = REPOSITORY_ROOT, s
         headAndBlinkActions: Object.keys(ACTIONS).length, activities: ACTIVITY_IDS.length, sequences: Object.keys(ACTIVITY_SEQUENCES).length },
       evidenceScope: '读取原配方 + 实际控制器/程序采样；真实骨位置 FK 仍不等于渲染、衣发、语音时序或完整组合验收。',
       sourceProfileErrors: items.filter(i => i.measurements.errors?.length || i.measurements.numeric?.nonFinite?.length || i.measurements.cpuPose?.numeric?.nonFinite?.length).map(i => i.id),
+      cancellationBlocked: items.filter(i => i.measurements.cancellationProbes?.some(p => p.setupBlocked)).map(i => i.id),
       cancellationFailures: items.filter(i => i.measurements.cancellationProbes?.some(p => p.setupFailed || p.nonFinite || p.cancelAccepted === false || p.staleEpochAcceptedAfterCancel || p.remainingGestures > 0 || p.done === false)).map(i => i.id) } };
 }
 
@@ -416,8 +433,8 @@ export function renderNotes(catalog) {
     `手势使用当前模型 inspection 的真实骨位置和现有控制器，关闭自然摆动，固定 relaxed 空手站姿；采样 ${s.fps} Hz，保留现有幅度、近身肘部、利落挥手。表情用真实 FaceController 检查目标和语音口型所有权。活动实际采样支撑脚、位移、道具和阶段，并在 20%、50%、80%调用现有控制器停止。\n\n` +
     `不能据此声称所有组合自然：没有在 three-mmd grants 后的真实蒙皮上看连续画面，没有检验头发裙摆、任意家具位置、持物承接和真实语音时序。阶段标签只说明源程序如何分段，未把它冒充已验可停窗口。\n\n` +
     `## 实际发现的准备缺口\n\n` +
-    `- FaceController.cancel 当前把 base 改为 neutral，仍需接回数学情绪底色。\n- MotionController 默认 continuity=false；局部接续能力不能代替原生全身和道具过渡。\n- 持书仍有按手距缩放的问题；合书仍然持书，不是放书。\n- 物品 attachment 的时间切换只证明程序切换，未证明手到握点或物品落到承接面。\n- 坐姿 stop 会保持手和道具，未证明中途运动的双手都有自然收势。\n- 全部连续序列只整理配方与子段证据，跨段需要保留世界位置、支撑和道具，并重新验收。\n\n` +
-    `源定义或非有限值问题：${s.sourceProfileErrors.length ? s.sourceProfileErrors.join('、') : '本轮未检出'}。取消探针失败：${s.cancellationFailures.length ? s.cancellationFailures.join('、') : '本轮未检出'}。未检出失败不等于完整验收。\n\n` +
+    `- 原 FaceController.cancel 把 base 改为 neutral；新 PreparedFaceController 保留最新底色，但正式数学情绪来源仍需接线，不能混称两个控制器。\n- MotionController 默认 continuity=false；局部接续能力不能代替所有原生全身和道具过渡。\n- 持物已改用固定尺寸握点，合书仍然持书；本项源采样不能替代真实掌点、初次抓取和跨活动检查。\n- 拿放执行层需要真实接触回执；本目录只读取原始采样，未收到回执时不能据名义时长认定完成。\n- 坐姿停止已改为从当前速度收稳；对应支撑、椅子和脚的实际保持证据另列。\n- 连续序列在这里仅整理配方、显式现场布置与子段证据；完整世界衔接和拿放另附执行验收。\n\n` +
+    `源定义或非有限值问题：${s.sourceProfileErrors.length ? s.sourceProfileErrors.join('、') : '本轮未检出'}。取消探针失败：${s.cancellationFailures.length ? s.cancellationFailures.join('、') : '本轮未检出'}。缺真实场景/接触回执而未覆盖：${s.cancellationBlocked?.length ? s.cancellationBlocked.join('、') : '无'}。未覆盖不是通过，未检出失败不等于完整验收。\n\n` +
     `## 每个动作的说明\n\n` + catalog.items.map(item => `### ${item.name}（${item.id}）\n\n用途：${item.usage.purpose}。触发：${item.usage.trigger}\n\n先满足：${item.usage.preconditions.join(' ')}\n\n不要用于：${item.usage.prohibited.join(' ')}\n\n进入：${item.usage.entry}\n\n退出：${item.usage.exit}\n\n取消由谁判断：${item.usage.cancel.judge} 依据：${item.usage.cancel.basis} 判断不出：${item.usage.cancel.unknown}\n\n还缺：${item.blockers.join(' ')}\n`).join('\n');
 }
 

@@ -108,12 +108,18 @@ test('a cup stays upright despite PMX wrist axes and tilts only by the authored 
 test('partly open and closed books keep real edge contacts rather than hovering above hands', () => {
   const { props } = fixture();
   for (const openness of [0, .2, .4, .8, 1]) {
-    const span = openness < .3 ? 1.5 : 3, left = [span / 2, 8.5, 3], right = [-span / 2, 8.5, 3];
+    const grips = propGripPair('book', openness), position = new THREE.Vector3(0, 8.5, 3);
+    const left = new THREE.Vector3(...grips.left).add(position).toArray(), right = new THREE.Vector3(...grips.right).add(position).toArray();
     props.update({ book: { visible: true, attachment: 'both', openness } }, { anchors: { leftHand: left, rightHand: right } });
-    const grips = propGripPair('book', openness), book = props.objects.book;
+    const book = props.objects.book;
     nearPoint(book.localToWorld(new THREE.Vector3(...grips.left)).toArray(), left);
     nearPoint(book.localToWorld(new THREE.Vector3(...grips.right)).toArray(), right);
-    assert.ok(Math.max(...book.scale.toArray()) <= 1.8, 'closed page thickness is never expanded to the distance between hands');
+    assert.deepEqual(book.scale.toArray(), [1, 1, 1], 'cover, pages and spine keep their authored dimensions');
+    near(props.snapshot().props.book.gripError, 0);
+    props.update({ book: { visible: true, attachment: 'both', openness } }, { anchors: { leftHand: [4, 8.5, 3], rightHand: [-4, 8.5, 3] } });
+    assert.deepEqual(book.scale.toArray(), [1, 1, 1], 'wrong hand spacing cannot stretch a book');
+    assert.ok(props.snapshot().props.book.gripError > 2, 'incompatible contacts are measured explicitly');
+    assert.equal(book.visible, true, 'report the bad grip; hiding is not a trajectory fix');
   }
   props.dispose();
 });

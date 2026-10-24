@@ -1,27 +1,71 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { registerHooks } from 'node:module';
+import * as THREE from '../preview/node_modules/three/build/three.module.js';
 import { ActivityDirector } from '../realtime/activities/director.mjs';
 import { FullBodyController } from '../preview/core/full-body-controller.js';
 import { ACTIVITY_LIBRARY, ACTIVITY_SEQUENCES, sampleActivity } from '../preview/core/activity-library.js';
 import { skeletonFromInspection } from '../preview/core/motion-skeleton.js';
 import { toWorld } from '../preview/core/full-body-ik.js';
+const hooks = registerHooks({ resolve(specifier, context, next) {
+  return specifier === 'three' ? { url: new URL('../preview/node_modules/three/build/three.module.js', import.meta.url).href, shortCircuit: true } : next(specifier, context);
+} });
+const { createActivityProps } = await import('../realtime/activities/props.mjs');
+hooks.deregister();
 
 // Cross-layer acceptance uses the real catalog, director, body solver and PMX.
 // No fake providers, timers, forced support states, or first-three-step shortcut.
 const skeleton = skeletonFromInspection(JSON.parse(readFileSync(new URL('../assets/Aemeath-inspection.json', import.meta.url), 'utf8')));
 const distance = (a, b) => Math.hypot(...a.map((value, index) => value - b[index]));
 function makeRun() {
-  const body = new FullBodyController({ skeleton }), director = new ActivityDirector(body);
+  const body = new FullBodyController({ skeleton }), director = new ActivityDirector(body), props = createActivityProps(new THREE.Scene());
   let wall = 0;
-  return { body, director, tick() {
+  return { body, director, props, tick() {
     wall += 1 / 30;
     const clock = director.tick(wall);
     body.update(clock.now, clock.dt, { paused: clock.paused });
+    const anchors = body.handAnchors();
+    props.update(body.pose.props, { anchors: { leftHand: anchors.L, rightHand: anchors.R }, root: body.root,
+      anchor: body.pose.anchor ?? body.anchor, pose: body.pose, snapshot: body.snapshot(), time: body.now });
+    body.setRenderedPropsSnapshot(props.snapshot());
+    body.setPropTransferReceipts(props.snapshot());
     return director.snapshot();
   } };
 }
 const stepId = value => typeof value === 'string' ? value : value.activity;
+function exitColliders(props) {
+  const parts = [];
+  for (const id of ['table', 'chair']) props.objects[id].traverse(part => {
+    if (!part.isMesh || !part.visible) return;
+    part.geometry.computeBoundingBox(); part.updateWorldMatrix(true, false);
+    parts.push({ id, name: part.name, inverse: part.matrixWorld.clone().invert(), bounds: part.geometry.boundingBox.clone() });
+  });
+  return parts;
+}
+function segmentCrosses(start, end, collider) {
+  const a = new THREE.Vector3(...start).applyMatrix4(collider.inverse), b = new THREE.Vector3(...end).applyMatrix4(collider.inverse);
+  if (collider.bounds.containsPoint(a) || collider.bounds.containsPoint(b)) return true;
+  const direction = b.clone().sub(a), length = direction.length();
+  if (length < 1e-10) return false;
+  const hit = new THREE.Ray(a, direction.divideScalar(length)).intersectBox(collider.bounds, new THREE.Vector3());
+  return !!hit && hit.distanceTo(a) <= length + 1e-9;
+}
+function legExitHits(body, colliders) {
+  const hits = [];
+  for (const side of ['L', 'R']) {
+    const names = body.rig.legs[side].names;
+    const points = ['hip', 'knee', 'ankle'].map(key => toWorld(body.root, body.fk.get(names[key]).position));
+    for (let segment = 0; segment < 2; segment++) for (const collider of colliders) {
+      if (segmentCrosses(points[segment], points[segment + 1], collider)) hits.push({ side, segment, propId: collider.id, part: collider.name });
+    }
+  }
+  return hits;
+}
+function assertLegExitClear(body, colliders, frame) {
+  const hits = legExitHits(body, colliders);
+  assert.equal(hits.length, 0, `reading exit frame ${frame}/${body.activeId} crosses actual prop geometry bounds: ${JSON.stringify(hits)}`);
+}
 
 assert.equal(Object.keys(ACTIVITY_SEQUENCES).length, 7, 'audit every published continuous sequence');
 for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
@@ -29,7 +73,7 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
     const run = makeRun(), { body, director } = run, ids = sequence.steps.map(stepId);
     const entered = [], completed = [], doneAtStep = new Set();
     assert.equal(director.playSequence(id), true);
-    let previousIndex = -1, previousRoot = [...body.root.position], maxFrameTravel = 0;
+    let previousIndex = -1, previousRoot = [...body.root.position], maxFrameTravel = 0, exitSamples = 0, colliders = null;
     for (let frame = 0; frame < 9000 && director.sequence; frame++) {
       const beforeIndex = director.sequence.index;
       if (beforeIndex !== previousIndex) {
@@ -46,15 +90,25 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
       assert.ok(travel < 1.2, `${id}/${beforeIndex}: root teleported ${travel}`);
       previousRoot = [...body.root.position];
       const currentIndex = director.sequence?.index;
+      if (id === 'reading_break' && currentIndex !== undefined && currentIndex >= 9) {
+        colliders ??= exitColliders(run.props); assertLegExitClear(body, colliders, frame); exitSamples++;
+      }
       if (currentIndex !== undefined && body.done && body.activeId === ids[currentIndex] && !doneAtStep.has(currentIndex)) {
         doneAtStep.add(currentIndex);
-        const definition = ACTIVITY_LIBRARY[ids[currentIndex]], final = sampleActivity(ids[currentIndex], definition.duration, body.context);
+        const definition = ACTIVITY_LIBRARY[ids[currentIndex]], final = sampleActivity(ids[currentIndex], definition.duration, body.sampleContext);
         const expectedRoot = toWorld(body.anchor, final.root.position);
         assert.equal(body.pose.support, definition.endSupport, `${id}/${currentIndex}: wrong final support`);
         assert.ok(distance(body.root.position, expectedRoot) < 1e-7, `${id}/${currentIndex}: lost root displacement`);
         assert.ok(Math.abs(body.root.yaw - body.anchor.yaw - final.root.yaw) < 1e-7, `${id}/${currentIndex}: lost final turn`);
         completed.push({ step: currentIndex + 1, activity: body.activeId, at: director.time,
-          root: structuredClone(body.root), anchor: structuredClone(body.anchor), support: body.pose.support });
+          root: structuredClone(body.root), anchor: structuredClone(body.anchor), support: body.pose.support,
+          transfer: body.transferOperation(definition) ? structuredClone(body.propTransferReceipts[definition.propId]) : null });
+        if (body.transferOperation(definition)) {
+          assert.equal(body.propTransferReceipts[definition.propId]?.released, true, 'placement completed without actual renderer handoff');
+          assert.equal(body.propTransferReceipts[definition.propId]?.operation, body.transferOperation(definition));
+          assert.ok(body.transferOperation(definition) === 'place' ? run.props.snapshot().props[definition.propId].attachment === 'table'
+            : ['left', 'right', 'both'].includes(run.props.snapshot().props[definition.propId].attachment));
+        }
       }
     }
     assert.equal(director.sequence, null, `${id}: sequence did not end within 300 simulated seconds`);
@@ -71,10 +125,19 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
     assert.deepEqual(body.root, finalRoot); assert.equal(director.generation, generation);
     assert.equal(director.sequence, null);
     if (id === 'reading_break') {
-      assert.equal(completed.length, 8);
-      assert.deepEqual(completed[2].anchor, completed[3].anchor, 'turning a page changed chair anchor');
-      assert.deepEqual(completed[3].anchor, completed[5].anchor, 'later reading steps changed chair anchor');
-      assert.ok(finalRoot.position[2] > 25, 'read/stand/walk must retain the first walk displacement');
+      assert.equal(completed.length, 12);
+      const at = activity => completed.find(step => step.activity === activity);
+      assert.deepEqual(at('read_seated').anchor, at('page_turn_seated').anchor, 'turning a page changed chair anchor');
+      assert.deepEqual(at('page_turn_seated').anchor, at('close_book').anchor, 'later reading steps changed chair anchor');
+      assert.equal(ids[2], 'take_book_seated', 'book must be genuinely acquired before reading');
+      assert.equal(ids[7], 'put_book_seated', 'read sequence must place its book before rising');
+      assert.equal(ids[8], 'stand_up_from_desk', 'read sequence must move the chair clear of the desk before rising');
+      assert.equal(sequence.steps[8].context.deskRetreat, 5.5, 'reading uses the separately verified farther chair retreat');
+      assert.deepEqual(ids.slice(9), ['walk_left', 'turn_around', 'walk_forward'], 'exit must route around the retained table and chair');
+      assert.ok(distance(at('stand_up_from_desk').root.position, [0, 0, 3.905294108390808]) < 1e-7);
+      assert.ok(distance(at('walk_left').root.position, [10, 0, 3.905294108390808]) < 1e-7);
+      assert.ok(distance(finalRoot.position, [10, 0, -14.094705891609192]) < 1e-7);
+      assert.ok(Math.abs(finalRoot.yaw - Math.PI) < 1e-7); assert.ok(exitSamples > 300, 'exit path was not actually sampled');
     }
     if (id === 'quiet_afternoon') {
       assert.equal(body.pose.support, 'seated'); assert.equal(body.pose.props.chair, true);
@@ -87,7 +150,8 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
       assert.equal(Object.hasOwn(body.pose.props, 'table'), false, 'desk exit must not relocate the persistent table');
     }
     console.log(JSON.stringify({ acceptance: 'whole-real-sequence', id, steps: completed,
-      simulatedSeconds: completed.at(-1).at, maximumRootTravelPer30HzFrame: maxFrameTravel }));
+      simulatedSeconds: completed.at(-1).at, maximumRootTravelPer30HzFrame: maxFrameTravel, exitSamples }));
+    run.props.dispose();
   });
 }
 
@@ -118,4 +182,24 @@ test('director interruption during a real sequence jump retires all remaining st
   assert.equal(director.sequence, null); assert.deepEqual(body.pose, landed);
   assert.equal(director.events.filter(event => event.type === 'step').length, stepsBefore, 'cancelled balance step was dispatched');
   assert.equal(director.events.some(event => event.type === 'sequence-ended'), false, 'cancel must not masquerade as natural completion');
+  run.props.dispose();
+});
+
+test('the exit clearance probe detects an unsafe straight walk through the retained tabletop', () => {
+  const run = makeRun(), { body, director } = run; director.playSequence('reading_break');
+  for (let frame = 0; frame < 9000; frame++) {
+    run.tick();
+    if (director.sequence?.index === 8 && body.activeId === 'stand_up_from_desk' && body.done) break;
+  }
+  assert.equal(director.sequence.index, 8); assert.equal(body.done, true);
+  const colliders = exitColliders(run.props).filter(part => part.id === 'table');
+  assert.equal(body.play('walk_forward'), true);
+  let detected = null;
+  for (let frame = 0; frame < 1000 && !body.done; frame++) {
+    run.tick(); const hits = legExitHits(body, colliders);
+    if (hits.length) { detected = { frame, hits, root: structuredClone(body.root) }; break; }
+  }
+  assert.ok(detected, 'collision regression would fail to detect the former straight exit');
+  console.log(JSON.stringify({ acceptance: 'unsafe-exit-negative-control', ...detected }));
+  run.props.dispose();
 });
