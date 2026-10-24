@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>爱弥斯 · 动作准备册</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css"></head>
+<body>
+<header><span>AEMEATH / PREPARATION</span><a href="/native-resources/" target="_blank" rel="noopener">完整原生素材预览 ↗</a></header>
+<main>
+  <div class="intro"><p class="eyebrow">先了解动作，再交给人物使用</p><h1>动作准备册。</h1><p>把现有素材与控制器逐项整理：能表达什么、需要什么条件、怎样进入和退出、还缺什么。</p></div>
+  <div id="summary" class="summary" aria-live="polite">读取准备资料…</div>
+  <p class="boundary">这里的“已测量”指源轨迹或控制器数据。用途待确认、出口待验、场景不明的组合仍不自动使用；衣发、表情、注视和身体分开计数。</p>
+  <div class="workspace">
+    <aside><label for="search">查找动作、用途或缺口</label><input id="search" type="search" placeholder="如：坐姿、解释、缺出口…"><label for="kind">资料类型</label><select id="kind"><option value="">全部类型</option></select><label for="status-filter">准备状态</label><select id="status-filter"><option value="">全部状态</option></select><p id="list-status" aria-live="polite"></p><div id="records" class="records"></div><div class="pagination"><button id="prev">上一页</button><span id="page"></span><button id="next">下一页</button></div></aside>
+    <article id="detail"><p>选择左侧一条记录，查看它的使用条件与证据。</p></article>
+  </div>
+  <section class="preview" id="preview-section" hidden><div class="preview-title"><h2>当前模型素材预览</h2><p id="preview-status" aria-live="polite"></p></div><iframe id="preview" title="动作模型预览" loading="lazy"></iframe></section>
+  <p class="footer">身体幅度、近身肘部、利落挥手继续保留。准备资料不改变正式语音、记忆、情绪或历史记录。</p>
+</main><script type="module" src="./viewer.mjs"></script>
+</body></html>
