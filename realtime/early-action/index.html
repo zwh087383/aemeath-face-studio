@@ -7,6 +7,7 @@
 <div class="controls"><button data-view="body">正面</button><button data-view="angle">斜侧</button><button data-view="side">侧面</button><button data-view="full">全身</button><label>音量 <input id="volume" type="range" min="0" max=".5" step=".01" value=".16"></label></div><p id="status">模型加载中</p></section>
 <aside><label>选择场景 <select id="case"></select></label><div class="cards"><div><b id="voice">—</b><span>请求 → 首声播放</span></div><div><b id="lead">—</b><span>身体动作提前量</span></div><div><b id="tool">—</b><span>请求 → 完整动作命令</span></div><div><b id="face">—</b><span>表情提前量</span></div></div>
 <p id="plan">还没有动作命令。无动作也是有效选择。</p><p id="context"></p><button id="live" disabled>运行所选云端样本</button><p id="budget"></p>
+<details open><summary>手写情绪样本 · 本地预览</summary><label>选择样本 <select id="emotion-sample" disabled><option value="">原始自然底色</option></select></label><pre id="emotion-values">正在读取八组测试数值…</pre><p class="note">这些是人工测试输入。切换只预览现有表情底色；进入语音对照时恢复原设置，不改变云端台词或次数。身体动作仍由原调度器执行。</p></details>
 <details><summary>人设与顺序要求</summary><pre id="prompt"></pre></details><details><summary>时序、打断与性能证据</summary><pre id="diagnostic"></pre></details>
 <p class="note">本页测试固定上下文到真实流式语音，不含麦克风断句、记忆检索或物理扬声器测量。首声为非静音采样进入 WebAudio 播放游标的时刻。回放沿用保存的事件间隔，不收费。准备阶段探针在本地撤销，云端排空以核对用量；出声阶段探针发送真正的取消请求。实验不改长期情绪或历史记录。</p></aside></main>
 <section class="results"><h2>三组实测</h2><p id="summary">尚未生成汇总。</p><div class="scroll"><table><thead><tr><th>样本</th><th>模型首有声包</th><th>首声播放</th><th>动作提前</th><th>表情提前</th><th>同响应 / 回执前</th><th>结果</th></tr></thead><tbody id="rows"></tbody></table></div></section>

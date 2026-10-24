@@ -1,15 +1,17 @@
 import {createScene} from '../qwen/scene.mjs';
 import {LiveAvatarSession} from '../qwen/live-session.mjs';
 import {PreparedMotionController,PreparedFaceController,EarlyActionDriver} from './preparation.mjs';
+import {applyEmotionSample,restoreComparisonFace} from './emotion-preview.mjs';
 
 const $=id=>document.getElementById(id),now=()=>performance.now(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let catalog,scene,session,context,mix,capture,run=null,report=null,rendered,last=now(),serial=0,stopSequence=false,batchRunning=false;
+let catalog,scene,session,context,mix,capture,run=null,report=null,rendered,last=now(),serial=0,stopSequence=false,batchRunning=false,emotionSamples=[],emotionPreview=null;
 const mark=(key,value=now())=>{if(run&&run[key]===undefined)run[key]=value;};
 const ms=value=>Number.isFinite(value)?`${Math.round(value)} ms`:'—';
 function info(){const c=catalog.cases.find(c=>c.id===$('case').value);$('context').textContent=c.context+'\n本轮台词：'+c.text;$('prompt').textContent=catalog.settings[c.group].instructions;
   $('replay').disabled=!catalog.attempted.includes(c.id);$('compare').disabled=!catalog.attempted.length;
   $('live').disabled=catalog.blocked||!catalog.cloudEnabled||catalog.used>=catalog.limit||catalog.attempted.includes(c.id);
   $('batch').disabled=batchRunning||catalog.blocked||!catalog.cloudEnabled||catalog.used>=catalog.limit;
+  $('emotion-sample').disabled=!scene||!!(run&&!run.completed)||batchRunning;
   $('budget').textContent=`本批已用 ${catalog.used} / ${catalog.limit} 个响应${catalog.blocked?' · 未知用量，云调用已停止':''}`;}
 async function refresh(){catalog=await(await fetch('/api/early-action')).json();info();try{const response=await fetch('/api/early-action/summary');if(response.ok){const summary=await response.json();$('summary').textContent=summary.conclusion;
   $('rows').replaceChildren();for(const row of summary.rows){const tr=document.createElement('tr');for(const value of [row.id,ms(row.server?.firstNonSilentPcmMs),ms(row.client?.voiceMs),ms(row.client?.bodyLeadMs),ms(row.client?.faceLeadMs),row.server?.sameResponseBothBeforeReceipt?'是':'否',row.outcome]){const td=document.createElement('td');td.textContent=value;tr.append(td);}$('rows').append(tr);}}}catch{/* Report is optional. */}}
@@ -114,6 +116,9 @@ async function runCase(key,{live=false,recordVideo=false,localEvents=null}={}){
   if(live&&localEvents)throw Error('cannot_mix_cloud_and_fixture');
   if(!live&&!localEvents&&!catalog.attempted.includes(key))throw Error('missing_recording');
   if(live)await checkAudio(false);else await context.resume();
+  // Fixed A/B/C comparison remains byte-for-byte the same cloud input. The
+  // optional idle preview cannot leak its base strength into tool execution.
+  clearEmotionPreview();
   run={key,case:config,mode:live?'live':localEvents?'offline':'replay',started:now(),sequence:0,tools:[],rejected:[],received:[],frames:[],trace:[],transcript:'',completed:false};
   report=null;$('case').value=key;info();for(const id of ['replay','compare','live','batch'])$(id).disabled=true;
   $('caption').textContent='';$('plan').textContent='等待完整动作指令；语音不等待动作。';$('status').textContent=live?'正在执行有界云端样本':'保存事件按原间隔回放';
@@ -174,14 +179,32 @@ async function runBatch(){
   }finally{batchRunning=false;await refresh();}
 }
 
+function clearEmotionPreview(){
+  restoreComparisonFace(scene.face);emotionPreview=null;$('emotion-sample').value='';
+  $('emotion-values').textContent='原始自然底色。云端三组对照继续使用原有输入。';
+}
+function chooseEmotion(id){
+  if(run&&!run.completed||batchRunning)throw Error('请等本段测试结束后切换情绪样本。');
+  if(!id){clearEmotionPreview();return null;}
+  const sample=emotionSamples.find(sample=>sample.id===id);if(!sample)throw Error('Unknown emotion sample');
+  emotionPreview=applyEmotionSample(scene.face,sample);$('emotion-sample').value=id;
+  $('emotion-values').textContent=JSON.stringify({样本:sample.label,...emotionPreview.emotion,表情强度:+emotionPreview.strength.toFixed(3),情境:sample.context,来源:'人工测试输入'},null,2);
+  return emotionPreview;
+}
 async function boot(){
   catalog=await(await fetch('/api/early-action')).json();for(const c of catalog.cases){const option=document.createElement('option');option.value=c.id;option.textContent=`${catalog.groups[c.group]} · ${c.scene==='greet'?'招呼':'比较方案'} · ${c.repeat||'打断探针'}`;$('case').append(option);}
   context=new AudioContext({sampleRate:24000,latencyHint:'interactive'});mix=context.createGain();mix.gain.value=.16;mix.connect(context.destination);capture=context.createMediaStreamDestination();mix.connect(capture);
   const host={get state(){return context.state;},get currentTime(){return context.currentTime;},destination:mix,resume:()=>context.resume(),createBuffer:(...v)=>context.createBuffer(...v),createBufferSource:()=>context.createBufferSource(),createGain:()=>context.createGain()};
   scene=await createScene($('stage'),message=>$('loading').textContent=message,{motionFactory:options=>new PreparedMotionController(options),faceFactory:()=>new PreparedFaceController()});
   scene.motion.setPosture('relaxed');session=new LiveAvatarSession({context:host,face:scene.face,motion:scene.motion,naturalConversation:false});session.audio.setVolume(1);
+  try{const fixture=await(await fetch('./emotion-samples.json')).json();
+    if(fixture.source!=='handwritten_local_test'||fixture.experimental!==true)throw Error('Invalid fixture provenance');
+    emotionSamples=fixture.samples;for(const sample of emotionSamples){const option=document.createElement('option');option.value=sample.id;option.textContent=sample.label;$('emotion-sample').append(option);}
+    $('emotion-values').textContent='已准备八组手写样本。选择后显示数值和现有表情底色，不调用模型。';
+  }catch(error){$('emotion-values').textContent='情绪样本未加载：'+error.message;}
   $('loading').remove();requestAnimationFrame(frame);await refresh();$('status').textContent='人物就绪。三组语音都不等待动作。';
-  window.earlyAction={ready:true,runCase,runBatch,checkAudio,cancel,accept,get report(){return report;},get catalog(){return catalog;},get active(){return !!run&&!run.completed;},get scene(){return scene;},get session(){return session;},get state(){return {run:run?{key:run.key,tools:run.tools,cancelled:run.cancelled,requestAt:run.requestAt,bodyAt:run.bodyAt,voiceAt:run.voiceAt,providerDoneAt:run.providerDoneAt}:null,rendered,audio:session.audio.snapshot(),motion:scene.motion.snapshot(),preparation:scene.motion.preparationSnapshot()};},refresh};
+  window.earlyAction={ready:true,runCase,runBatch,checkAudio,cancel,accept,chooseEmotion,get emotionPreview(){return emotionPreview;},get report(){return report;},get catalog(){return catalog;},get active(){return !!run&&!run.completed;},get scene(){return scene;},get session(){return session;},get state(){return {run:run?{key:run.key,tools:run.tools,cancelled:run.cancelled,requestAt:run.requestAt,bodyAt:run.bodyAt,voiceAt:run.voiceAt,providerDoneAt:run.providerDoneAt}:null,rendered,audio:session.audio.snapshot(),motion:scene.motion.snapshot(),preparation:scene.motion.preparationSnapshot()};},refresh};
+  $('emotion-sample').onchange=()=>{try{chooseEmotion($('emotion-sample').value);}catch(error){$('status').textContent=error.message;}};
   $('case').onchange=info;$('volume').oninput=()=>mix.gain.value=+$('volume').value;
   $('replay').onclick=()=>runCase($('case').value).catch(e=>$('status').textContent=e.message);
   $('live').onclick=()=>runCase($('case').value,{live:true,recordVideo:true}).catch(e=>$('status').textContent=e.message);
