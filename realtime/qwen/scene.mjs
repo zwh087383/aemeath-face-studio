@@ -8,7 +8,7 @@ import { MotionRig, skeletonFromMesh } from '/preview/studio/motion-rig.js';
 import { ExpressionChoreographer, blendExpressionOverlay } from '/preview/core/expression-choreography.js';
 
 /** One composition point for the already delivered character controllers. */
-export async function createScene(stage, progress = () => {}) {
+export async function createScene(stage, progress = () => {}, { motionFactory, faceFactory } = {}) {
   const scene = new THREE.Scene(), camera = new THREE.OrthographicCamera(-5, 5, 5, -5, .1, 150);
   const renderer = new WebGPURenderer({ antialias: true, alpha: true, forceWebGL: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -20,8 +20,9 @@ export async function createScene(stage, progress = () => {}) {
   const manager = new THREE.LoadingManager(); manager.onProgress = (_, n, total) => progress(`人物贴图 ${n}/${total}`);
   const mesh = await new MMDLoader(manager).loadAsync('/model/' + encodeURIComponent('鸣潮_爱弥斯1.05.pmx'));
   for (const [i, name] of AEMEATH_BINDINGS) if (mesh.geometry.morphTargets[i]?.name !== name) throw new Error(`Morph binding: ${name}`);
-  const face = new FaceController(); face.headSway = false;
-  const motion = new MotionController({ skeleton: skeletonFromMesh(mesh) }); motion.setOptions({ natural: true, intensity: 1, speed: 1, continuity: true });
+  const face = faceFactory ? faceFactory() : new FaceController(); face.headSway = false;
+  const motionOptions = { skeleton: skeletonFromMesh(mesh) };
+  const motion = motionFactory ? motionFactory(motionOptions) : new MotionController(motionOptions); motion.setOptions({ natural: true, intensity: 1, speed: 1, continuity: true });
   const rig = new MotionRig(mesh), helper = new MMDAnimationHelper(); helper.add(mesh, { physics: false }); helper.enable('ik', false);
   const rest = mesh.skeleton.bones.map(b => [b, b.quaternion.clone(), b.position.clone()]); mesh.frustumCulled = false; scene.add(mesh);
   const observedBones = [
