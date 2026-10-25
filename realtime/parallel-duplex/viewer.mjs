@@ -4,6 +4,14 @@ import {captureMicrophone,resample16k,pcmBase64} from '../qwen/input-audio.mjs';
 import {VoicedPreparedMotionController,VoicedPreparedFaceController} from '../action-timing/prep-driver.mjs';
 import {ParallelActionDirector} from './director.mjs';
 import {ParallelDuplexClient,ACTOR_STATE,framePreflightVerdict,attemptedFixtureIds,replayTurnEvents} from './client.mjs';
+import {ModelActionDirector} from '../model-director/director.mjs';
+import {MODEL_ACTIONS,validateCommands} from '../model-director/catalog.mjs';
+import {ModelMotionController,ModelFaceController} from '../model-director/driver.mjs';
+import {ModelDuplexClient} from '../model-director/client.mjs';
+
+const modelMode=location.pathname.startsWith('/model-director/');
+const modelStateLabels={queued:'等待',admitted:'已交给播放器',playing:'正在做',completed:'已完成',cancelled:'已撤销',execution_failed:'执行失败'};
+const modelReasonLabels={previous_action_running:'前一个动作还在做',body_recovery:'等待身体收势',execution_scene_unavailable:'站姿 / 空手 / 足部支撑未确认',model_delay:'等待模型指定的时间',waiting_voice:'等待出声',model_replace:'模型替换了队列',model_clear:'模型清空了队列',local_demo_clear:'手动清空',explicit_user_interrupt:'用户打断',voice_owner_revoked:'旧轮已撤销',new_turn:'进入新一轮'};
 
 const $=id=>document.getElementById(id),now=()=>performance.now(),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const shown=value=>Number.isFinite(value)?`${Math.round(value)} ms`:'—';
@@ -39,13 +47,13 @@ function event(e){
   if(s?.type==='input_final')$('input').textContent=s.transcript;
   if(s?.type==='turn_started'){$('pipeline').textContent='检索记忆、准备本轮上下文';$('answer').textContent='';}
   if(s?.type==='context_ready')$('pipeline').textContent='记忆已就绪；语音与动作独立进行';
-  if(s?.type==='action_plan')$('plan').textContent=`动作建议：${s.intent??'待校验'}。是否执行由调度器判断。`;
+  if(s?.type==='action_plan')$('plan').textContent=modelMode?`收到 ${s.command?.operation??'待校验'} 指令，共 ${s.command?.actions?.length??0} 个动作；下表记录执行结果。`:`动作建议：${s.intent??'待校验'}。是否执行由调度器判断。`;
   if(s?.type==='action_context'&&client.current?.id===s.turnId){client.current.emotionBaseline??=rendered?structuredClone(rendered):null;client.current.emotionContextAt??=now();}
   if(s?.type==='handoff_requested')$('pipeline').textContent='语音模型请求完整分析，准备接续回复';
   if(s?.type==='turn_output_done')$('pipeline').textContent='语音生成完成，等待实际播完确认';
   if(s?.type==='settled'){$('pipeline').textContent='已实际播完，回复已写入已送达历史';const t=client.trials.find(t=>t.id===s.turnId);if(t)t.measurementEndedAt??=now();}
 }
-function newClient(){return new ParallelDuplexClient({session,director,onEvent:event});}
+function newClient(){return new (modelMode?ModelDuplexClient:ParallelDuplexClient)({session,director,onEvent:event});}
 function metrics(t){
   const relative=key=>Number.isFinite(t[key])&&Number.isFinite(t.requestAt)?t[key]-t.requestAt:null;
   const lead=key=>Number.isFinite(t.voiceAt)&&Number.isFinite(t[key])?t.voiceAt-t[key]:null;
@@ -67,14 +75,17 @@ function controls(){
   $('connect').disabled=!ready||starting||suite||replaying||client.ready||!cloud||full||budget?.blocked||(client.blocked&&!client.canReconnect);
   const attempted=attemptedFixtureIds(allAttempts());
   $('suite').disabled=!ready||suite||starting||replaying||!cloud||full||budget?.blocked||client.blocked||attempted.size>0||budget?.turns>0;
+  if(modelMode)$('suite').disabled=true; // Three-question batch is sent explicitly, never the legacy six-question suite.
   $('resume-suite').disabled=!ready||suite||starting||replaying||!cloud||full||budget?.blocked||client.blocked||!service.completedFixtures?.length||attempted.size!==service.completedFixtures.length||budget?.turns!==service.completedFixtures.length;
   const inputDisabled=!client.ready||client.blocked||client.inputExhausted||feeding||suite||replaying;
   $('feed').disabled=inputDisabled||!!microphone||attempted.has($('fixture').value);$('mic').disabled=inputDisabled||!!microphone;$('send').disabled=inputDisabled;
-  $('stop-mic').disabled=!microphone;$('cancel').disabled=!client.current||client.current.revoked||client.current.settledAt!==undefined;
+  $('stop-mic').disabled=!microphone;$('cancel').disabled=!client.current||client.current.revoked||(client.current.settledAt!==undefined&&!director.hasWork?.());
   $('disconnect').disabled=!client.ready&&!client.socket;$('replay').disabled=!replays.length||suite||replaying||client.ready||starting;
   $('save').disabled=!ready||starting;$('fixture').disabled=feeding||suite||replaying;$('replay-choice').disabled=replaying||suite;
   $('sound').disabled=!ready||starting||suite||feeding||replaying;
   $('preview-wave').disabled=!ready||starting||suite||feeding||replaying||client.ready||client.socket?.readyState<2;
+  if(modelMode){$('model-send').disabled=!client.current||client.current.revoked||!client.localReplay;
+    $('model-pause').disabled=!director.hasWork();$('model-stop').disabled=!director.hasWork();}
   for(const option of $('fixture').options)option.disabled=attempted.has(option.value);
   $('suite-progress').textContent=attempted.size?`已经送入 ${attempted.size} 条题目（包括中途停止的录音）；整批按钮已停用，请仅手动选择未发送的剩余题目。刷新页面也不会重置云端预算。`:budget?.turns>0?'当前批次已有真实轮次；禁止整批从头重测。请先核对报告，再手动选择尚未发送的题目。':'每条题目只送入一次；异常后不从头重测。';
   $('budget').textContent=budget?`本批 ${budget.turns}/${budget.turnLimit} 轮 · ${budget.responses}/${budget.responseLimit} 个 Qwen 响应 · 未知 ${budget.unknown??0}${budget.blocked?' · 已停止新调用':''}`:'正在读取预算';
@@ -89,16 +100,18 @@ function updateUI(){
     $('body-lead').textContent=m.renderTimingValid?shown(m.bodyLeadMs):'待画面复核';$('plan-lead').textContent=shown(m.commandLeadMs);
     if(t.error){$('pipeline').textContent='本轮未完成，证据已保留';error(t.error);}}
   $('director').textContent=JSON.stringify({mode:d.mode,selected:d.selected,execution:d.execution,pending:d.pending,lastDecisions:d.decisions?.slice(-5)},null,2);
+  if(modelMode){$('queue-count').textContent=`已接收 ${d.counts.received} · 起势 ${d.counts.started} · 完成 ${d.counts.completed} · 撤销 ${d.counts.cancelled} · 拒绝 ${d.counts.rejected}`;
+    $('model-rows').replaceChildren();for(const row of d.rows.slice(-20)){const tr=document.createElement('tr');for(const value of [MODEL_ACTIONS[row.action].label,modelStateLabels[row.status]??row.status,modelReasonLabels[row.reason]??row.reason??'—']){const td=document.createElement('td');td.textContent=value;tr.append(td);}$('model-rows').append(tr);}}
   $('rows').replaceChildren();
   for(const row of client.trials){const m=metrics(row),tr=document.createElement('tr');
-    const result=row.revoked?'已撤销':row.settledAt!==undefined?'已播完并入历史':row.error?'失败：'+row.error:row.outputDoneAt?'生成完成，等待播放':'进行中';
+    const result=row.revoked?'已撤销':client.localReplay&&a.status==='ended'?'已回放，不写真实历史':row.settledAt!==undefined?'已播完并入历史':row.error?'失败：'+row.error:row.outputDoneAt?'生成完成，等待播放':'进行中';
     for(const value of [row.text,shown(m.lastInputSpeechToVoiceMs),shown(m.requestToVoiceMs),shown(m.commandLeadMs),m.renderTimingValid?shown(m.bodyLeadMs):'画面计时待复核',result]){const td=document.createElement('td');td.textContent=value;tr.append(td);}$('rows').append(tr);}
 }
 function frame(time){
   const interval=time-lastFrame,dt=Math.min(.05,Math.max(0,interval/1000));lastFrame=time;
   try{
     client.sync();const a=session.audio.snapshot(),m=marker();captureVoice(client.current,m);
-    director.advance(a,m);const visual=session.visualState(a);visual.paused=visual.paused||!!m?.reached&&a.status==='buffering';
+    director.advance(a,m);const visual=session.visualState(a);visual.paused=visual.paused||!!m?.reached&&a.status==='buffering'||(modelMode&&director.paused);
     rendered=scene.step(time,dt,session.lipSample(a),{...visual,idle:true});const t=client.current,motion=scene.motion.snapshot();
     if(t&&!t.measurementEndedAt&&(!t.revoked||now()-t.cancelAt<3500)){
       const f={at:time,interval,driver:rendered.driverMs,render:rendered.renderMs,hidden:document.visibilityState!=='visible'};(t.renderFrames??=[]).push(f);if(t.renderFrames.length>12000)t.renderFrames.shift();
@@ -113,7 +126,7 @@ function frame(time){
       const faceBase=t.emotionBaseline??base;
       if(!t.revoked&&faceBase&&[0,1,2,3,4,5,7,8,9,10,11,12,13,14,25].some(i=>Math.abs(rendered.weights[i]-faceBase.weights[i])>.04))t.faceAt??=now();
       if(!t.lastTraceAt||time-t.lastTraceAt>=80){t.lastTraceAt=time;(t.renderTrace??=[]).push({at:time,audio:{status:a.status,time:a.time,sources:a.sourceCount},marker:m,mouth:rendered.mouthOpen,
-        rotations:rendered.rotations,weights:rendered.weights,gestures:motion.gestures,reactions:motion.reactions,preparations:scene.motion.preparationSnapshot(),director:director.snapshot().execution});if(t.renderTrace.length>2000)t.renderTrace.shift();}
+        rotations:rendered.rotations,weights:rendered.weights,gestures:motion.gestures,reactions:motion.reactions,preparations:scene.motion.preparationSnapshot(),director:modelMode?director.executionSnapshot():director.snapshot().execution});if(t.renderTrace.length>2000)t.renderTrace.shift();}
     }
     for(const stop of client.interruptions){if(stop.turnId!==t?.id)continue;
       if(rendered.mouthOpen<.01)stop.mouthClosedMs??=now()-stop.at;
@@ -244,6 +257,7 @@ async function replay(index=+$('replay-choice').value){
   const start=now(),origin=events[0]?.serverMs??0;
   try{for(const saved of events){await sleep(Math.max(0,start+saved.serverMs-origin-now()));client.message({...saved,connectionId});}
     const deadline=now()+45000;while(now()<deadline&&!['ended','fault','cancelled'].includes(session.audio.snapshot().status))await sleep(25);
+    if(modelMode){const end=now()+180000;while(director.hasWork()&&!director.cancelled&&now()<end)await sleep(50);}
     await sleep(1000);if(client.current)client.current.measurementEndedAt??=now();await saveReport('replay');$('status').textContent='真实记录免费回放结束；未写对话历史。';
   }finally{client.ready=false;replaying=false;controls();}
 }
@@ -261,6 +275,7 @@ async function previewWave(){
   replaying=true;reportSource='simulated_plan_cached_audio';previewEvidence={audio:'/duplex-data/preview-greet.wav',sha256:hash,
     instruction:'人工模拟 greet 指令，用于检查既有调度器和挥手轨迹；不代表本轮真实云端延迟。',
     mathContext:'cached_read_only_WAI_snapshot',mathCapturedAt:cachedContext.capturedAt??null,planToAudioInjectionDelayMs:350};
+  if(modelMode)previewEvidence.instruction='人工多动作序列和缓存语音，检查同一真实执行队列；不是模型本轮决策或云端延迟。';
   client=newClient();client.localReplay=true;const connectionId=`parallel-local-preview-${++replaySerial}`,turnId=`local-preview-turn-${replaySerial}`;
   const emit=(type,fields={})=>client.message({type,connectionId,turnId,...fields});
   emit('ready',{variant:'qwen-direct',actionMode:'parallel',budget:{blocked:false,unknown:0},listenerConfiguration:{}});client.inputExhausted=true;
@@ -268,8 +283,9 @@ async function previewWave(){
   emit('action_context',{...cachedContext,type:'action_context',connectionId,turnId,actorState:{...ACTOR_STATE},userText:'请轻快地挥挥手，跟我打个招呼。'});
   const fields={segmentIndex:0,phase:'direct',startFrame:0,providerConnectionId:'local-cached-audio',responseId:`cached-response-${replaySerial}`};
   emit('request_sent',fields);emit('response_created',fields);
-  emit('action_plan',{planId:`simulated-plan-${replaySerial}`,plannerConnectionId:'local-simulated-planner',plannerResponseId:`simulated-response-${replaySerial}`,
+  if(!modelMode)emit('action_plan',{planId:`simulated-plan-${replaySerial}`,plannerConnectionId:'local-simulated-planner',plannerResponseId:`simulated-response-${replaySerial}`,
     sourceRole:'planner',intent:'greet',arguments:'{"intent":"greet"}',contextGeneration:cachedContext.contextGeneration,outputFinal:true,expiresInMs:3500});
+  if(modelMode)manualModelCommand();
   controls();$('status').textContent='本地模拟动作指令 + 已保存问候音频。可点击“立即打断”；这不是新的云端实测。';
   try{
     await sleep(350);const transcript='回来啦，今天过得怎么样？我在这儿呢。';emit('subtitle',{...fields,delta:transcript});
@@ -278,8 +294,9 @@ async function previewWave(){
     emit('audio_done',fields);emit('response_done',{...fields,result:{...segment,transcript}});
     emit('turn_output_done',{...fields,result:{connectionId:fields.providerConnectionId,responseId:fields.responseId,frames:pcm.length,transcript,status:'completed',audioDone:true,transcriptDone:true,segments:[segment]}});
     const deadline=now()+20000;while(now()<deadline&&!['ended','fault','cancelled'].includes(session.audio.snapshot().status))await sleep(25);
+    if(modelMode){const end=now()+180000;while(director.hasWork()&&!director.cancelled&&now()<end)await sleep(50);}
     await sleep(client.current?.revoked?3500:1000);if(client.current)client.current.measurementEndedAt??=now();await saveReport('replay');
-    $('status').textContent='本地挥手预览已结束，模拟结果已单独保存；没有请求云端，也没有写入对话历史。';
+    $('status').textContent=modelMode?'动作队列预览结束，报告单独保存；本次是人工指令加缓存音频，没有请求云端，也没有写入真实历史。':'本地挥手预览已结束，模拟结果已单独保存；没有请求云端，也没有写入对话历史。';
   }finally{client.ready=false;replaying=false;controls();}
 }
 function startRecording(){
@@ -287,6 +304,15 @@ function startRecording(){
   const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8,opus',videoBitsPerSecond:2000000}),parts=[];let resolve;const done=new Promise(r=>resolve=r);
   recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data);};recorder.onstop=()=>{recordingBlob=new Blob(parts,{type:recorder.mimeType});stream.getVideoTracks().forEach(track=>track.stop());resolve();};
   recording={recorder,done};recorder.start(250);
+}
+let manualCommandSerial=0;
+function manualModelCommand(){
+  if(!modelMode||!client.localReplay||!client.current||client.current.revoked)throw Error('人工指令只允许用于本地演示');
+  const command=validateCommands(JSON.parse($('model-command').value)),t=client.current;
+  client.message({type:'action_plan',connectionId:client.connectionId,turnId:t.id,
+    planId:`manual-command-${++manualCommandSerial}`,plannerConnectionId:'local-manual-planner',
+    plannerResponseId:`manual-response-${replaySerial}`,sourceRole:'planner',outputFinal:true,
+    contextGeneration:t.actionContext.contextGeneration,command});
 }
 async function stopRecording(){if(!recording)return null;recording.recorder.stop();await recording.done;recording=null;return {bytes:recordingBlob.size};}
 async function videoBase64(){if(!recordingBlob)return null;return new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(';base64,')[1]);r.readAsDataURL(recordingBlob);});}
@@ -297,14 +323,20 @@ async function boot(){
   for(const clip of manifest.clips){const option=document.createElement('option');option.value=clip.id;option.textContent=clip.text;$('fixture').append(option);}
   context=new AudioContext({sampleRate:24000,latencyHint:'interactive'});mix=context.createGain();mix.gain.value=.16;mix.connect(context.destination);capture=context.createMediaStreamDestination();mix.connect(capture);
   const host={get state(){return context.state;},get currentTime(){return context.currentTime;},destination:mix,resume:()=>context.resume(),createBuffer:(...a)=>context.createBuffer(...a),createBufferSource:()=>context.createBufferSource(),createGain:()=>context.createGain()};
-  scene=await createScene($('stage'),text=>$('loading').textContent=text,{motionFactory:o=>new VoicedPreparedMotionController(o),faceFactory:()=>new VoicedPreparedFaceController()});scene.setExpressionEnabled(false);
+  scene=await createScene($('stage'),text=>$('loading').textContent=text,{motionFactory:o=>new (modelMode?ModelMotionController:VoicedPreparedMotionController)(o),faceFactory:()=>new (modelMode?ModelFaceController:VoicedPreparedFaceController)()});scene.setExpressionEnabled(false);
   session=new LiveAvatarSession({context:host,face:scene.face,motion:scene.motion,naturalConversation:false});session.audio.setVolume(1);
-  director=new ParallelActionDirector({session,onDecision:directorDecision});client=newClient();client.blocked=!!service.budget?.blocked;
+  director=new (modelMode?ModelActionDirector:ParallelActionDirector)({session,onDecision:directorDecision});client=newClient();client.blocked=!!service.budget?.blocked;
   const action=fn=>()=>Promise.resolve().then(fn).catch(error);$('connect').onclick=action(connect);$('suite').onclick=action(runSuite);$('feed').onclick=action(()=>fixture());$('mic').onclick=action(startMic);$('sound').onclick=action(soundCheck);$('preview-wave').onclick=action(previewWave);$('fixture').onchange=controls;
   $('resume-suite').onclick=action(()=>runSuite(true));
   $('stop-mic').onclick=stopMic;$('disconnect').onclick=action(close);$('cancel').onclick=()=>{captureVoice();client.cancel();};$('send').onclick=()=>client.sendText($('text').value);
   $('save').onclick=action(()=>saveReport());$('replay').onclick=action(()=>replay());$('refresh').onclick=action(loadReplays);
   $('volume').oninput=()=>mix.gain.value=+$('volume').value;for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>scene.setView(button.dataset.view);
+  if(modelMode){$('model-send').onclick=action(manualModelCommand);
+    $('model-pause').onclick=()=>{director.paused=!director.paused;director.userPaused=director.paused;if(director.paused)session.pause();else session.resume();$('model-pause').textContent=director.paused?'继续动作 / 语音':'暂停动作 / 语音';};
+    $('model-stop').onclick=()=>{director.clear('local_demo_clear');};
+    $('record-start').onclick=()=>{startRecording();$('record-start').disabled=true;$('record-stop').disabled=false;};
+    $('record-stop').onclick=action(async()=>{await stopRecording();const link=$('record-download');link.href=URL.createObjectURL(recordingBlob);link.hidden=false;$('record-start').disabled=false;$('record-stop').disabled=true;});
+    $('catalog').textContent=Object.entries(MODEL_ACTIONS).map(([key,row])=>`${key} — ${row.label}`).join('\n');}
   ready=true;$('loading').remove();$('status').textContent=service.cloudEnabled?'人物已就绪。点击连接才开始真实监听。':'人物已就绪，云端调用未启用。';requestAnimationFrame(frame);await loadReplays();controls();
   window.parallelDuplex={ready:true,connect,fixture,startMic,stopMic,close,runSuite,replay,previewWave,saveReport,snapshot,startRecording,stopRecording,videoBase64,soundCheck,
     cancel:()=>{captureVoice();return client.cancel();},get state(){return {ready:client.ready,blocked:client.blocked,suite,replaying,current:client.current?{...client.current,driver:undefined}:null,audio:session.audio.snapshot(),director:director.snapshot()};}};

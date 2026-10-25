@@ -1,0 +1,367 @@
+[
+  {
+    "id": "gesture:wave",
+    "name": "挥手",
+    "duration_seconds": 3.916
+  },
+  {
+    "id": "gesture:explain",
+    "name": "摊手解释",
+    "duration_seconds": 4.112
+  },
+  {
+    "id": "gesture:shrug",
+    "name": "轻耸肩",
+    "duration_seconds": 3.081
+  },
+  {
+    "id": "gesture:chest",
+    "name": "手放胸前",
+    "duration_seconds": 4.648
+  },
+  {
+    "id": "action:nod",
+    "name": "点头",
+    "duration_seconds": 0.86
+  },
+  {
+    "id": "action:shake",
+    "name": "摇头",
+    "duration_seconds": 1.15
+  },
+  {
+    "id": "action:tilt",
+    "name": "侧头",
+    "duration_seconds": 1.65
+  },
+  {
+    "id": "action:glance",
+    "name": "回眸",
+    "duration_seconds": 1.4
+  },
+  {
+    "id": "action:blink",
+    "name": "眨眼",
+    "duration_seconds": 0.24
+  },
+  {
+    "id": "gesture:bow_smile",
+    "name": "俯身抬眼微笑",
+    "duration_seconds": 6.159
+  },
+  {
+    "id": "gesture:laugh",
+    "name": "开心轻笑",
+    "duration_seconds": 5.593
+  },
+  {
+    "id": "gesture:curious",
+    "name": "好奇探身",
+    "duration_seconds": 5.952
+  },
+  {
+    "id": "gesture:shy",
+    "name": "害羞回望",
+    "duration_seconds": 6.622
+  },
+  {
+    "id": "gesture:explain_firm",
+    "name": "郑重点明",
+    "duration_seconds": 6.003
+  },
+  {
+    "id": "gesture:surprise",
+    "name": "惊讶回神",
+    "duration_seconds": 5.56
+  },
+  {
+    "id": "gesture:think",
+    "name": "凝神思考",
+    "duration_seconds": 6.7
+  },
+  {
+    "id": "gesture:greet",
+    "name": "轻快招呼",
+    "duration_seconds": 4.782
+  },
+  {
+    "id": "gesture:listen",
+    "name": "认真倾听",
+    "duration_seconds": 6.298
+  },
+  {
+    "id": "gesture:comfort",
+    "name": "温柔安慰",
+    "duration_seconds": 6.581
+  },
+  {
+    "id": "gesture:look_up",
+    "name": "仰头舒展",
+    "duration_seconds": 6.37
+  },
+  {
+    "id": "gesture:agree",
+    "name": "会意点头",
+    "duration_seconds": 5.159
+  },
+  {
+    "id": "gesture:micro_ack",
+    "name": "轻轻应声",
+    "duration_seconds": 3.174
+  },
+  {
+    "id": "gesture:double_ack",
+    "name": "两次会意",
+    "duration_seconds": 3.859
+  },
+  {
+    "id": "gesture:attentive_tilt",
+    "name": "侧耳专注",
+    "duration_seconds": 4.782
+  },
+  {
+    "id": "gesture:refocus",
+    "name": "收回注意力",
+    "duration_seconds": 3.731
+  },
+  {
+    "id": "gesture:thinking_glance",
+    "name": "短暂移目思考",
+    "duration_seconds": 4.9
+  },
+  {
+    "id": "gesture:recall_up",
+    "name": "抬眼回忆",
+    "duration_seconds": 5.048
+  },
+  {
+    "id": "gesture:doubtful_tilt",
+    "name": "迟疑侧头",
+    "duration_seconds": 4.541
+  },
+  {
+    "id": "gesture:breath_settle",
+    "name": "呼气放松",
+    "duration_seconds": 6.071
+  },
+  {
+    "id": "gesture:weight_settle",
+    "name": "换侧站稳",
+    "duration_seconds": 5.679
+  },
+  {
+    "id": "gesture:finger_release",
+    "name": "指尖舒展",
+    "duration_seconds": 4.588
+  },
+  {
+    "id": "gesture:listening_pause",
+    "name": "留白倾听",
+    "duration_seconds": 5.71
+  },
+  {
+    "id": "gesture:small_no",
+    "name": "轻缓否认",
+    "duration_seconds": 4.083
+  },
+  {
+    "id": "gesture:offer_turn",
+    "name": "把话递给你",
+    "duration_seconds": 5.375
+  },
+  {
+    "id": "gesture:invite_continue",
+    "name": "示意继续",
+    "duration_seconds": 4.875
+  },
+  {
+    "id": "gesture:clarify",
+    "name": "把问题说清楚",
+    "duration_seconds": 5.754
+  },
+  {
+    "id": "gesture:compare_options",
+    "name": "左右权衡",
+    "duration_seconds": 7.009
+  },
+  {
+    "id": "gesture:enumerate_two",
+    "name": "分两点说明",
+    "duration_seconds": 6.839
+  },
+  {
+    "id": "gesture:outline_space",
+    "name": "圈定一小片范围",
+    "duration_seconds": 6.195
+  },
+  {
+    "id": "gesture:emphasize_down",
+    "name": "轻落掌强调",
+    "duration_seconds": 4.55
+  },
+  {
+    "id": "gesture:gently_decline",
+    "name": "温和婉拒",
+    "duration_seconds": 5.9
+  },
+  {
+    "id": "gesture:reassure",
+    "name": "稳稳安抚",
+    "duration_seconds": 6.504
+  },
+  {
+    "id": "gesture:ask_check",
+    "name": "抬掌确认",
+    "duration_seconds": 4.932
+  },
+  {
+    "id": "gesture:present_left",
+    "name": "向左侧介绍",
+    "duration_seconds": 5.791
+  },
+  {
+    "id": "gesture:present_right",
+    "name": "递出右侧重点",
+    "duration_seconds": 5.415
+  },
+  {
+    "id": "gesture:relieved",
+    "name": "松一口气",
+    "duration_seconds": 6.89
+  },
+  {
+    "id": "gesture:proud_soft",
+    "name": "小小得意",
+    "duration_seconds": 5.9
+  },
+  {
+    "id": "gesture:disappointed",
+    "name": "失落后整理心情",
+    "duration_seconds": 6.675
+  },
+  {
+    "id": "gesture:embarrassed",
+    "name": "不好意思地收手",
+    "duration_seconds": 6.112
+  },
+  {
+    "id": "gesture:skeptical",
+    "name": "半信半疑",
+    "duration_seconds": 5.967
+  },
+  {
+    "id": "gesture:delighted",
+    "name": "眼前一亮",
+    "duration_seconds": 5.679
+  },
+  {
+    "id": "gesture:concerned",
+    "name": "担心地靠近",
+    "duration_seconds": 6.36
+  },
+  {
+    "id": "gesture:determined",
+    "name": "下定决心",
+    "duration_seconds": 5.791
+  },
+  {
+    "id": "gesture:grateful",
+    "name": "认真道谢",
+    "duration_seconds": 6.403
+  },
+  {
+    "id": "gesture:amused",
+    "name": "忍不住莞尔",
+    "duration_seconds": 5.679
+  },
+  {
+    "id": "gesture:warm_welcome",
+    "name": "展开欢迎再请入座",
+    "duration_seconds": 9.178
+  },
+  {
+    "id": "gesture:explain_sequence",
+    "name": "铺陈再归纳",
+    "duration_seconds": 10.072
+  },
+  {
+    "id": "gesture:celebration_compact",
+    "name": "原地小小庆祝",
+    "duration_seconds": 7.925
+  },
+  {
+    "id": "gesture:storytelling_arc",
+    "name": "起承转合地讲述",
+    "duration_seconds": 11.345
+  },
+  {
+    "id": "gesture:reset_and_resolve",
+    "name": "整理思路再出发",
+    "duration_seconds": 9.344
+  },
+  {
+    "id": "gesture:farewell_linger",
+    "name": "道别后留恋回望",
+    "duration_seconds": 8.648
+  },
+  {
+    "id": "action:acknowledge",
+    "name": "轻点一下",
+    "duration_seconds": 0.78
+  },
+  {
+    "id": "action:double_nod",
+    "name": "连续轻点头",
+    "duration_seconds": 1.2
+  },
+  {
+    "id": "action:listen_dip",
+    "name": "听着低一下头",
+    "duration_seconds": 1.56
+  },
+  {
+    "id": "action:chin_lift",
+    "name": "微抬下巴",
+    "duration_seconds": 1.04
+  },
+  {
+    "id": "action:glance_left",
+    "name": "向左看一眼",
+    "duration_seconds": 1.58
+  },
+  {
+    "id": "action:glance_right",
+    "name": "向右看一眼",
+    "duration_seconds": 1.58
+  },
+  {
+    "id": "action:look_down",
+    "name": "低头想一想",
+    "duration_seconds": 1.82
+  },
+  {
+    "id": "action:look_up",
+    "name": "抬头回想",
+    "duration_seconds": 1.68
+  },
+  {
+    "id": "action:head_settle",
+    "name": "轻轻回稳",
+    "duration_seconds": 1.24
+  },
+  {
+    "id": "action:gentle_decline",
+    "name": "轻轻否认",
+    "duration_seconds": 1.31
+  },
+  {
+    "id": "action:tiny_agree",
+    "name": "短促应一下",
+    "duration_seconds": 0.57
+  },
+  {
+    "id": "action:thought_tilt",
+    "name": "思索时稍偏头",
+    "duration_seconds": 1.92
+  }
+]

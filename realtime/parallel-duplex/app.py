@@ -23,7 +23,7 @@ SPEC.loader.exec_module(legacy)
 EXPERIMENT = "parallel-duplex-director-20261024"
 
 
-def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False, session_class=None, factory=None, recovery=None):
+def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False, session_class=None, factory=None, recovery=None, model_director=False):
     if session_class is None:
         from backend import ParallelDuplexSession
         session_class = ParallelDuplexSession
@@ -39,10 +39,10 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False,
 
     async def status(request):
         allow(request)
-        return web.json_response({"experimental": True, "experimentId": EXPERIMENT,
+        return web.json_response({"experimental": True, "experimentId": budget.data.get("experimentId", EXPERIMENT),
             "mode": mode, "cloudEnabled": cloud, "budget": budget.snapshot(),
-            "variants": ["qwen-direct"], "actionMode": "parallel", "connected": bool(active),
-            "model": "qwen-audio-3.1-realtime-plus", "memory": "actual_WAI_with_isolated_synthetic_state",
+            "variants": ["qwen-direct"], "actionMode": "model_commands" if model_director else "parallel", "connected": bool(active),
+            "model": "qwen-audio-3.1-realtime-plus", "memory": "actual_WAI_with_isolated_synthetic_state" if runtime else "not_running_local_cache_demo",
             "plannerKnowsFutureAnswer": False,
             "completedFixtures": (recovery or {}).get("completedFixtures", []),
             "savedSessions": [p.stem for p in sorted(output.glob("duplex-*.json"))],
@@ -51,11 +51,15 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False,
 
     async def evidence(request):
         allow(request)
+        if runtime is None:
+            return web.json_response({"runtimeStarted": False, "source": "local_cache_demo"})
         result = await asyncio.to_thread(evidence_snapshot, main, runtime)
         return web.json_response(result, headers={"Cache-Control": "no-store"})
 
     async def drain(request):
         allow(request, True)
+        if runtime is None:
+            return web.json_response({"runtimeStarted": False, "source": "local_cache_demo"})
         result = await asyncio.to_thread(wait_quiescent, main, runtime, timeout=25)
         return web.json_response(result, headers={"Cache-Control": "no-store"})
 
@@ -136,7 +140,7 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False,
         return web.json_response({"saved": True, "name": name})
 
     async def root(request):
-        raise web.HTTPFound("/parallel-duplex/")
+        raise web.HTTPFound("/model-director/" if model_director else "/parallel-duplex/")
 
     app.router.add_get("/", root)
     app.router.add_get("/api/duplex/status", status)
@@ -151,7 +155,8 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False,
 
     async def shutdown(_):
         await asyncio.gather(*(s.close() for s in list(active)), return_exceptions=True)
-        await asyncio.to_thread(runtime.stop)
+        if runtime is not None:
+            await asyncio.to_thread(runtime.stop)
     app.on_shutdown.append(shutdown)
     return app
 
@@ -197,6 +202,9 @@ def main():
     parser.add_argument("--port", type=int, default=18803)
     parser.add_argument("--enable-cloud", action="store_true")
     parser.add_argument("--local-proxy", action="store_true")
+    parser.add_argument("--model-director", action="store_true", help="Model-owned multi-action queue, separate experiment ledger")
+    parser.add_argument("--max-turns", type=int, default=6)
+    parser.add_argument("--max-responses", type=int, default=24)
     parser.add_argument("--resume-from", type=Path, help="Explicit stopped synthetic runtime to copy; keeps the same output ledger")
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
@@ -210,13 +218,22 @@ def main():
     from tools.voice_avatar.bootstrap import configure, bootstrap_runtime
     from tools.voice_avatar.duplex_transport import save_json
     from backend import ParallelBudget, ParallelDuplexSession
+    experiment = EXPERIMENT
+    if args.model_director:
+        if args.resume_from:
+            parser.error("Model director requires its own batch, not an old P runtime recovery")
+        spec = importlib.util.spec_from_file_location("model_director_backend", FACE_ROOT / "realtime/model-director/backend.py")
+        model_backend = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(model_backend)
+        ParallelBudget, ParallelDuplexSession = model_backend.ModelBudget, model_backend.ModelDuplexSession
+        experiment = model_backend.EXPERIMENT
     recovery = None
     if args.resume_from:
         import psutil
         from resume import validate_source, restore_snapshot
         recovery = validate_source(args.resume_from, args.output, process_alive=psutil.pid_exists)
-    budget = ParallelBudget(args.output / "ledger.json", max_turns=6, max_responses=24)
-    config = configure(args.env_file, args.data_dir, batch_id=EXPERIMENT)
+    budget = ParallelBudget(args.output / "ledger.json", max_turns=args.max_turns, max_responses=args.max_responses)
+    config = configure(args.env_file, args.data_dir, batch_id=experiment)
     if recovery:
         restore_snapshot(args.resume_from, config, recovery)
     if args.local_proxy:
@@ -238,17 +255,23 @@ def main():
             raise
     runtime.adapter.process_turn = diagnosed_process_turn
     sources = [p for p in Path(__file__).parent.iterdir() if p.suffix in {".py", ".mjs", ".html", ".css", ".json"}]
+    if args.model_director:
+        sources += [p for p in (FACE_ROOT / "realtime/model-director").iterdir()
+                    if p.suffix in {".py", ".mjs", ".html", ".css", ".json"}]
     manifest_name = "manifest-resume-" + uuid4().hex + ".json" if recovery else "manifest.json"
-    save_json(args.output / manifest_name, {"experimental": True, "batchId": EXPERIMENT,
-        "maxTurns": 6, "maxResponses": 24, "model": "qwen-audio-3.1-realtime-plus",
+    save_json(args.output / manifest_name, {"experimental": True, "batchId": experiment,
+        "modelOwnsActionSelection": args.model_director, "perTurnActionCountLimit": None if args.model_director else 1,
+        "maxTurns": args.max_turns, "maxResponses": args.max_responses, "model": "qwen-audio-3.1-realtime-plus",
         "topology": "continuous smart_turn listener / actual WAI memory+delivered context / independent voice and intent planner / local director / playback ACK",
         "plannerKnowsFutureAnswer": False, "fixedAnswerScript": False, "syntheticMemory": True,
         "syntheticUserVoice": True, "physicalAcousticsVerified": False, "autonomousTimers": False,
         "backgroundModelsCountedSeparately": True, "optimizedPreparation": True, "prewarmPolicy": "after_request",
-        "sourceHashes": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}})
+        "sourceHashes": {str(p.relative_to(FACE_ROOT)) if args.model_director else p.name:
+                         hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}})
     web.run_app(create_app(runtime, wai_main, budget, args.output, cloud=args.enable_cloud,
                           session_class=ParallelDuplexSession,
-                          factory=existing_local_proxy_socket if args.local_proxy else None, recovery=recovery),
+                          factory=existing_local_proxy_socket if args.local_proxy else None, recovery=recovery,
+                          model_director=args.model_director),
                 host="127.0.0.1", port=args.port,
                 print=lambda _: print("Experimental parallel duplex ready on loopback", flush=True))
 

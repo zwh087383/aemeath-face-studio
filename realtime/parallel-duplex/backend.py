@@ -77,16 +77,17 @@ def strict_intent(raw):
 
 class ParallelBudget(DurableBudget):
     """New batch cap only. The old 16-response budget and files stay untouched."""
+    experiment_id = EXPERIMENT
     def __init__(self, path, *, max_turns=6, max_responses=24):
         if not 1 <= max_turns <= 6 or not 1 <= max_responses <= 24:
             raise ValueError("parallel_budget_bounds")
         self._async_lock = asyncio.Lock()
         self.path = Path(path)
         self.data = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {
-            "version": 2, "experimentId": EXPERIMENT,
+            "version": 2, "experimentId": self.experiment_id,
             "turnLimit": max_turns, "responseLimit": max_responses,
             "turns": [], "responses": [], "blocked": False, "reasons": []}
-        if self.data.get("experimentId") != EXPERIMENT:
+        if self.data.get("experimentId") != self.experiment_id:
             raise ValueError("different_experiment_ledger")
         self.data["turnLimit"] = min(max_turns, self.data["turnLimit"])
         self.data["responseLimit"] = min(max_responses, self.data["responseLimit"])
@@ -199,6 +200,22 @@ def planner_payload(turn, messages, state):
 
 
 class ParallelDuplexSession(DuplexSession):
+    planner_connection_class = PlannerConnection
+    multiple_plans = False
+    planner_tool_name = "propose_action"
+    planner_argument_limit = 1024
+    action_mode = "parallel"
+    action_schema = INTENTS
+
+    def make_planner_payload(self, turn, messages, state):
+        return planner_payload(turn, messages, state)
+
+    def parse_planner_command(self, raw):
+        return {"intent": strict_intent(raw)}
+
+    def planner_event_fields(self, command):
+        return {**command, "expiresInMs": 3500}
+
     def __init__(self, runtime, main, budget, output, send, *, factory=None, mode="smart_turn", prewarm_policy="after_request", local_tail_ms=650):
         if isinstance(local_tail_ms, bool) or not isinstance(local_tail_ms, (int, float)) or not 350 <= local_tail_ms <= 1200:
             raise ValueError("local_tail_bounds")
@@ -327,8 +344,8 @@ class ParallelDuplexSession(DuplexSession):
             return await super().emit("voice_visual_tool_ignored", turnId=payload.get("turnId"),
                                       reason="parallel_planner_owns_visual_proposals")
         if kind == "ready":
-            payload.update(actionMode="parallel", plannerModel=MODEL,
-                           plannerKnowsFutureReply=False, actionSchema=list(INTENTS),
+            payload.update(actionMode=self.action_mode, plannerModel=MODEL,
+                           plannerKnowsFutureReply=False, actionSchema=list(self.action_schema),
                            localInputTailMs=self.local_tail_ms)
         if kind == "request_sent":
             entry = self.planners.get(payload.get("turnId"))
@@ -358,7 +375,7 @@ class ParallelDuplexSession(DuplexSession):
         if self.stopping or self.budget.data["blocked"] or self.planner_warm_task or self.planner_warm_failed:
             return
         async def prepare():
-            connection = PlannerConnection(factory=self.factory)
+            connection = self.planner_connection_class(factory=self.factory)
             self.planner_warm_connection = connection
             await self.emit("planner_prewarm_started", plannerConnectionId=connection.id)
             try:
@@ -393,6 +410,7 @@ class ParallelDuplexSession(DuplexSession):
         connection = reservation = None
         terminal = sent = False
         rid, plan, cancel_at = None, None, None
+        accepted_calls, arguments, tool_items = {}, {}, {}
         origin = time.monotonic()
         raw = ""
         item_name = item_call = None
@@ -407,7 +425,7 @@ class ParallelDuplexSession(DuplexSession):
             if revoked():
                 return
             await self.emit("action_context", turnId=turn["id"], userText=turn["text"], **state)
-            payload = planner_payload(turn, messages, state)
+            payload = self.make_planner_payload(turn, messages, state)
             await event("planner_context_ready", contextHash=digest(payload), contextKeys=list(payload),
                         contextChars=len(json.dumps(payload, ensure_ascii=False)), futureReplyAvailable=False,
                         historyMessages=len(payload["delivered_context"]), contextGeneration=entry["generation"])
@@ -476,17 +494,21 @@ class ParallelDuplexSession(DuplexSession):
                     item = value.get("item", {})
                     if item.get("type") == "function_call":
                         item_name, item_call = item.get("name"), item.get("call_id")
+                        tool_items[item.get("id", item_call)] = (item_name, item_call)
                         await event("planner_tool_item", name=item_name)
                 elif kind == "response.function_call_arguments.delta":
+                    key = value.get("item_id", item_call)
+                    raw = arguments.get(key, "")
                     delta = value.get("delta", "")
-                    if not isinstance(delta, str) or len(raw) + len(delta) > 1024:
+                    if not isinstance(delta, str) or len(raw) + len(delta) > self.planner_argument_limit:
                         raise ProtocolError("planner_argument_limit")
                     raw += delta
+                    arguments[key] = raw
                     if not first_delta:
                         first_delta = True
                         await event("planner_first_argument_delta")
                     try:
-                        strict_intent(raw)
+                        self.parse_planner_command(raw)
                     except (ValueError, TypeError):
                         pass
                     else:
@@ -494,21 +516,24 @@ class ParallelDuplexSession(DuplexSession):
                             first_parse = True
                             await event("planner_first_complete_json")
                 elif kind == "response.function_call_arguments.done":
-                    name, call = value.get("name", item_name), value.get("call_id", item_call)
+                    defaults = tool_items.get(value.get("item_id"), (item_name, item_call))
+                    name, call = value.get("name", defaults[0]), value.get("call_id", defaults[1])
                     try:
-                        intent = strict_intent(value.get("arguments"))
-                        if name != "propose_action" or not isinstance(call, str) or not ID.fullmatch(call) or plan:
+                        command = self.parse_planner_command(value.get("arguments"))
+                        if (name != self.planner_tool_name or not isinstance(call, str) or not ID.fullmatch(call)
+                                or call in accepted_calls or (plan and not self.multiple_plans)):
                             raise ValueError("invalid_or_duplicate_call")
                     except (ValueError, TypeError):
                         await event("planner_plan_rejected", reason="invalid_or_duplicate_plan")
                         continue
-                    plan = {"intent": intent, "callId": call}
-                    await event("planner_arguments_done", intent=intent, callId=call)
-                    if not revoked() and not turn.get("acknowledged"):
+                    plan = {**command, "callId": call}
+                    accepted_calls[call] = plan
+                    await event("planner_arguments_done", **command, callId=call)
+                    if not revoked() and (self.multiple_plans or not turn.get("acknowledged")):
                         await self.check_direct_context(turn, "stream_tool")
-                        await event("action_plan", intent=intent, planId=connection.id + ":" + call,
-                                    callId=call, arguments=json.dumps({"intent": intent}), outputFinal=True,
-                                    contextGeneration=entry["generation"], expiresInMs=3500)
+                        await event("action_plan", **self.planner_event_fields(command), planId=connection.id + ":" + call,
+                                    callId=call, arguments=json.dumps(command), outputFinal=True,
+                                    contextGeneration=entry["generation"])
                 elif kind == "response.audio.delta":
                     raise ProtocolError("planner_unexpected_audio")
                 elif kind == "response.done":
@@ -520,11 +545,12 @@ class ParallelDuplexSession(DuplexSession):
                     if self.budget.data["blocked"]:
                         self.accept_input = False
                         await self.emit("planner_usage_blocked", turnId=turn["id"], budget=self.budget.snapshot())
-                    if plan and value["response"].get("status") == "completed" and not revoked():
-                        await event("planner_receipt_send", callId=plan["callId"])
-                        await connection.send({"type": "conversation.item.create", "item": {
-                            "type": "function_call_output", "call_id": plan["callId"],
-                            "output": '{"proposal_received":true,"execution_confirmed":false}'}})
+                    if value["response"].get("status") == "completed" and not revoked():
+                        for call in accepted_calls:
+                            await event("planner_receipt_send", callId=call)
+                            await connection.send({"type": "conversation.item.create", "item": {
+                                "type": "function_call_output", "call_id": call,
+                                "output": '{"proposal_received":true,"execution_confirmed":false}'}})
                     return
             raise ProtocolError("planner_terminal_timeout")
         except Exception as exc:

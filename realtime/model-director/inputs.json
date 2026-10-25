@@ -1,0 +1,13 @@
+{
+  "source": "Local Windows System.Speech / Microsoft Huihui Desktop",
+  "purpose": "User audio only. Both Qwen instances receive no scripted assistant answer. Model owns the chosen action sequence.",
+  "clips": [
+    {"id": "welcome", "text": "嗨，我回来啦。你还记得我在星桥咖啡店最喜欢喝什么吗？回复时动作随你决定。"},
+    {"id": "correction-long", "text": "我纠正一下，现在最喜欢的是无糖乌龙茶，记住这个变化。再聊聊读书和散步，详细比较三点，讲二十秒，动作由你自由安排。"},
+    {"id": "barge", "text": "等一下，先别比较了。告诉我你记住的饮料就好。"}
+  ],
+  "sequence": ["welcome", "correction-long", "barge"],
+  "maxTurns": 3,
+  "maxResponses": 12,
+  "interruptPair": {"during": "correction-long", "input": "barge", "trigger": "first_voiced_playback_and_body_action"}
+}
