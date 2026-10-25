@@ -1,0 +1,16 @@
+{
+  "source": "Local Windows System.Speech / Microsoft Huihui Desktop",
+  "purpose": "User questions only. Assistant answers are freely generated from actual WAI context; no target answer is supplied to either Qwen.",
+  "clips": [
+    {"id": "memory-drink", "text": "你还记得我在星桥咖啡店最喜欢喝什么吗？", "expectation": "Retrieve the seeded synthetic drink memory."},
+    {"id": "correction", "text": "我纠正一下，我现在最喜欢的是无糖乌龙茶，不是无糖柠檬水，请记住这个变化。", "expectation": "Accept the correction through the existing WAI input and memory pipeline."},
+    {"id": "correction-check", "text": "那我下次去星桥咖啡店，你会建议我点什么饮料？", "expectation": "Use the corrected preference without returning the superseded drink."},
+    {"id": "greet", "text": "先跟我轻快地挥挥手，打个招呼吧。", "expectation": "A natural greeting with an optional permitted wave."},
+    {"id": "long", "text": "请比较读书和散步这两种放松方式，详细说三点，回答大约二十秒。", "expectation": "Freely generate a longer comparison. Do not prescribe an answer."},
+    {"id": "barge", "text": "等一下，先别比较了，告诉我你记住的饮料就好。", "expectation": "Interrupt actual playback and resume with the corrected preference."}
+  ],
+  "sequence": ["memory-drink", "correction", "correction-check", "greet", "long", "barge"],
+  "interruptPair": {"during": "long", "input": "barge", "trigger": "turn_output_done_while_still_playing"},
+  "maxTurns": 6,
+  "maxResponses": 24
+}
