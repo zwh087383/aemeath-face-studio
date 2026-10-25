@@ -15,8 +15,8 @@
   "samples": [
     {"id": "calm", "label": "平静放松", "V": 0.15, "A": 0.18, "D": 0.55, "S": 0.08, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.75, "preset": "serene", "context": "正在安静地陪伴，暂时没有需要表达的大事。"},
     {"id": "happy", "label": "温和开心", "V": 0.65, "A": 0.50, "D": 0.60, "S": 0.08, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.80, "preset": "smile", "context": "聊到一件让她开心的小事，笑意自然浮出来。"},
-    {"id": "excited", "label": "明显兴奋", "V": 0.85, "A": 0.85, "D": 0.65, "S": 0.12, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.85, "preset": "happy", "context": "共同完成了期待很久的事情，短暂地显露喜悦。"},
-    {"id": "low", "label": "有些低落", "V": -0.55, "A": 0.22, "D": 0.30, "S": 0.30, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.45, "preset": "disappointed", "context": "事情没有达到预期，有点失落，但仍愿意交流。"},
+    {"id": "excited", "label": "明显兴奋", "V": 0.85, "A": 0.85, "D": 0.65, "S": 0.12, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.85, "preset": "delighted", "context": "共同完成了期待很久的事情，睁着眼睛显露喜悦，不持续闭眼笑。"},
+    {"id": "low", "label": "有些低落", "V": -0.55, "A": 0.22, "D": 0.30, "S": 0.30, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.45, "preset": "disappointed", "cornerLowering": 0.30, "context": "事情没有达到预期，有点失落，嘴角收住并略向下，但仍愿意交流。"},
     {"id": "tense", "label": "有些紧张", "V": -0.25, "A": 0.72, "D": 0.35, "S": 0.72, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.60, "preset": "worried", "context": "一件尚未解决的事让她紧绷，不等于愤怒或惊讶。"},
     {"id": "irritated", "label": "克制不悦", "V": -0.60, "A": 0.65, "D": 0.70, "S": 0.65, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.65, "preset": "unconvinced", "context": "她对某个具体做法不太认同，表达保留，不做夸张怒脸。"},
     {"id": "shy", "label": "有点害羞", "V": 0.45, "A": 0.45, "D": 0.30, "S": 0.25, "L": 0.70, "T": 0.80, "effectiveEnergy": 0.70, "preset": "shy", "context": "被当面认真夸奖，带着好感和一点局促；情境明确后才选害羞表情。"},

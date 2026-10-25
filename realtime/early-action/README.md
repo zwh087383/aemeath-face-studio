@@ -41,3 +41,5 @@
 Node专项：`node --test realtime/tests/early-action.test.mjs realtime/tests/cooutput-driver.test.mjs realtime/tests/functioncall-driver.test.mjs realtime/tests/live-session.test.mjs`。Python专项：`python -m unittest discover -s realtime/tests -p test_early_action.py`。本地真实PMX合成音频验收脚本：`scripts/early-action/local-check.cjs`（Playwright CLI）；这些证据与真实模型响应明确分开。
 
 2026-10-24交付状态：本地控制器及真实PMX准备/取消检查通过；宿主连接尝试在模型请求前失败，0/14响应消耗。用户改为自行运行BAT后返回结果，本轮未取得有效云端延迟结论。连接失败样本保留，不计入三组有效统计。
+
+2026-10-24样本修正：明显兴奋复用delighted睁眼喜悦；有些低落增加仅本地预览的嘴角下压校准，避免闭口时仍像浅笑。语音比较开始清除校准；新增表情近景按钮，详见VALIDATION。

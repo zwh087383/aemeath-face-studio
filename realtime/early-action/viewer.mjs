@@ -1,7 +1,7 @@
 import {createScene} from '../qwen/scene.mjs';
 import {LiveAvatarSession} from '../qwen/live-session.mjs';
-import {PreparedMotionController,PreparedFaceController,EarlyActionDriver} from './preparation.mjs';
-import {applyEmotionSample,restoreComparisonFace} from './emotion-preview.mjs';
+import {PreparedMotionController,EarlyActionDriver} from './preparation.mjs';
+import {EmotionPreviewFaceController,applyEmotionSample,restoreComparisonFace} from './emotion-preview.mjs';
 
 const $=id=>document.getElementById(id),now=()=>performance.now(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let catalog,scene,session,context,mix,capture,run=null,report=null,rendered,last=now(),serial=0,stopSequence=false,batchRunning=false,emotionSamples=[],emotionPreview=null;
@@ -188,14 +188,14 @@ function chooseEmotion(id){
   if(!id){clearEmotionPreview();return null;}
   const sample=emotionSamples.find(sample=>sample.id===id);if(!sample)throw Error('Unknown emotion sample');
   emotionPreview=applyEmotionSample(scene.face,sample);$('emotion-sample').value=id;
-  $('emotion-values').textContent=JSON.stringify({样本:sample.label,...emotionPreview.emotion,表情强度:+emotionPreview.strength.toFixed(3),情境:sample.context,来源:'人工测试输入'},null,2);
+  $('emotion-values').textContent=JSON.stringify({样本:sample.label,...emotionPreview.emotion,表情强度:+emotionPreview.strength.toFixed(3),嘴角校准:emotionPreview.cornerLowering,情境:sample.context,来源:'人工测试输入'},null,2);
   return emotionPreview;
 }
 async function boot(){
   catalog=await(await fetch('/api/early-action')).json();for(const c of catalog.cases){const option=document.createElement('option');option.value=c.id;option.textContent=`${catalog.groups[c.group]} · ${c.scene==='greet'?'招呼':'比较方案'} · ${c.repeat||'打断探针'}`;$('case').append(option);}
   context=new AudioContext({sampleRate:24000,latencyHint:'interactive'});mix=context.createGain();mix.gain.value=.16;mix.connect(context.destination);capture=context.createMediaStreamDestination();mix.connect(capture);
   const host={get state(){return context.state;},get currentTime(){return context.currentTime;},destination:mix,resume:()=>context.resume(),createBuffer:(...v)=>context.createBuffer(...v),createBufferSource:()=>context.createBufferSource(),createGain:()=>context.createGain()};
-  scene=await createScene($('stage'),message=>$('loading').textContent=message,{motionFactory:options=>new PreparedMotionController(options),faceFactory:()=>new PreparedFaceController()});
+  scene=await createScene($('stage'),message=>$('loading').textContent=message,{motionFactory:options=>new PreparedMotionController(options),faceFactory:()=>new EmotionPreviewFaceController()});
   scene.motion.setPosture('relaxed');session=new LiveAvatarSession({context:host,face:scene.face,motion:scene.motion,naturalConversation:false});session.audio.setVolume(1);
   try{const fixture=await(await fetch('./emotion-samples.json')).json();
     if(fixture.source!=='handwritten_local_test'||fixture.experimental!==true)throw Error('Invalid fixture provenance');
