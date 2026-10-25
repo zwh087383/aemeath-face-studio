@@ -354,6 +354,11 @@ def create_app(lab):
             suffix = (data.get('owner') or {}).get('responseId') or data.get('responseId', 'fixture')
             if not re.fullmatch(r'offline-[A-Za-z0-9_-]{1,40}', suffix): raise web.HTTPBadRequest()
             path = lab.output / f'{key}-{suffix}-client.json'
+        elif data.get('mode') == 'replay' and data.get('measurementVersion') == 2:
+            timing = data.get('synchronization')
+            if timing not in ('legacy', 'immediate'): raise web.HTTPBadRequest()
+            suffix = '-interrupt' if data.get('interruptAfterBodyMs') is not None else ''
+            path = lab.output / f'{key}-sync-{timing}{suffix}-replay-client.json'
         else:
             path = lab.output / f'{key}-replay-client.json'
         await asyncio.to_thread(write_json, path, data)

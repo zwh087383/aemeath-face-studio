@@ -107,9 +107,9 @@ export class PreparedFaceController extends FaceController {
 }
 
 export class EarlyActionDriver {
-  constructor(session,owner,{early=false,clock=()=>performance.now()/1000}={}){
+  constructor(session,owner,{early=false,synchronized=true,clock=()=>performance.now()/1000}={}){
     this.session=session;this.owner=owner;this.early=early;this.clock=clock;
-    this.fallback=new CooutputDriver(session,owner,'D');this.calls=new Set();this.revoked=false;
+    this.fallback=new CooutputDriver(session,owner,'D',{leadSeconds:synchronized?0:.06,legacyBufferZero:!synchronized});this.calls=new Set();this.revoked=false;
   }
   cancel(){this.revoked=true;this.fallback.cancel();}
   accept(event){

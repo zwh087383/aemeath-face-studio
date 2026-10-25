@@ -4,14 +4,16 @@ import {PreparedMotionController,EarlyActionDriver} from './preparation.mjs';
 import {EmotionPreviewFaceController,applyEmotionSample,restoreComparisonFace} from './emotion-preview.mjs';
 
 const $=id=>document.getElementById(id),now=()=>performance.now(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let catalog,scene,session,context,mix,capture,run=null,report=null,rendered,last=now(),serial=0,stopSequence=false,batchRunning=false,emotionSamples=[],emotionPreview=null;
+let catalog,scene,session,context,mix,capture,run=null,report=null,rendered,last=now(),serial=0,stopSequence=false,batchRunning=false,comparisonRunning=false,preparingRun=false,comparisonCount=0,emotionSamples=[],emotionPreview=null;
 const mark=(key,value=now())=>{if(run&&run[key]===undefined)run[key]=value;};
 const ms=value=>Number.isFinite(value)?`${Math.round(value)} ms`:'—';
 function info(){const c=catalog.cases.find(c=>c.id===$('case').value);$('context').textContent=c.context+'\n本轮台词：'+c.text;$('prompt').textContent=catalog.settings[c.group].instructions;
   $('replay').disabled=!catalog.attempted.includes(c.id);$('compare').disabled=!catalog.attempted.length;
+  for(const id of ['sync-compare','sync-interrupt'])$(id).disabled=!scene||!catalog.attempted.includes(c.id)||!!(run&&!run.completed)||batchRunning;
   $('live').disabled=catalog.blocked||!catalog.cloudEnabled||catalog.used>=catalog.limit||catalog.attempted.includes(c.id);
   $('batch').disabled=batchRunning||catalog.blocked||!catalog.cloudEnabled||catalog.used>=catalog.limit;
   $('emotion-sample').disabled=!scene||!!(run&&!run.completed)||batchRunning;
+  if(comparisonRunning)for(const id of ['replay','compare','live','batch','sync-compare','sync-interrupt','emotion-sample'])$(id).disabled=true;
   $('budget').textContent=`本批已用 ${catalog.used} / ${catalog.limit} 个响应${catalog.blocked?' · 未知用量，云调用已停止':''}`;}
 async function refresh(){catalog=await(await fetch('/api/early-action')).json();info();try{const response=await fetch('/api/early-action/summary');if(response.ok){const summary=await response.json();$('summary').textContent=summary.conclusion;
   $('rows').replaceChildren();for(const row of summary.rows){const tr=document.createElement('tr');for(const value of [row.id,ms(row.server?.firstNonSilentPcmMs),ms(row.client?.voiceMs),ms(row.client?.bodyLeadMs),ms(row.client?.faceLeadMs),row.server?.sameResponseBothBeforeReceipt?'是':'否',row.outcome]){const td=document.createElement('td');td.textContent=value;tr.append(td);}$('rows').append(tr);}}}catch{/* Report is optional. */}}
@@ -26,8 +28,11 @@ function accept(e){
     const connectionId=`early-${++serial}`;session.setConnection(connectionId);
     run.owner=session.beginResponse({connectionId,responseId:e.responseId,sampleRate:24000,sidecar:false});
     if(!run.owner)throw Error('response_owner_rejected');
-    run.driver=new EarlyActionDriver(session,run.owner,{early:run.case.group==='C'});
-  }else if(e.type==='non_silent_pcm'){run.firstVoicedFrame=e.frame;mark('voicedPacketAt');}
+    run.driver=new EarlyActionDriver(session,run.owner,{early:run.case.group==='C',synchronized:run.synchronization!=='legacy'});
+  }else if(e.type==='non_silent_pcm'){
+    run.firstVoicedFrame=e.frame;mark('voicedPacketAt');
+    if(!run.cancelled&&run.owner)session.audio.setPlaybackMarker(e.frame/24000);
+  }
   else if(e.type==='audio'){
     mark('pcmAt');if(run.cancelled)return;
     if(e.responseId!==run.owner?.responseId)throw Error('pcm_owner_mismatch');
@@ -51,9 +56,17 @@ function accept(e){
   }else if(e.type==='error'){run.failure=e.code;run.providerDoneAt=now();cancel('bridge_error',false);}
 }
 
+function captureVoice(){
+  if(!run||run.voiceAt!==undefined||!run.owner)return;
+  const marker=session.audio.playbackMarker();
+  if(marker?.reached){
+    run.voiceContextSeconds=marker.contextTime;
+    mark('voiceAt',now()-(context.currentTime-marker.contextTime)*1000);
+  }
+}
 function cancel(reason='user_interrupt',provider=true){
   if(reason==='user_interrupt')stopSequence=true;if(!run||run.completed||run.cancelled)return false;
-  const at=now(),before=session.audio.snapshot();
+  captureVoice();const at=now(),before=session.audio.snapshot();
   run.driver?.cancel();const accepted=session.cancel(reason,run.owner);
   run.cancelled=true;run.interrupt={reason,at,returnMs:now()-at,accepted,before,after:session.audio.snapshot(),providerRequested:false};
   if(provider&&run.mode==='live'&&!run.providerDoneAt&&run.socket?.readyState===WebSocket.OPEN){run.socket.send(JSON.stringify({type:'cancel'}));run.interrupt.providerRequested=true;}
@@ -68,7 +81,9 @@ function frame(t){
     rendered=scene.step(t,dt,session.lipSample(a),session.visualState(a));
     const prepCpu=now()-start;
     if(run&&!run.completed){
-      if(a.status==='playing'&&a.sourceActive){mark('playbackAt');if(Number.isFinite(run.firstVoicedFrame)&&a.time*24000>=run.firstVoicedFrame)mark('voiceAt');}
+      captureVoice();
+      // Keep the old RAF detector as a diagnostic, never as the new first-voice result.
+      if(a.status==='playing'&&a.sourceActive){mark('playbackAt');if(Number.isFinite(run.firstVoicedFrame)&&a.time*24000>=run.firstVoicedFrame)mark('legacyRafVoiceAt');}
       if(a.status==='playing'&&rendered.mouthOpen>.03)mark('mouthAt');
       const active=scene.motion.gestures.filter(g=>!g.recovering&&/^(early:|fc:)/.test(g.id));
       const hasBody=active.some(g=>Object.values(g.live?.weights??{}).some(w=>(w.position??w.body??0)>.015));
@@ -92,6 +107,7 @@ function frame(t){
         cancel('preparation_local_drain',false);
       }
       if(run.case.probe==='speech-provider-cancel'&&!run.cancelled&&run.voiceAt!==undefined&&now()-run.voiceAt>=350)cancel('speech_interrupt',true);
+      if(run.interruptAfterBodyMs!==null&&!run.cancelled&&run.bodyAt!==undefined&&now()-run.bodyAt>=run.interruptAfterBodyMs)cancel('replay_body_interrupt',false);
       const delta=key=>run[key]===undefined?null:run[key]-run.requestAt;
       $('voice').textContent=ms(delta('voiceAt'));$('tool').textContent=ms(delta('toolAt'));
       $('lead').textContent=ms(run.voiceAt-run.bodyAt);$('face').textContent=ms(run.voiceAt-run.faceAt);
@@ -109,19 +125,24 @@ function record(){
   return ()=>new Promise(resolve=>{recorder.onstop=()=>{for(const track of stream.getVideoTracks())track.stop();resolve(new Blob(chunks,{type:mime}));};recorder.stop();});
 }
 
-async function runCase(key,{live=false,recordVideo=false,localEvents=null}={}){
+async function runCase(key,{live=false,recordVideo=false,localEvents=null,synchronization='immediate',interruptAfterBodyMs=null,comparisonMember=false}={}){
+  if(comparisonRunning&&!comparisonMember)throw Error('comparison_busy');
+  if(preparingRun)throw Error('run_starting');
   if(run&&!run.completed)throw Error('run_busy');
   const config=catalog.cases.find(c=>c.id===key);if(!config)throw Error('unknown_case');
   if(live&&(!catalog.cloudEnabled||catalog.blocked||catalog.used>=catalog.limit||catalog.attempted.includes(key)))throw Error('cloud_not_allowed');
   if(live&&localEvents)throw Error('cannot_mix_cloud_and_fixture');
+  if(!['immediate','legacy'].includes(synchronization)||live&&synchronization!=='immediate')throw Error('legacy_timing_is_replay_only');
   if(!live&&!localEvents&&!catalog.attempted.includes(key))throw Error('missing_recording');
-  if(live)await checkAudio(false);else await context.resume();
+  preparingRun=true;
+  try{if(live)await checkAudio(false);else await context.resume();
   // Fixed A/B/C comparison remains byte-for-byte the same cloud input. The
   // optional idle preview cannot leak its base strength into tool execution.
   clearEmotionPreview();
-  run={key,case:config,mode:live?'live':localEvents?'offline':'replay',started:now(),sequence:0,tools:[],rejected:[],received:[],frames:[],trace:[],transcript:'',completed:false};
+  run={key,case:config,mode:live?'live':localEvents?'offline':'replay',synchronization,interruptAfterBodyMs,measurementVersion:2,started:now(),sequence:0,tools:[],rejected:[],received:[],frames:[],trace:[],transcript:'',completed:false};
+  }finally{preparingRun=false;}
   report=null;$('case').value=key;info();for(const id of ['replay','compare','live','batch'])$(id).disabled=true;
-  $('caption').textContent='';$('plan').textContent='等待完整动作指令；语音不等待动作。';$('status').textContent=live?'正在执行有界云端样本':'保存事件按原间隔回放';
+  $('caption').textContent='';$('plan').textContent='等待完整动作指令；语音不等待动作。';$('status').textContent=live?'正在执行有界云端样本':`${synchronization==='legacy'?'旧调度':'同步优化'} · 保存事件按原间隔回放`;
   const finishVideo=recordVideo?record():null;
   let events=[],index=0,base;
   if(live){
@@ -147,23 +168,39 @@ async function runCase(key,{live=false,recordVideo=false,localEvents=null}={}){
   const delta=key=>run[key]===undefined?null:run[key]-run.requestAt;
   const lead=key=>run.voiceAt===undefined||run[key]===undefined?null:run.voiceAt-run[key];
   const {socket,driver,frames,...saved}=run;
-  report={...saved,latency:{voiceMs:delta('voiceAt'),clickToVoiceMs:run.voiceAt===undefined?null:run.voiceAt-run.started,playbackMs:delta('playbackAt'),nonSilentPacketMs:delta('voicedPacketAt'),toolMs:delta('toolAt'),bodyMs:delta('bodyAt'),faceMs:delta('faceAt'),bodyLeadMs:lead('bodyAt'),faceLeadMs:lead('faceAt')},performance:{frames:frames.length,driverP95Ms:percentile('driver'),renderSubmitP95Ms:percentile('render'),frameP95Ms:percentile('interval')},finalAudio:session.audio.snapshot(),finalMotion:scene.motion.snapshot(),environment:{...scene.environment,audioBaseLatency:context.baseLatency,audioOutputLatency:context.outputLatency},physicalSpeakerVerified:false,scope:localEvents?'Offline synthetic PCM fixture on real PMX':'Fixed text-to-voice cloud comparison; browser playback cursor and composed PMX pose.'};
+  report={...saved,latency:{voiceMs:delta('voiceAt'),legacyRafVoiceMs:delta('legacyRafVoiceAt'),clickToVoiceMs:run.voiceAt===undefined?null:run.voiceAt-run.started,playbackMs:delta('playbackAt'),nonSilentPacketMs:delta('voicedPacketAt'),toolMs:delta('toolAt'),bodyMs:delta('bodyAt'),faceMs:delta('faceAt'),bodyLeadMs:lead('bodyAt'),faceLeadMs:lead('faceAt')},performance:{frames:frames.length,driverP95Ms:percentile('driver'),renderSubmitP95Ms:percentile('render'),frameP95Ms:percentile('interval')},finalAudio:session.audio.snapshot(),finalMotion:scene.motion.snapshot(),environment:{...scene.environment,audioBaseLatency:context.baseLatency,audioOutputLatency:context.outputLatency},physicalSpeakerVerified:false,scope:localEvents?'Offline synthetic PCM fixture on real PMX':'Fixed text-to-voice cloud comparison; scheduled AudioContext marker and composed PMX pose.'};
   $('diagnostic').textContent=JSON.stringify({latency:report.latency,interrupt:report.interrupt,server:report.server?.metrics,performance:report.performance,failure:report.failure},null,2);
   await fetch(`/api/early-action/report/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(report)}).then(r=>{if(!r.ok)throw Error('report_save_failed');});
   if(blob&&live)await fetch(`/api/early-action/video/${key}`,{method:'POST',headers:{'Content-Type':'video/webm'},body:blob}).then(r=>{if(!r.ok)throw Error('video_save_failed');});
   await refresh();$('status').textContent=run.failure?'未通过：'+run.failure:run.cancelled?'打断完成，查看回收与时序证据。':run.server?.completed?'本段完成。可回放或切换三组。':'本响应没有完整语音，已保留失败记录，没有补发请求。';
-  return {key,latency:report.latency,interrupt:report.interrupt,failure:report.failure,server:report.server?.metrics};
+  return {key,synchronization,latency:report.latency,interrupt:report.interrupt,failure:report.failure,server:report.server?.metrics};
+}
+
+async function compareTiming(){
+  if(comparisonRunning||batchRunning||run&&!run.completed)return;
+  comparisonRunning=true;stopSequence=false;
+  const key=$('case').value,rows=[];
+  try{
+    // Reverse order on alternate clicks to make order/load bias visible.
+    const order=comparisonCount++%2?['immediate','legacy']:['legacy','immediate'];
+    for(const synchronization of order){if(stopSequence)break;rows.push(await runCase(key,{synchronization,comparisonMember:true}));await sleep(500);}
+    const lag=value=>Number.isFinite(value)?ms(-value):'未观察到';
+    $('sync-results').textContent=rows.map(r=>`${r.synchronization==='legacy'?'旧调度':'同步优化'}：首声 ${ms(r.latency.voiceMs)}；动作落后 ${lag(r.latency.bodyLeadMs)}；表情落后 ${lag(r.latency.faceLeadMs)}`).join('\n');
+  }finally{comparisonRunning=false;info();}
 }
 
 async function checkAudio(audible=true){
   if(context.state==='closed')throw Error('音频设备已关闭，请刷新页面后重试；尚未调用模型。');
   await Promise.race([context.resume(),sleep(3000).then(()=>{throw Error('浏览器未允许播放，请先点击试听。');})]);
-  const initial=context.currentTime;await sleep(160);
+  // A cold output device can take longer than 160 ms to start its clock.
+  // Wait for observed progress, with a bound; never spend a response on a dead clock.
+  const initial=context.currentTime,clockDeadline=now()+2000;
+  while(context.state==='running'&&context.currentTime<=initial&&now()<clockDeadline)await sleep(20);
   if(context.state!=='running'||context.currentTime<=initial)throw Error('音频时钟没有运行，请检查系统输出设备并刷新页面。');
   if(audible){const oscillator=context.createOscillator(),gain=context.createGain();oscillator.frequency.value=440;gain.gain.value=.08;oscillator.connect(gain);gain.connect(mix);oscillator.start();oscillator.stop(context.currentTime+.16);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};$('status').textContent='浏览器音频时钟正常。请确认听到了短提示音，再开始整批测试。';}
 }
 async function runBatch(){
-  if(batchRunning||run&&!run.completed)throw Error('已有测试在运行');
+  if(comparisonRunning||batchRunning||run&&!run.completed)throw Error('已有测试在运行');
   await checkAudio(false);batchRunning=true;stopSequence=false;info();
   try{
     await refresh();
@@ -218,7 +255,9 @@ async function boot(){
       $('status').textContent=`ZIP 已保存在本机（${(result.bytes/1024/1024).toFixed(1)} MB）：${result.path}。将此文件发给 Codex 即可。`;
     }catch(error){$('status').textContent=error.message;}finally{$('export').disabled=false;}
   };
-  $('cancel').onclick=()=>cancel();$('pause').onclick=()=>{const a=session.audio.snapshot();if(a.status==='paused')session.audio.play();else if(a.status==='playing')session.audio.pause();};
+  $('sync-compare').onclick=()=>compareTiming().catch(e=>$('status').textContent=e.message);
+  $('sync-interrupt').onclick=()=>runCase($('case').value,{interruptAfterBodyMs:200}).catch(e=>$('status').textContent=e.message);
+  $('cancel').onclick=()=>cancel();$('pause').onclick=()=>{captureVoice();const a=session.audio.snapshot();if(a.status==='paused')session.audio.play();else if(a.status==='playing')session.audio.pause();};
   $('compare').onclick=async()=>{stopSequence=false;const c=catalog.cases.find(c=>c.id===$('case').value);for(const g of ['A','B','C']){if(stopSequence)break;const key=`${c.scene}-r1-${g}`;if(catalog.attempted.includes(key))await runCase(key);}};
   for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>scene.setView(button.dataset.view);
 }

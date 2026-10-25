@@ -3,7 +3,11 @@ export const EXPRESSIONS = ['neutral','smile','happy','curious','focus','surpris
 export const GESTURES = ['none','nod','shake','tilt','glance','blink','explain','wave','shrug','chest','bow_smile','laugh','curious','shy','explain_firm','surprise','think','greet','listen','comfort','look_up','agree'];
 const short = new Set(['nod','shake','tilt','glance','blink']);
 export class FunctionCallDriver {
-  constructor(session, owner) { this.session=session;this.owner=owner;this.calls=new Set();this.revoked=false; }
+  constructor(session, owner, {leadSeconds=.06, legacyBufferZero=false}={}) {
+    if(!Number.isFinite(leadSeconds)||leadSeconds<0||leadSeconds>.2)throw new RangeError('invalid_tool_lead');
+    this.session=session;this.owner=owner;this.calls=new Set();this.revoked=false;
+    this.leadSeconds=leadSeconds;this.legacyBufferZero=legacyBufferZero;
+  }
   cancel() { this.revoked=true; }
   accept(event) {
     if(this.revoked || this.session.owner !== this.owner) return {accepted:false,reason:'revoked_or_stale_owner'};
@@ -18,9 +22,12 @@ export class FunctionCallDriver {
     const audio=this.session.audio.snapshot();
     if(!['buffering','playing','paused'].includes(audio.status)) return {accepted:false,reason:'audio_turn_closed'};
     this.calls.add(event.callId);
-    // No model-supplied timestamp/epoch/pose is trusted. Before first PCM use
-    // media zero; late calls use the current playback head plus one short lead.
-    const at=audio.status==='buffering'?0:audio.time+.06;
+    // Buffering also means a mid-stream underrun: retain the current media head.
+    // The legacy switch exists only for labelled offline comparison in the lab.
+    // Never loosen the scheduler's ownership or stale-cue checks.
+    const at=audio.status==='buffering'
+      ? (this.legacyBufferZero?0:audio.time)
+      : audio.time+this.leadSeconds;
     const prefix=`fc:${event.callId}`;
     const face=this.session.enqueue({id:prefix+':face',kind:'expression',preset:p.expression,strength:p.strength,at},this.owner);
     let motion=null;

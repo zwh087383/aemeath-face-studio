@@ -3,7 +3,7 @@ import {FunctionCallDriver} from './functioncall-driver.mjs';
 // Compact calls are expanded locally, without asking the model for log prose.
 // The existing scheduler and authored motion trajectories remain untouched.
 export class CooutputDriver extends FunctionCallDriver {
-  constructor(session, owner, group) { super(session, owner); this.group = group; this.localCalls = new Map(); }
+  constructor(session, owner, group, options) { super(session, owner, options); this.group = group; this.localCalls = new Map(); }
   accept(event) {
     if (this.group === 'A') return {accepted:false, reason:'unexpected_baseline_tool'};
     if (typeof event.callId !== 'string' || !/^[A-Za-z0-9_.:-]{1,100}$/.test(event.callId))

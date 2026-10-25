@@ -22,11 +22,13 @@ def create_bundle(output):
     temporary = output / 'Aemeath-early-action-results.tmp.zip'
     videos = {'greet-r1-A', 'greet-r1-B', 'greet-r1-C', 'compare-r1-C', 'prep-cancel-C', 'speech-cancel-C'}
     with ZipFile(temporary, 'w', ZIP_DEFLATED, compresslevel=5) as archive:
-        for name in ['summary.json', 'experiment.json', 'ledger.json', 'source-freeze.json']:
+        for name in ['summary.json', 'experiment.json', 'ledger.json', 'source-freeze.json', 'sync-validation.json']:
             path = output / name
             if path.is_file(): archive.write(path, name)
         for key in manifest['cases']:
-            for suffix in ['.json', '-client.json', '.wav'] + (['.webm'] if key in videos else []):
+            sync_suffixes = [f'-sync-{timing}{interrupt}-replay-client.json'
+                             for timing in ('legacy', 'immediate') for interrupt in ('', '-interrupt')]
+            for suffix in ['.json', '-client.json', '.wav'] + sync_suffixes + (['.webm'] if key in videos else []):
                 path = output / (key + suffix)
                 if not path.is_file(): continue
                 if suffix == '.json':

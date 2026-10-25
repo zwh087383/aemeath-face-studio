@@ -34,12 +34,47 @@ export class StreamingAudioTransport {
     this._chunks = [];
     this._sources = [];
     this._gain = null;
+    this._playbackMarker = null;
     this.setVolume(volume);
   }
 
   get receivedDuration() { return this._frames / this._sampleRate; }
 
   _reject(reason) { this.lastError = reason; return false; }
+
+  /** Observe one media sample without changing playback. Set before the sample
+   * is consumed; the returned context timestamp is Web Audio scheduling evidence,
+   * not a microphone/speaker measurement. Repeated identical markers are safe.
+   */
+  setPlaybackMarker(mediaTime) {
+    if (!Number.isFinite(mediaTime) || mediaTime < 0) return false;
+    if (this._playbackMarker?.mediaTime === mediaTime) return true;
+    if (!this.epoch || ['idle', 'cancelled', 'fault', 'ended'].includes(this.status)
+      || mediaTime < this._position) return false;
+    this._playbackMarker = { mediaTime, contextTime: null, reached: false };
+    this._updatePlaybackMarker();
+    return true;
+  }
+
+  playbackMarker() {
+    this._updatePlaybackMarker();
+    return this._playbackMarker ? { ...this._playbackMarker } : null;
+  }
+
+  _updatePlaybackMarker() {
+    const marker = this._playbackMarker;
+    if (!marker || marker.reached) return;
+    const entry = this._sources.find(e => e.started && !e.stopped && !e.disconnected
+      && e.generation === this._generation
+      && marker.mediaTime >= e.mediaStart && marker.mediaTime < e.mediaEnd);
+    if (!entry) return;
+    marker.contextTime = entry.start + marker.mediaTime - entry.mediaStart;
+    // The audio clock advances independently of animation frames. Record before
+    // pruning ended sources, including a short voiced tail between two RAFs.
+    // A suspended context freezes currentTime; a timestamp already behind that
+    // clock was reached before suspension, even if no animation frame saw it.
+    if (this.context.state !== 'closed' && this.context.currentTime >= marker.contextTime) marker.reached = true;
+  }
 
   _recordFault(error) {
     this.fault = error instanceof Error ? error.message : String(error);
@@ -52,6 +87,8 @@ export class StreamingAudioTransport {
   // Attempt every cleanup operation, even after one fails. Failed handles stay
   // reachable for explicit cancel() retry; unknown cleanup is never success.
   _cut() {
+    this._updatePlaybackMarker();
+    if (this._playbackMarker && !this._playbackMarker.reached) this._playbackMarker.contextTime = null;
     ++this._generation;
     const errors = [];
     const attempt = fn => { try { fn(); return true; } catch (error) { errors.push(error); return false; } };
@@ -85,6 +122,7 @@ export class StreamingAudioTransport {
     if (['idle', 'cancelled', 'fault'].includes(this.status)) return;
     if (this.context.state === 'closed') { this._fail(new Error('AudioContext closed')); return; }
     const now = this.context.currentTime;
+    this._updatePlaybackMarker();
     for (const entry of this._sources) {
       if (now >= entry.start) {
         this._position = Math.max(this._position,
@@ -171,6 +209,7 @@ export class StreamingAudioTransport {
     this._frames = 0;
     this._sequence = 0;
     this._chunks = [];
+    this._playbackMarker = null;
     this._finished = false;
     this._wanted = false;
     this.fault = null;
