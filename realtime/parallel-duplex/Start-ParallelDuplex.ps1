@@ -2,6 +2,7 @@ param(
     [string]$WaiRoot = (Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)))) 'WAI'),
     [string]$DataDirectory = '',
     [string]$OutputDirectory = '',
+    [string]$ResumeFrom = '',
     [ValidateRange(1024,65535)][int]$Port = 18803,
     [switch]$UseLocalProxy,
     [switch]$NoBrowser
@@ -38,13 +39,16 @@ if (-not (Test-Path -LiteralPath (Join-Path $ParallelOutput 'inputs\input-fixtur
 $ParallelArgs = @('-u', $ParallelEntry, '--wai-root', $WaiRoot, '--env-file', $ParallelConfiguration,
     '--data-dir', $DataDirectory, '--output', $ParallelOutput, '--port', [string]$Port, '--enable-cloud')
 if ($UseLocalProxy) { $ParallelArgs += '--local-proxy' }
+if ($ResumeFrom) { $ParallelArgs += @('--resume-from', [IO.Path]::GetFullPath($ResumeFrom)) }
 $ParallelQuoted = ($ParallelArgs | ForEach-Object {
     if ($_ -match '["\r\n]') { throw 'Invalid launcher argument.' }
     '"' + $_ + '"'
 }) -join ' '
 $env:PYTHONIOENCODING = 'utf-8'
 $ParallelProcess = Start-Process -FilePath $ParallelPython -ArgumentList $ParallelQuoted -WorkingDirectory $ParallelFaceRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $ParallelOutput 'server-stdout.log') -RedirectStandardError (Join-Path $ParallelOutput 'server-stderr.log')
-@{pid=$ParallelProcess.Id;port=$Port;batch='parallel-duplex-director-20261024'} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ParallelOutput 'server-state.json') -Encoding UTF8
+if (-not $ResumeFrom) {
+    @{pid=$ParallelProcess.Id;port=$Port;batch='parallel-duplex-director-20261024'} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ParallelOutput 'server-state.json') -Encoding UTF8
+}
 Write-Output ('Starting isolated real WAI + parallel duplex, PID ' + $ParallelProcess.Id)
 Write-Output 'Maximum six turns / 24 Qwen responses, including listener, voice, planner and handoff. Unknown usage stops new calls.'
 Write-Output 'Opening the page does not generate a response. Connecting or running the live test does.'

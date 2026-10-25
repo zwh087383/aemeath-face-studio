@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P 方案补测 · 实际延迟与打断</title>
+<style>
+:root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#203739;background:#f4f5ee;font-synthesis:none}*{box-sizing:border-box}body{margin:0;padding:32px clamp(18px,5vw,80px)}main{max-width:1180px;margin:auto}small{letter-spacing:.12em;color:#627975}h1{font-size:clamp(25px,4vw,43px);line-height:1.25;margin:16px 0}h2{font-size:22px;margin:0 0 14px}p{line-height:1.8;margin:12px 0}a{color:#305c4c;text-underline-offset:4px}.status{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}.status span{border:1px solid #d3ddcd;border-radius:24px;padding:9px 16px;background:#e7edde}.panel{background:#fff;border-radius:20px;padding:24px;margin:20px 0;border:1px solid #e4e8dd}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{text-align:left;line-height:1.6;padding:15px 12px;border-bottom:1px solid #e7eae1}th{color:#5c716a;font-size:14px}td strong{font-size:23px;white-space:nowrap}.slow{color:#995b2f}.warn{background:#f7f0df;border-left:4px solid #ae8442;padding:14px 18px;border-radius:8px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.grid .panel{margin:0}.note{font-size:14px;color:#64736a}.links{display:flex;gap:24px;flex-wrap:wrap;margin:26px 0}footer{margin:28px 0;color:#61736c;font-size:14px}@media(max-width:760px){body{padding:22px 15px}.grid{grid-template-columns:1fr}.panel{padding:18px}th,td{padding:12px 8px;font-size:14px}}
+</style><body><main>
+<small>WAI × QWEN AUDIO 3.1 · P · 2026-10-25 · 实验性</small>
+<h1>记忆和打断跑通了，<br>延迟与实时挥手仍有问题。</h1>
+<p>恢复原有记忆和历史，补完四条真实语音输入。回答由 Qwen 现场生成；动作模型没有提前拿到完整台词。</p>
+<div class="status"><span>累计 6 / 6 条输入</span><span>22 / 24 个实时响应</span><span>未知用量 0</span><span>云端监听已断开</span></div>
+<section class="panel"><h2>四条新增现场结果</h2><div class="scroll"><table>
+<thead><tr><th>对话</th><th>说完 → 首声</th><th>动作命令提前</th><th>身体 / 交付结果</th></tr></thead>
+<tbody>
+<tr><td>纠正后追问饮料</td><td><strong>2.99 秒</strong></td><td>0.79 秒</td><td>回答无糖乌龙茶；不强行动作；已播完入历史</td></tr>
+<tr><td>轻快挥手问候</td><td><strong>2.90 秒</strong></td><td>0.66 秒</td><td>挥手获准，但实时画面约 1 FPS，身体计时无效</td></tr>
+<tr><td>比较读书与散步</td><td><strong class="slow">7.52 秒</strong></td><td>0.69 秒</td><td>身体提前 0.59 秒起势；播放中被插话撤销</td></tr>
+<tr><td>插话后再问饮料</td><td><strong class="slow">7.54 秒</strong></td><td>0.35 秒</td><td>保持倾听；正确回答无糖乌龙茶；已播完入历史</td></tr>
+</tbody></table></div><p class="note">首声按 AudioContext 第一个非静音采样计算，不是物理扬声器实测。此前两轮缺少浏览器计时，不补造数据。</p></section>
+<div class="grid">
+<section class="panel"><h2>慢的主要位置已找到</h2><p><b>比较轮：</b>记忆准备约 0.33 秒；之后等待云端会话配置确认 <b>1.35 秒</b>、上下文确认 <b>2.14 秒</b>。大头在语音请求发出之前，不能都归给 prefill。</p><p><b>插话后的回答：</b>本轮没进入快速通道，完整准备花 <b>2.34 秒</b>；配置和上下文确认再花约 <b>1.43 秒</b>。不是 Qwen 主动调用转交工具。</p></section>
+<section class="panel"><h2>声音先停，历史没有写错</h2><p>本地检测到插话后，约 <b>0.6 ms</b> 内执行暂停，活动音源从 4 个变成 0 个；云端随后确认撤销，剩余旧音频没有恢复。</p><p>最终历史为 <b>6 条用户 + 4 条完整助手回复</b>。被打断的长回答没有记成已播完。0.6 ms 是检测后的本地执行时间，输入分包为 100 ms，不是人开口到扬声器停止的物理延迟。</p></section>
+</div>
+<section class="panel"><h2>挥手与验收边界</h2><p>同一云端挥手记录的免费回放中，画面恢复正常：帧间隔 P95 10.1 ms，身体提前 <b>0.39 秒</b> 起势。它说明正常渲染时调度能工作，但不能覆盖实时节流的失败样本。</p><div class="warn">不能写成全部通过：实时挥手同步仍待有效复测；真实插话时解释动作已经结束，运动中的挥手打断未获本批实测证明。原有身体幅度、近身肘部和利落挥手轨迹均未改。</div><p class="note">后台维护队列均完成、活动 ACK 为 0；仍保留此前一条系统错误的未确认交付，因此总排空检查没有通过。未伪造播放确认。</p></section>
+<nav class="links"><a href="./">打开人物与免费回放</a><a href="./RESULTS-RETEST-20261025.md">查看完整分段报告</a></nav>
+<footer>此页为保存的静态测试结果，不会连接云端。使用隔离合成记忆和合成用户问题录音；Qwen 回复现场生成。麦克风远场、扬声器回声和物理声学尚未验收。</footer>
+</main></body></html>

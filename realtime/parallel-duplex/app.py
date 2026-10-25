@@ -23,7 +23,7 @@ SPEC.loader.exec_module(legacy)
 EXPERIMENT = "parallel-duplex-director-20261024"
 
 
-def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False, session_class=None, factory=None):
+def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False, session_class=None, factory=None, recovery=None):
     if session_class is None:
         from backend import ParallelDuplexSession
         session_class = ParallelDuplexSession
@@ -44,6 +44,7 @@ def create_app(runtime, main, budget, output, *, mode="smart_turn", cloud=False,
             "variants": ["qwen-direct"], "actionMode": "parallel", "connected": bool(active),
             "model": "qwen-audio-3.1-realtime-plus", "memory": "actual_WAI_with_isolated_synthetic_state",
             "plannerKnowsFutureAnswer": False,
+            "completedFixtures": (recovery or {}).get("completedFixtures", []),
             "savedSessions": [p.stem for p in sorted(output.glob("duplex-*.json"))],
             "savedReports": [p.name for p in sorted(output.glob("client-*.json"))]},
             headers={"Cache-Control": "no-store"})
@@ -196,6 +197,7 @@ def main():
     parser.add_argument("--port", type=int, default=18803)
     parser.add_argument("--enable-cloud", action="store_true")
     parser.add_argument("--local-proxy", action="store_true")
+    parser.add_argument("--resume-from", type=Path, help="Explicit stopped synthetic runtime to copy; keeps the same output ledger")
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
         parser.error("Invalid port")
@@ -208,15 +210,36 @@ def main():
     from tools.voice_avatar.bootstrap import configure, bootstrap_runtime
     from tools.voice_avatar.duplex_transport import save_json
     from backend import ParallelBudget, ParallelDuplexSession
+    recovery = None
+    if args.resume_from:
+        import psutil
+        from resume import validate_source, restore_snapshot
+        recovery = validate_source(args.resume_from, args.output, process_alive=psutil.pid_exists)
     budget = ParallelBudget(args.output / "ledger.json", max_turns=6, max_responses=24)
     config = configure(args.env_file, args.data_dir, batch_id=EXPERIMENT)
+    if recovery:
+        restore_snapshot(args.resume_from, config, recovery)
     if args.local_proxy:
         os.environ["HTTP_PROXY"] = "http://127.0.0.1:7890"
         os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7890"
         os.environ["NO_PROXY"] = "127.0.0.1,localhost"
-    runtime, wai_main = bootstrap_runtime(config)
+    runtime, wai_main = bootstrap_runtime(config, seed=not bool(recovery))
+    if recovery:
+        save_json(args.output / ("resume-" + uuid4().hex + ".json"), recovery)
+        save_json(args.output / "server-state.json", {"pid": os.getpid(), "port": args.port, "batch": EXPERIMENT})
+    # Preserve private traceback evidence for failures otherwise normalized by the runtime.
+    original_process_turn = runtime.adapter.process_turn
+    def diagnosed_process_turn(*a, **kw):
+        try:
+            return original_process_turn(*a, **kw)
+        except Exception:
+            import traceback
+            (args.output / ("runtime-error-" + uuid4().hex + ".txt")).write_text(traceback.format_exc(), encoding="utf-8")
+            raise
+    runtime.adapter.process_turn = diagnosed_process_turn
     sources = [p for p in Path(__file__).parent.iterdir() if p.suffix in {".py", ".mjs", ".html", ".css", ".json"}]
-    save_json(args.output / "manifest.json", {"experimental": True, "batchId": EXPERIMENT,
+    manifest_name = "manifest-resume-" + uuid4().hex + ".json" if recovery else "manifest.json"
+    save_json(args.output / manifest_name, {"experimental": True, "batchId": EXPERIMENT,
         "maxTurns": 6, "maxResponses": 24, "model": "qwen-audio-3.1-realtime-plus",
         "topology": "continuous smart_turn listener / actual WAI memory+delivered context / independent voice and intent planner / local director / playback ACK",
         "plannerKnowsFutureAnswer": False, "fixedAnswerScript": False, "syntheticMemory": True,
@@ -225,7 +248,7 @@ def main():
         "sourceHashes": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}})
     web.run_app(create_app(runtime, wai_main, budget, args.output, cloud=args.enable_cloud,
                           session_class=ParallelDuplexSession,
-                          factory=existing_local_proxy_socket if args.local_proxy else None),
+                          factory=existing_local_proxy_socket if args.local_proxy else None, recovery=recovery),
                 host="127.0.0.1", port=args.port,
                 print=lambda _: print("Experimental parallel duplex ready on loopback", flush=True))
 

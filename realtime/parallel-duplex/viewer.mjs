@@ -67,6 +67,7 @@ function controls(){
   $('connect').disabled=!ready||starting||suite||replaying||client.ready||!cloud||full||budget?.blocked||(client.blocked&&!client.canReconnect);
   const attempted=attemptedFixtureIds(allAttempts());
   $('suite').disabled=!ready||suite||starting||replaying||!cloud||full||budget?.blocked||client.blocked||attempted.size>0||budget?.turns>0;
+  $('resume-suite').disabled=!ready||suite||starting||replaying||!cloud||full||budget?.blocked||client.blocked||!service.completedFixtures?.length||attempted.size!==service.completedFixtures.length||budget?.turns!==service.completedFixtures.length;
   const inputDisabled=!client.ready||client.blocked||client.inputExhausted||feeding||suite||replaying;
   $('feed').disabled=inputDisabled||!!microphone||attempted.has($('fixture').value);$('mic').disabled=inputDisabled||!!microphone;$('send').disabled=inputDisabled;
   $('stop-mic').disabled=!microphone;$('cancel').disabled=!client.current||client.current.revoked||client.current.settledAt!==undefined;
@@ -198,13 +199,18 @@ async function waitUntil(predicate,timeout=90000){const deadline=now()+timeout;w
   const value=predicate();if(value)return value;await sleep(25);}throw Error('等待超时，保留原始记录，不自动重试');}
 function checkTurnCount(start,expected=1){if(client.trials.length-start>expected)throw Error('云端将输入拆成多个轮次；停止下一输入，保留记录');}
 function checkFrames(t){const m=metrics(t);if(t.renderFrames?.length>5&&!m.renderTimingValid)throw Error('画面被节流；当前记录已保留，请恢复前台后手动继续，不重发已测输入');}
-async function runSuite(){
+async function runSuite(resume=false){
   if(suite||starting||replaying||feeding||microphone)throw Error('已有输入或测试正在运行');
-  if(attemptedFixtureIds(allAttempts()).size||(client.localReplay?service?.budget:client.budget??service?.budget)?.turns>0)throw Error('已有题目送入过；整批不会从头重测，请手动继续未发送的题目。');
-  suite=true;suiteState={startedAt:now(),inputs:[],completed:false};controls();
+  const prior=resume?service.completedFixtures??[]:[];
+  const sequence=['memory-drink','correction','correction-check','greet','long','barge'];
+  const attempted=attemptedFixtureIds(allAttempts());
+  if(resume){if(!prior.length||prior.length>4||JSON.stringify(prior)!==JSON.stringify(sequence.slice(0,prior.length))||attempted.size!==prior.length||prior.some(id=>!attempted.has(id))||(client.budget??service.budget)?.turns!==prior.length)throw Error('续测前缀与账本不一致，停止');}
+  else if(attempted.size||(client.localReplay?service?.budget:client.budget??service?.budget)?.turns>0)throw Error('已有题目送入过；整批不会从头重测，请手动继续未发送的题目。');
+  suite=true;suiteState={startedAt:now(),inputs:[],completed:false,resumedAfter:prior};controls();
   try{
     if(!client.ready)await connect();
     for(const id of ['memory-drink','correction','correction-check','greet']){
+      if(prior.includes(id))continue;
       const start=client.trials.length;if(!await fixture(id))throw Error('用户音频未完整送入');
       const turn=await waitUntil(()=>{checkTurnCount(start);return client.trials[start];});
       await waitUntil(()=>{checkTurnCount(start);if(turn.error)throw Error(turn.error);if(turn.revoked)throw Error('正常验收轮被撤销');return turn.settledAt;});
@@ -287,6 +293,7 @@ async function videoBase64(){if(!recordingBlob)return null;return new Promise(re
 async function boot(){
   [service,manifest]=await Promise.all([json('/api/duplex/status'),json('/api/parallel-duplex/input-manifest')]);
   try{const saved=JSON.parse(localStorage.getItem(attemptKey())??'[]');if(Array.isArray(saved))persistedAttempts=saved.filter(x=>manifest.clips.some(c=>c.id===x.id)&&x.sentPackets>0);}catch{/* no stored attempts */}
+  for(const id of service.completedFixtures??[])if(!persistedAttempts.some(x=>x.id===id))persistedAttempts.push({id,sentPackets:1,source:'verified_restored_history'});
   for(const clip of manifest.clips){const option=document.createElement('option');option.value=clip.id;option.textContent=clip.text;$('fixture').append(option);}
   context=new AudioContext({sampleRate:24000,latencyHint:'interactive'});mix=context.createGain();mix.gain.value=.16;mix.connect(context.destination);capture=context.createMediaStreamDestination();mix.connect(capture);
   const host={get state(){return context.state;},get currentTime(){return context.currentTime;},destination:mix,resume:()=>context.resume(),createBuffer:(...a)=>context.createBuffer(...a),createBufferSource:()=>context.createBufferSource(),createGain:()=>context.createGain()};
@@ -294,6 +301,7 @@ async function boot(){
   session=new LiveAvatarSession({context:host,face:scene.face,motion:scene.motion,naturalConversation:false});session.audio.setVolume(1);
   director=new ParallelActionDirector({session,onDecision:directorDecision});client=newClient();client.blocked=!!service.budget?.blocked;
   const action=fn=>()=>Promise.resolve().then(fn).catch(error);$('connect').onclick=action(connect);$('suite').onclick=action(runSuite);$('feed').onclick=action(()=>fixture());$('mic').onclick=action(startMic);$('sound').onclick=action(soundCheck);$('preview-wave').onclick=action(previewWave);$('fixture').onchange=controls;
+  $('resume-suite').onclick=action(()=>runSuite(true));
   $('stop-mic').onclick=stopMic;$('disconnect').onclick=action(close);$('cancel').onclick=()=>{captureVoice();client.cancel();};$('send').onclick=()=>client.sendText($('text').value);
   $('save').onclick=action(()=>saveReport());$('replay').onclick=action(()=>replay());$('refresh').onclick=action(loadReplays);
   $('volume').oninput=()=>mix.gain.value=+$('volume').value;for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>scene.setView(button.dataset.view);

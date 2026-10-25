@@ -7,7 +7,7 @@
 <div class="controls"><button data-view="body">正面</button><button data-view="angle">斜侧</button><button data-view="face">表情近景</button><button data-view="full">全身</button><label>音量 <input id="volume" type="range" min="0" max=".6" step=".01" value=".16"></label></div>
 <p id="status" role="status">打开页面不会请求模型；点击连接后才开始云端监听。</p><div class="transcript"><small>刚才听到</small><p id="input">等待输入</p></div><div class="transcript"><small>现场回复</small><p id="answer">等待回应</p></div></section>
 <aside><section class="panel"><small>01 / 真实输入</small><h2>同一条语音链路</h2><label>用户问题录音<select id="fixture" aria-label="用户问题录音"></select></label><button id="feed" disabled>按原速送入问题语音</button><button id="suite" disabled>运行六条真实对话测试</button>
-<p class="note">一键测试依次检查记忆、纠正、纠正后追问、挥手问候，再在长回复播放中插话。录音仅包含用户问题，回答由模型现场生成；每条都走相同的持续 PCM / 断句 / 转写入口。不会自动重试或补发。</p><p id="suite-progress" class="note">每条题目只送入一次。</p>
+<button id="resume-suite" disabled>继续已核验的剩余测试</button><p class="note">一键测试依次检查记忆、纠正、纠正后追问、挥手问候，再在长回复播放中插话。续测沿用同一批账本、纠正和历史，只执行未发送题目。录音仅包含用户问题，回答由模型现场生成；每条都走相同的持续 PCM / 断句 / 转写入口。不会自动重试或补发。</p><p id="suite-progress" class="note">每条题目只送入一次。</p>
 <details><summary>文字调试入口</summary><textarea id="text" rows="3">你还记得我现在最喜欢喝什么吗？</textarea><button id="send" disabled>发送文字</button><p class="note">文字输入不计作完整语音链路时延。</p></details>
 <p class="note">点击“开启持续麦克风”才会采集房间声音并发送云端。录音注入验收不代表真实远场、扬声器回声或物理声学验收。</p></section>
 <section class="panel"><small>02 / 本轮时序</small><h2 id="pipeline">等待连接</h2><div class="cards"><div><b id="latency">—</b><span>用户说完 → 首声</span></div><div><b id="voice">—</b><span>请求发出 → 首声</span></div><div><b id="plan-lead">—</b><span>完整动作建议提前量</span></div><div><b id="body-lead">—</b><span>身体实际起势提前量</span></div></div><p id="plan">动作调度器等待有效候选。</p><p id="playback-window" class="note">播放状态：尚未开始</p>
