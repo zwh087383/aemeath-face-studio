@@ -1,0 +1,15 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>爱弥斯 · 动作指令时序对照</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css">
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+<body><header><small>爱弥斯 · QWEN AUDIO · 实验性对照</small><h1>动作先准备，语音不等待</h1><p>四组真实流式请求 · 同一动作调度 · 原身体幅度、近身肘部与利落挥手</p></header>
+<main><section><div id="stage"><span id="loading">正在准备人物…</span><div id="phase">等待测试</div><p id="caption"></p></div>
+<div class="controls"><button id="batch" disabled>运行这批真实对照</button><button id="sound" disabled>试听 / 检查音频</button></div>
+<div class="controls"><button id="replay" disabled>免费回放所选样本</button><button id="interrupt-replay" disabled>回放：动作后 200 ms 打断</button><button id="cancel" disabled>立即打断</button><button id="pause" disabled>暂停 / 继续</button></div>
+<div class="controls"><button data-view="body">正面</button><button data-view="face">表情近景</button><button data-view="angle">斜侧</button><button data-view="full">全身</button><label>音量 <input id="volume" type="range" min="0" max=".5" step=".01" value=".16"></label></div><p id="status">正在加载人物和样本目录…</p></section>
+<aside><label>选择场景<select id="case"></select></label><div class="cards"><div><b id="voice">—</b><span>请求 → 首声播放</span></div><div><b id="lead">—</b><span>身体动作提前量</span></div><div><b id="tool">—</b><span>请求 → 完整动作命令</span></div><div><b id="face">—</b><span>表情提前量</span></div></div>
+<p class="note">提前量为正：动作先于声音；为负：声音先于动作。没有观察到实际变化时显示“—”，不算作零毫秒。</p>
+<p id="plan">只有完整、有效的动作指令才执行；语音不等工具回执。</p><p id="context"></p><button id="live" disabled>运行所选真实样本</button><p id="budget"></p>
+<details open><summary>这四组在比较什么</summary><ul><li>D：原有“语音先出”要求，表情与动作两个字段。</li><li>N：不指定输出先后，保持同样两个字段。</li><li>K：不指定先后，三个短指令选项在本地展开。</li><li>P：语音和动作各用一个 Qwen，同一时刻发出。</li></ul><p class="note">K 同时缩小了候选范围，不能把差异全归因于字段更短。P 的规划模型提前知道目标台词，是有利条件下的上限实验。</p></details>
+<details><summary>原始事件时间与当前报告</summary><pre id="diagnostic">尚未测试。</pre></details>
+<p class="note">实验使用固定台词与上下文，尚不代表自由对话。四组都沿用原动作：有完整指令就先准备，到第一个非静音样本实际播放时再释放；初始静音 PCM 不算开口。首声取 AudioContext 播放时间，不是物理扬声器实测。本页不含麦克风断句、记忆检索或数学情绪流；回放与回放打断不产生云端费用，也不等于云端取消验收。</p></aside></main>
+<section class="results"><h2>本批对照记录</h2><p id="summary">正在读取结果。每个样本只调用一次；未返回用量或连接故障时停止批次，不自动重试。</p><div class="scroll"><table><thead><tr><th>场景 / 组</th><th>首个参数片段</th><th>完整指令</th><th>首声播放</th><th>动作提前</th><th>表情提前</th><th>结果</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<script type="module" src="./viewer.mjs"></script></body></html>
