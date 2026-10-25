@@ -101,6 +101,10 @@ function updateUI(){
     if(t.error){$('pipeline').textContent='本轮未完成，证据已保留';error(t.error);}}
   $('director').textContent=JSON.stringify({mode:d.mode,selected:d.selected,execution:d.execution,pending:d.pending,lastDecisions:d.decisions?.slice(-5)},null,2);
   if(modelMode){$('queue-count').textContent=`已接收 ${d.counts.received} · 起势 ${d.counts.started} · 完成 ${d.counts.completed} · 撤销 ${d.counts.cancelled} · 拒绝 ${d.counts.rejected}`;
+    if(t)$('command-source').textContent=reportSource==='simulated_plan_cached_audio'
+      ?'当前是人工连续命令 + 缓存音频，用于检查队列；不是 Qwen 本轮决策，不产生云端费用。'
+      :client.localReplay?'当前回放的是保存的真实 Qwen 动作指令和真实语音，不是人工动作脚本；本次回放不产生云端费用。'
+      :'当前动作由独立 Qwen 根据本轮真实上下文决定；右侧记录实际收到和执行的结果。语音不等动作。';
     $('model-rows').replaceChildren();for(const row of d.rows.slice(-20)){const tr=document.createElement('tr');for(const value of [MODEL_ACTIONS[row.action].label,modelStateLabels[row.status]??row.status,modelReasonLabels[row.reason]??row.reason??'—']){const td=document.createElement('td');td.textContent=value;tr.append(td);}$('model-rows').append(tr);}}
   $('rows').replaceChildren();
   for(const row of client.trials){const m=metrics(row),tr=document.createElement('tr');
