@@ -1,0 +1,20 @@
+{
+  "source":"Local Windows System.Speech / Microsoft Huihui Desktop",
+  "purpose":"User questions only; no scripted assistant answers or selected character motions.",
+  "clips":[
+    {"id":"emotion-happy","group":"emotion","text":"我终于把那个拖了很久的任务做完啦，想和你分享一下。"},
+    {"id":"emotion-sad","group":"emotion","text":"我今天有点失落，期待的事情没有发生，先陪我说两句吧。"},
+    {"id":"emotion-serious","group":"emotion","text":"认真帮我比较一下晚上读书和出去散步，简单说一下各自的好处。"},
+    {"id":"emotion-uncertain","group":"emotion","text":"你觉得月球背面是不是永远都照不到太阳？如果不确定就直接说。"},
+    {"id":"memory-correct","group":"memory","text":"我纠正一下，现在我在星桥咖啡店最喜欢喝的是无糖乌龙茶，不是无糖柠檬水，请记住。"},
+    {"id":"memory-retrieve","group":"memory","text":"我现在在星桥咖啡店最喜欢喝什么？"},
+    {"id":"background-inflight","group":"background","text":"爱弥斯，先停一下，你现在在忙什么？告诉我真实进度就好。"},
+    {"id":"background-artifact","group":"background","text":"你刚才阅读留下了什么有趣的发现？简单说一个就好，说完继续忙你的。"},
+    {"id":"barge-long-one","group":"interrupt","text":"聊聊读书、散步和听音乐这三个放松方式，认真比较一下，分三点展开说，大概说二十秒。"},
+    {"id":"barge-stop-one","group":"interrupt","text":"等一下，不用展开了，用一句话告诉我你的建议。"},
+    {"id":"barge-long-two","group":"interrupt","text":"如果我们要安排一个轻松的周末，你会怎么安排？详细说三个小计划，大概讲二十秒。"},
+    {"id":"barge-stop-two","group":"interrupt","text":"先停一下，我现在只想安静地待一会儿，你陪着就好。"}
+  ],
+  "maxTurns":12,"maxRequests":228,"maxPcmSeconds":480,
+  "speciality":"First-stage subset of approved 15 background cases and 50 conversation inputs; not extra quota. Synthetic user PCM, live free Qwen replies."
+}

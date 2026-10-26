@@ -1,0 +1,1430 @@
+{
+  "version": 1,
+  "experimental": true,
+  "actions": [
+    {
+      "duration": 3.916,
+      "apex": 0.72,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "wave",
+      "label": "挥手",
+      "id": "gesture:wave",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.112,
+      "apex": 0.66,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "explain",
+      "label": "摊手解释",
+      "id": "gesture:explain",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 3.081,
+      "apex": 0.44,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "shrug",
+      "label": "轻耸肩",
+      "id": "gesture:shrug",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.648,
+      "apex": 0.72,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "chest",
+      "label": "手放胸前",
+      "id": "gesture:chest",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 0.86,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "nod",
+      "label": "点头",
+      "id": "action:nod",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.15,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "shake",
+      "label": "摇头",
+      "id": "action:shake",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.65,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "tilt",
+      "label": "侧头",
+      "id": "action:tilt",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.4,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "glance",
+      "label": "回眸",
+      "id": "action:glance",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 0.24,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "blink",
+      "kind": "action",
+      "name": "blink",
+      "label": "眨眼",
+      "id": "action:blink",
+      "executor": "conversation",
+      "channel": "face",
+      "requires": {},
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.159,
+      "apex": 1.05,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "bow_smile",
+      "label": "俯身抬眼微笑",
+      "id": "gesture:bow_smile",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.593,
+      "apex": 0.98,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "laugh",
+      "label": "开心轻笑",
+      "id": "gesture:laugh",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.952,
+      "apex": 1.12,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "curious",
+      "label": "好奇探身",
+      "id": "gesture:curious",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.622,
+      "apex": 1.12,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "shy",
+      "label": "害羞回望",
+      "id": "gesture:shy",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.003,
+      "apex": 1.12,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "explain_firm",
+      "label": "郑重点明",
+      "id": "gesture:explain_firm",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.56,
+      "apex": 0.72,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "surprise",
+      "label": "惊讶回神",
+      "id": "gesture:surprise",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.7,
+      "apex": 1.3,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "think",
+      "label": "凝神思考",
+      "id": "gesture:think",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.782,
+      "apex": 0.88,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "greet",
+      "label": "轻快招呼",
+      "id": "gesture:greet",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.298,
+      "apex": 1.1,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "listen",
+      "label": "认真倾听",
+      "id": "gesture:listen",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.581,
+      "apex": 1.35,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "comfort",
+      "label": "温柔安慰",
+      "id": "gesture:comfort",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.37,
+      "apex": 1.2,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "look_up",
+      "label": "仰头舒展",
+      "id": "gesture:look_up",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.159,
+      "apex": 0.95,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "agree",
+      "label": "会意点头",
+      "id": "gesture:agree",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 3.174,
+      "apex": 0.612,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "micro_ack",
+      "label": "轻轻应声",
+      "id": "gesture:micro_ack",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 3.859,
+      "apex": 0.7285,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "double_ack",
+      "label": "两次会意",
+      "id": "gesture:double_ack",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.782,
+      "apex": 1.11,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "attentive_tilt",
+      "label": "侧耳专注",
+      "id": "gesture:attentive_tilt",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 3.731,
+      "apex": 0.9675,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "refocus",
+      "label": "收回注意力",
+      "id": "gesture:refocus",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.9,
+      "apex": 1.116,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "thinking_glance",
+      "label": "短暂移目思考",
+      "id": "gesture:thinking_glance",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.048,
+      "apex": 1.184,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "recall_up",
+      "label": "抬眼回忆",
+      "id": "gesture:recall_up",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.541,
+      "apex": 1.064,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "doubtful_tilt",
+      "label": "迟疑侧头",
+      "id": "gesture:doubtful_tilt",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.071,
+      "apex": 1.2,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "breath_settle",
+      "label": "呼气放松",
+      "id": "gesture:breath_settle",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.679,
+      "apex": 1.606,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "weight_settle",
+      "label": "换侧站稳",
+      "id": "gesture:weight_settle",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.588,
+      "apex": 1.2255,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "finger_release",
+      "label": "指尖舒展",
+      "id": "gesture:finger_release",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.71,
+      "apex": 1.35,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "listening_pause",
+      "label": "留白倾听",
+      "id": "gesture:listening_pause",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.083,
+      "apex": 0.816,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "small_no",
+      "label": "轻缓否认",
+      "id": "gesture:small_no",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.375,
+      "apex": 1.2395,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "offer_turn",
+      "label": "把话递给你",
+      "id": "gesture:offer_turn",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.875,
+      "apex": 0.99,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "invite_continue",
+      "label": "示意继续",
+      "id": "gesture:invite_continue",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.754,
+      "apex": 1.4235,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "clarify",
+      "label": "把问题说清楚",
+      "id": "gesture:clarify",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 7.009,
+      "apex": 1.395,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "compare_options",
+      "label": "左右权衡",
+      "id": "gesture:compare_options",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.839,
+      "apex": 1.35,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "enumerate_two",
+      "label": "分两点说明",
+      "id": "gesture:enumerate_two",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.195,
+      "apex": 1.6,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "outline_space",
+      "label": "圈定一小片范围",
+      "id": "gesture:outline_space",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.55,
+      "apex": 1.0725,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "emphasize_down",
+      "label": "轻落掌强调",
+      "id": "gesture:emphasize_down",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.9,
+      "apex": 1.33,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "gently_decline",
+      "label": "温和婉拒",
+      "id": "gesture:gently_decline",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.504,
+      "apex": 1.634,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "reassure",
+      "label": "稳稳安抚",
+      "id": "gesture:reassure",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 4.932,
+      "apex": 1.116,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "ask_check",
+      "label": "抬掌确认",
+      "id": "gesture:ask_check",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.791,
+      "apex": 1.48,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "present_left",
+      "label": "向左侧介绍",
+      "id": "gesture:present_left",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.415,
+      "apex": 1.156,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "present_right",
+      "label": "递出右侧重点",
+      "id": "gesture:present_right",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.89,
+      "apex": 1.564,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "relieved",
+      "label": "松一口气",
+      "id": "gesture:relieved",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.9,
+      "apex": 1.406,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "proud_soft",
+      "label": "小小得意",
+      "id": "gesture:proud_soft",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.675,
+      "apex": 1.602,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "disappointed",
+      "label": "失落后整理心情",
+      "id": "gesture:disappointed",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.112,
+      "apex": 1.36,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "embarrassed",
+      "label": "不好意思地收手",
+      "id": "gesture:embarrassed",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.967,
+      "apex": 1.443,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "skeptical",
+      "label": "半信半疑",
+      "id": "gesture:skeptical",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.679,
+      "apex": 1.152,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "delighted",
+      "label": "眼前一亮",
+      "id": "gesture:delighted",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.36,
+      "apex": 1.596,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "concerned",
+      "label": "担心地靠近",
+      "id": "gesture:concerned",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.791,
+      "apex": 1.554,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "determined",
+      "label": "下定决心",
+      "id": "gesture:determined",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 6.403,
+      "apex": 1.722,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "grateful",
+      "label": "认真道谢",
+      "id": "gesture:grateful",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 5.679,
+      "apex": 1.314,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "amused",
+      "label": "忍不住莞尔",
+      "id": "gesture:amused",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 9.178,
+      "apex": 1.827,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "warm_welcome",
+      "label": "展开欢迎再请入座",
+      "id": "gesture:warm_welcome",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 10.072,
+      "apex": 1.872,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "explain_sequence",
+      "label": "铺陈再归纳",
+      "id": "gesture:explain_sequence",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 7.925,
+      "apex": 1.62,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "celebration_compact",
+      "label": "原地小小庆祝",
+      "id": "gesture:celebration_compact",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 11.345,
+      "apex": 2.132,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "storytelling_arc",
+      "label": "起承转合地讲述",
+      "id": "gesture:storytelling_arc",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 9.344,
+      "apex": 2.015,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "reset_and_resolve",
+      "label": "整理思路再出发",
+      "id": "gesture:reset_and_resolve",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 8.648,
+      "apex": 1.8,
+      "cooldown": 0,
+      "slot": "body",
+      "kind": "gesture",
+      "name": "farewell_linger",
+      "label": "道别后留恋回望",
+      "id": "gesture:farewell_linger",
+      "executor": "conversation",
+      "channel": "body",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 0.78,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "acknowledge",
+      "label": "轻点一下",
+      "id": "action:acknowledge",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.2,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "double_nod",
+      "label": "连续轻点头",
+      "id": "action:double_nod",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.56,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "listen_dip",
+      "label": "听着低一下头",
+      "id": "action:listen_dip",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.04,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "chin_lift",
+      "label": "微抬下巴",
+      "id": "action:chin_lift",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.58,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "glance_left",
+      "label": "向左看一眼",
+      "id": "action:glance_left",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.58,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "glance_right",
+      "label": "向右看一眼",
+      "id": "action:glance_right",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.82,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "look_down",
+      "label": "低头想一想",
+      "id": "action:look_down",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.68,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "look_up",
+      "label": "抬头回想",
+      "id": "action:look_up",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.24,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "head_settle",
+      "label": "轻轻回稳",
+      "id": "action:head_settle",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.31,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "gentle_decline",
+      "label": "轻轻否认",
+      "id": "action:gentle_decline",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 0.57,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "tiny_agree",
+      "label": "短促应一下",
+      "id": "action:tiny_agree",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "duration": 1.92,
+      "apex": 0,
+      "cooldown": 0,
+      "slot": "head",
+      "kind": "action",
+      "name": "thought_tilt",
+      "label": "思索时稍偏头",
+      "id": "action:thought_tilt",
+      "executor": "conversation",
+      "channel": "head",
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "既有轨迹、身体幅度、近身肘部与挥手速度保持；没有每轮次数或冷却限制。"
+    },
+    {
+      "groupId": "native:c38c5010f63da5b2",
+      "label": "原生自然站姿 Stand01",
+      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Stand01",
+      "phases": [
+        "aimisi-stand01"
+      ],
+      "repeat": 1,
+      "id": "native:stand01",
+      "executor": "native",
+      "channel": "body",
+      "kind": "native",
+      "name": "stand01",
+      "duration": null,
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "一遍原生自然站姿；保持是有效选择，不代表同意或任务完成。"
+    },
+    {
+      "groupId": "native:ac884e85b5aef5d1",
+      "label": "原生思考 Thinking01",
+      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Thinking01",
+      "phases": [
+        "aimisi-thinking01-start",
+        "aimisi-thinking01-loop",
+        "aimisi-thinking01-end"
+      ],
+      "repeat": 1,
+      "id": "native:thinking01",
+      "executor": "native",
+      "channel": "body",
+      "kind": "native",
+      "name": "thinking01",
+      "duration": 6.0667,
+      "requires": {
+        "support": "standing",
+        "hands": "free"
+      },
+      "note": "原速起势、一圈中段、原速收势；不添加手脸接触微动作。"
+    },
+    {
+      "id": "activity:sit_down",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "sit_down",
+      "label": "靠近椅子坐下",
+      "duration": 4.1,
+      "requires": {
+        "support": "standing",
+        "props": [
+          "chair"
+        ]
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:take_book_seated",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "take_book_seated",
+      "label": "坐着从桌面拿书",
+      "duration": 6.6,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "table",
+          "book"
+        ],
+        "hands": "free",
+        "existingSource": "book"
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:read_seated",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "read_seated",
+      "label": "坐着读书",
+      "duration": 6,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "book"
+        ],
+        "held": "book"
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:page_turn_seated",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "page_turn_seated",
+      "label": "坐着翻页",
+      "duration": 6,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "book"
+        ],
+        "held": "book"
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:read_look_up",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "read_look_up",
+      "label": "读书时抬头回应",
+      "duration": 6,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "book"
+        ],
+        "held": "book"
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:close_book",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "close_book",
+      "label": "合上书想一想",
+      "duration": 6,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "book"
+        ],
+        "held": "book"
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:put_book_seated",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "put_book_seated",
+      "label": "坐着把书稳放桌面",
+      "duration": 6.6,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "table",
+          "book"
+        ],
+        "held": "book"
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    },
+    {
+      "id": "activity:stand_up_from_desk",
+      "executor": "activity",
+      "channel": "body",
+      "kind": "activity",
+      "name": "stand_up_from_desk",
+      "label": "退椅离桌后起身",
+      "duration": 6.85,
+      "requires": {
+        "support": "seated",
+        "props": [
+          "chair",
+          "table"
+        ]
+      },
+      "note": "单项生活动作，由模型选择；实际桌椅、书与握点回执成立才执行，不使用固定连续配方。"
+    }
+  ]
+}
