@@ -81,3 +81,20 @@ def test_execution_event_stages_with_same_action_id_are_not_deduplicated(tmp_pat
     result=analyzer.case_summary(tmp_path,case)
     assert result["actions"]=={"gesture:agree":1}
     assert result["bodyEventCounts"]=={"action_queued":1,"action_started":1,"action_completed":1}
+
+def test_simulated_clock_advances_only_authorized_gap_and_holds_real_work():
+    clocks=module('campaign_simclock',ROOT/'realtime/character-campaign/simclock.py')
+    stamp=[1000.0]
+    clock=clocks.IdleClock([180,90],wall=lambda:stamp[0],monotonic=lambda:stamp[0])
+    clock.begin(0);stamp[0]+=2
+    held=clock.step(0,hold=True)
+    assert held['advancedSeconds']==0 and held['logicalElapsedSeconds']==2
+    moved=clock.step(0)
+    assert moved['advancedSeconds']==12 and stamp[0]==1002
+    with pytest.raises(ValueError,match='previous_gap'):clock.begin(1)
+    for _ in range(90):
+        stamp[0]+=.25;last=clock.step(0)
+    assert 180<=last['logicalElapsedSeconds']<190
+    assert stamp[0]<1030
+    clock.begin(1)
+    with pytest.raises(ValueError):clock.step(0)

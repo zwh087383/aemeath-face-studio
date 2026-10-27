@@ -48,8 +48,20 @@ def main():
     from deepseek_planner import DeepSeekConfig,DeepSeekPlannerConnection
     provider=DeepSeekConfig.from_file(a.env_file,proxy="http://127.0.0.1:7890" if a.local_proxy else None)
     factory=load("campaign_proxy_transport",ROOT/"realtime/parallel-duplex/app.py").existing_local_proxy_socket if a.local_proxy else None
-    session_class=partial(CharacterCenterSession,planner_connection_class=partial(DeepSeekPlannerConnection,config=provider))
     fixture_log=[]
+    from simclock import IdleClock
+    idle_clock=IdleClock(case['gapsSeconds'])
+    active_activity=[]
+    class CampaignSession(CharacterCenterSession):
+        async def _payload(self,turn=None,messages=None):
+            payload=await super()._payload(turn,messages)
+            if case['kind']=='long':
+                tick=idle_clock.snapshot()
+                payload['experimental_idle_time']={'source':'user_authorized_simulated_elapsed_time',
+                    'gapIndex':tick.get('gap'),'logicalSeconds':min(tick.get('logicalElapsedSeconds',0),tick.get('targetSeconds',0)),
+                    'nativeAnimationAndSpeech':'real_time','doesNotSpecifyActions':True}
+            return payload
+    session_class=partial(CampaignSession,planner_connection_class=partial(DeepSeekPlannerConnection,config=provider))
 
     def initialise(_main,_output,fixture_id):
         if fixture_id!=case["id"]: raise ValueError("wrong_scenario_initial_condition")
@@ -66,6 +78,12 @@ def main():
         save_json(path,result);return result
 
     class CampaignActivities(ReadingActivities):
+        def __init__(self,*args,**kwargs):
+            super().__init__(*args,**kwargs)
+            # Only schedule deadlines use this clock. Source, memory and provider
+            # timestamps remain the real clock; native animation is never sped up.
+            self.planner.clock=idle_clock.now
+            active_activity.append(self)
         def _read_selected_public_source(self,query,*,read_pages=False):
             spec=next((s for s in case.get("activities",[]) if s["caseId"]==self.current_id),{})
             fault=spec.get("fault")
@@ -81,7 +99,25 @@ def main():
 
     async def case_get(request):
         allowed(request)
-        return web.json_response(case)
+        return web.json_response(case,headers={'Cache-Control':'no-store'})
+    clock_lock=asyncio.Lock()
+    async def advance_idle(request):
+        allowed(request,True)
+        if case['kind']!='long':raise web.HTTPConflict(text='only_long_gap_scenarios')
+        command=await request.json()
+        async with clock_lock:
+            try:
+                if command.get('operation')=='begin':result=idle_clock.begin(command.get('index'))
+                elif command.get('operation')=='step':
+                    activity=active_activity[0] if active_activity else None
+                    hold=bool(activity and activity.work_inflight)
+                    result=idle_clock.step(command.get('index'),hold=hold)
+                    if result['advancedSeconds']:
+                        await asyncio.to_thread(module.emotion_system.idle_update,result['advancedSeconds'])
+                else:raise ValueError('unknown_clock_operation')
+            except ValueError as exc:raise web.HTTPBadRequest(text=str(exc))
+            await asyncio.to_thread(save_json,out/'simulated-clock.json',{'policy':'10x_idle_schedule_and_math_only','current':idle_clock.snapshot(),'receipts':idle_clock.receipts})
+            return web.json_response(result)
     progress_lock=asyncio.Lock()
     async def progress(request):
         allowed(request,True)
@@ -109,7 +145,7 @@ def main():
                 await asyncio.to_thread(stream.write,chunk)
         temp.replace(path)
         return web.json_response({"saved":True,"bytes":size})
-    routes=[web.get("/api/campaign/case",case_get),web.post("/api/campaign/progress",progress),
+    routes=[web.get("/api/campaign/case",case_get),web.post('/api/campaign/clock',advance_idle),web.post("/api/campaign/progress",progress),
             web.post("/api/campaign/observations",sample_report),web.post("/api/campaign/video",video)]
     app=create_app(runtime,module,budget,out,cloud=True,asset_port=a.asset_port,session_class=session_class,
         factory=factory,action_provider="deepseek",activity_class=CampaignActivities,initial_state_initializer=initialise,extra_routes=routes)

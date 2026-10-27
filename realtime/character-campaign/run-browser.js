@@ -26,6 +26,8 @@ async page => {
     revoked:t.revoked,historySettled:t.historySettled,settledAt:t.settledAt,error:t.error};};
   const postFault=async()=>{await api.activityRevoke();result.interruptions.push({kind:'background_source_revoked',at:now(),state:observe()});};
   window.campaignTask=(async()=>{
+   const available=new Set([...document.getElementById('fixture').options].map(o=>o.value));
+   if(spec.turns.some(t=>!available.has(t.id)))throw Error('stale_input_manifest_before_cloud_connect');
    const status=await api.refresh();if(status.actionProvider!=='deepseek'||!status.cloudEnabled||status.budget.turns!==0)throw Error('wrong_or_used_case');
    result.recordingStartedAt=now();api.recordStart();await api.connect();
    result.initialCondition=await post('/api/character-center/initial-state',{fixtureId:spec.id});
@@ -55,11 +57,16 @@ async page => {
     // A spoken barge-in is a separate dimension: short conversations deliberately enter while audio is playing.
     if(!nextBarge){
      result.phase='idle_gap:'+i;let revoked=false;
-     while((now()-gap.startedAt)/1000<gap.targetSeconds){
-      if(activitySpec?.fault==='source_revoked'&&!revoked&&now()-gap.startedAt>45000){await postFault();revoked=true;}
+     let logicalElapsed=0;
+     if(spec.kind==='long')gap.simulationStart=await post('/api/campaign/clock',{operation:'begin',index:i});
+     while(logicalElapsed<gap.targetSeconds){
+      if(spec.kind==='long'){gap.simulationEnd=await post('/api/campaign/clock',{operation:'step',index:i});logicalElapsed=gap.simulationEnd.logicalElapsedSeconds;}
+      else logicalElapsed=(now()-gap.startedAt)/1000;
+      if(activitySpec?.fault==='source_revoked'&&!revoked&&logicalElapsed>45){await postFault();revoked=true;}
       if(api.state().renderFault||api.state().blocked)throw Error('idle_render_or_transport_fault');
       await sleep(250);
      }
+     gap.logicalSeconds=logicalElapsed;
     }
     gap.endedAt=now();gap.actualSeconds=(gap.endedAt-gap.startedAt)/1000;
    }

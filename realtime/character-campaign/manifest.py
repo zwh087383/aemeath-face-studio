@@ -150,12 +150,12 @@ def build():
         row["pcmSeconds"]=60 if row["kind"]=="single" else 180
         row["initialMath"]=EMOTIONS[row["emotion"]]
     totals={key:sum(s["limits"][key] for s in scenarios) for key in ("listener","voice","action","background")}
-    result={"version":1,"seed":SEED,"scenarios":scenarios,"totals":{"scenarios":100,"dialogueTurns":180,"activities":20,
+    result={"version":2,"seed":SEED,"scenarios":scenarios,"totals":{"scenarios":100,"dialogueTurns":180,"activities":20,
             "limits":totals,"responses":sum(totals.values()),"pcmSeconds":sum(s["pcmSeconds"] for s in scenarios)},
         "policy":{"actions":"unchanged_original_DeepSeek_tools_and_83_capabilities; model_selected_only",
           "voice":"real_Qwen_free_response; no_future_answer_for_action_model", "userAudio":"local_Windows_Huihui_synthetic",
           "unknownUsage":"confirmed_terminal_retains_full_maximum_reservation; unconfirmed_terminal_freezes_its_channel; old_ledgers_immutable",
-          "timing":"real_monotonic_intervals; background_existing_30x_schedule_120s_minimum; native_motion_original_speed",
+          "timing":"user_requested_simulated_idle_10x; real_model_audio_and_native_motion; activity_clock_and_math_idle_advance; source_memory_dates_real",
           "maxAttemptsPerScenario":1}}
     validate(result)
     return result

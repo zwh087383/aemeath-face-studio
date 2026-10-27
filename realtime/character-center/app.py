@@ -162,7 +162,7 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
 
     async def input_manifest(request):
         allow(request)
-        return web.FileResponse(output / "inputs/input-fixtures.json")
+        return web.FileResponse(output / "inputs/input-fixtures.json", headers={"Cache-Control": "no-store"})
 
     async def user_input(request):
         allow(request)

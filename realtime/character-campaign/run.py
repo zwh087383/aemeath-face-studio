@@ -40,6 +40,7 @@ def main():
     p.add_argument("--asset-port",type=int,default=18809)
     p.add_argument("--local-proxy",action="store_true")
     p.add_argument("--only",default="")
+    p.add_argument("--prior-output",type=Path)
     a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
     from manifest import write,validate
     digest=write(out/"manifest.json");data=read(out/"manifest.json");validate(data)
@@ -57,6 +58,15 @@ def main():
     else: raise RuntimeError("campaign_port_already_occupied")
     pending=[s for s in data["scenarios"] if s["id"] not in state["cases"] and (not a.only or s["id"] in a.only.split(','))]
     for case in pending:
+        charged={key:0 for key in data['totals']['limits']};pcm_charged=0
+        for evidence_root in (out,a.prior_output):
+            if evidence_root is None:continue
+            for ledger_path in evidence_root.glob('cases/*/ledger.json'):
+                old=read(ledger_path,{});pcm_charged+=old.get('pcmBytes',0)/32000
+                for row in old.get('responses',[]):
+                    if row.get('state')!='unused':charged[row['channel']]+=1
+        if pcm_charged+case['pcmSeconds']>data['totals']['pcmSeconds'] or any(charged[k]+case['limits'][k]>data['totals']['limits'][k] for k in charged):
+            state['stopped']='aggregate_channel_capacity_with_prior_evidence';save(path,state);break
         identity=case["id"];caseout=out/"cases"/identity;caseout.mkdir(parents=True,exist_ok=True)
         if not(caseout/"inputs/input-fixtures.json").exists(): raise RuntimeError("input_fixtures_missing")
         if(caseout/"ledger.json").exists(): raise RuntimeError("unregistered_existing_case_ledger")
@@ -79,9 +89,9 @@ def main():
                 except Exception: pass
                 time.sleep(.4)
             else: raise TimeoutError("server_health_deadline")
-            nav=browser("goto",url+"/character-center/")
+            nav=browser("goto",url+"/character-center/?campaign="+identity)
             if nav.returncode or "not open" in nav.stdout.lower():
-                nav=browser("open",url+"/character-center/","--headed")
+                nav=browser("open",url+"/character-center/?campaign="+identity,"--headed")
             (caseout/"browser-navigation.txt").write_text(nav.stdout+nav.stderr,encoding="utf-8")
             if nav.returncode: raise RuntimeError("browser_navigation_failed")
             run=browser("run-code","--filename="+str(HERE/"run-browser.js"))
