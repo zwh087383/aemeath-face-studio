@@ -35,12 +35,15 @@ def locked(function):
 class CenterBudget(DurableBudget):
     experiment_id = EXPERIMENT
 
-    def __init__(self, path, *, max_turns=12, limits=None, pcm_seconds=480, stop_on_unknown=False):
+    def __init__(self, path, *, max_turns=12, limits=None, pcm_seconds=480, stop_on_unknown=False, limit_ceilings=None):
         self._lock = threading.RLock()
         self._async_lock = asyncio.Lock()
         self.path = Path(path)
+        ceilings = dict(LIMITS if limit_ceilings is None else limit_ceilings)
+        if set(ceilings) != set(LIMITS) or any(type(v) is not int or not 0 < v <= 4096 for v in ceilings.values()):
+            raise ValueError("invalid_explicit_limit_ceilings")
         selected = dict(LIMITS if limits is None else limits)
-        if set(selected) != set(LIMITS) or any(type(v) is not int or not 0 < v <= LIMITS[k] for k, v in selected.items()):
+        if set(selected) != set(LIMITS) or any(type(v) is not int or not 0 < v <= ceilings[k] for k, v in selected.items()):
             raise ValueError("invalid_channel_limits")
         if not 1 <= max_turns <= 12 or not 0 < pcm_seconds <= 480:
             raise ValueError("invalid_batch_limits")

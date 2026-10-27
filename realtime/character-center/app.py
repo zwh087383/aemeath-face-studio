@@ -23,7 +23,8 @@ def load(name, path):
     return module
 
 
-def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, session_class=None, factory=None, action_provider="qwen"):
+def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, session_class=None, factory=None, action_provider="qwen",
+               activity_class=None, initial_state_initializer=None, extra_routes=()):
     legacy = load("center_static_guard", ROOT / "realtime/qwen/server.py")
     from tools.voice_avatar.bootstrap import evidence_snapshot, wait_quiescent
     from tools.voice_avatar.duplex_transport import save_json, ProtocolError
@@ -49,7 +50,7 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
 
     if runtime is not None:
         from activity import ReadingActivities
-        activity = ReadingActivities(main, output, publish, allow_existing_proxy=factory is not None, budget=budget)
+        activity = (activity_class or ReadingActivities)(main, output, publish, allow_existing_proxy=factory is not None, budget=budget)
 
     async def status(request):
         allow(request)
@@ -155,7 +156,7 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
             raise web.HTTPConflict(text="Wait until the current reply is settled")
         from initial_state import initialise_math
         try:
-            return web.json_response(await asyncio.to_thread(initialise_math, main, output, (await request.json()).get("fixtureId")))
+            return web.json_response(await asyncio.to_thread(initial_state_initializer or initialise_math, main, output, (await request.json()).get("fixtureId")))
         except ValueError as exc:
             raise web.HTTPBadRequest(text=str(exc))
 
@@ -211,6 +212,7 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
     app.router.add_get("/parallel-duplex-inputs/{name}", user_input)
     app.router.add_get("/duplex-data/{name}", saved)
     app.router.add_post("/api/parallel-duplex/report", report)
+    app.router.add_routes(extra_routes)
     app.router.add_get("/{path:.*}", static)
 
     async def shutdown(_):
