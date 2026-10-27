@@ -138,10 +138,10 @@ class Trace:
             self.value["calls"].append({"name": name, "valid": False, "arguments": raw, "atMs": self.ms()})
 
 
-async def deepseek(http, config, payload, trace):
+async def deepseek(http, config, payload, trace, *, rules=None, tool_schema=None):
     body = {"model": config["model"], "messages": [
-        {"role": "system", "content": protocol.RULES}, {"role": "user", "content": view.encoded(payload)}],
-        "tools": protocol.tools(), "thinking": {"type": "disabled"},
+        {"role": "system", "content": protocol.RULES if rules is None else rules}, {"role": "user", "content": view.encoded(payload)}],
+        "tools": protocol.tools() if tool_schema is None else tool_schema, "thinking": {"type": "disabled"},
         "stream": True, "stream_options": {"include_usage": True}, "max_tokens": 2048}
     buffers = {}
     trace.mark("requestSent")
