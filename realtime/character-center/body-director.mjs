@@ -67,7 +67,7 @@ export class CharacterBodyDirector {
 
   record(type, row = null, detail = {}) {
     const event = { type, at: this.now, atMs: this.now * 1000, ...(row ? {
-      id: row.id, action: row.action, owner: copy(row.owner), sourceKey: bodyOwnerKey(row.owner) } : {}), ...detail };
+      id: row.id, action: row.action, index: row.index, owner: copy(row.owner), sourceKey: bodyOwnerKey(row.owner) } : {}), ...detail };
     this.events.push(event); if (this.events.length > 500) this.events.shift();
     try { this.onEvent(copy(event)); } catch { /* Diagnostics cannot break the render loop. */ }
     return event;
@@ -86,10 +86,12 @@ export class CharacterBodyDirector {
     const requestKey = owner.requestId ? `${bodyOwnerKey(owner)}@${owner.sourceVersion}:${owner.requestId}` : null;
     if (requestKey && this.seen.has(requestKey)) return { accepted: false, reason: 'duplicate_request' };
     if (requestKey) this.seen.add(requestKey);
+    if(parsed.operation==='keep')return {accepted:true,count:0,kept:true};
     if (parsed.operation !== 'append') this.clearSource(owner, parsed.operation === 'clear' ? 'model_clear' : 'model_replace');
-    for (const action of parsed.actions) {
+    for (const [index,action] of parsed.actions.entries()) {
       const row = { ...action, id: `character-action-${++this.serial}`, owner: copy(owner),
-        acceptedAt: this.now, due: this.now + action.delay_ms / 1000, status: 'queued' };
+        index, goal:parsed.goal, acceptedAt: this.now, due: this.now + action.delay_ms / 1000, status: 'queued',
+        voiceAlreadyPlaying: this.matchesMedia({owner},this.media)&&this.media.audioStatus==='playing' };
       this.pending.push(row); this.rows.push(row); this.record('action_queued', row);
     }
     return { accepted: true, count: parsed.actions.length };
@@ -140,6 +142,15 @@ export class CharacterBodyDirector {
     return media.audioStatus === 'playing' && Number.isFinite(media.audioTime) && media.audioTime >= 0;
   }
 
+  blockDependents(row, reason) {
+    if(typeof row.owner.requestId!=='string')return; // legacy recordings lack command identity
+    this.pending=this.pending.filter(next=>{
+      if(!sameSource(next.owner,row.owner)||next.owner.requestId!==row.owner.requestId||next.index<=row.index)return true;
+      next.status='cancelled';next.reason='dependency_'+reason;
+      this.record('action_cancelled',next,{reason:next.reason});return false;
+    });
+  }
+
   update(now, dt, media = this.media) {
     if (!Number.isFinite(now) || !Number.isFinite(dt) || dt < 0) throw Error('invalid_body_clock');
     this.now = now; this.media = media;
@@ -154,13 +165,18 @@ export class CharacterBodyDirector {
     // an assistant segment-end semantic gate may release its command after the
     // audio has finished. Do not replay that missed gesture or leave it blocking
     // a later activity. Already moving bodies retain their mechanical exit.
-    if (media.audioStatus === 'ended' && Number.isFinite(media.audioTime) && media.audioTime >= 0) {
+    if (['ended','playing'].includes(media.audioStatus) && Number.isFinite(media.audioTime) && media.audioTime >= 0) {
+      const expired=[];
       this.pending = this.pending.filter(row => {
         if (row.anchor !== 'voice' || !this.matchesMedia(row, media)) return true;
+        const lateAtArrival=row.voiceAlreadyPlaying&&(row.late??'start_if_speaking')!=='start_if_speaking';
+        if(media.audioStatus!=='ended'&&!lateAtArrival)return true;
         row.status = 'expired'; row.reason = 'voice_anchor_missed'; row.expiredAt = now;
         this.record('action_expired', row, { reason: row.reason, audioTime: media.audioTime });
+        expired.push(row);
         return false;
       });
+      for(const row of expired)this.blockDependents(row,'expired');
     }
     if (this.active) {
       const row = this.active, state = this.executors[this.executor].status(row);
@@ -170,13 +186,16 @@ export class CharacterBodyDirector {
       if (state.done) {
         row.status = state.failed ? 'failed' : 'completed'; row.reason = state.reason ?? null; row.completedAt = now;
         this.record(`action_${row.status}`, row, { reason: row.reason, executor: this.executor }); this.active = null;
+        if(state.failed)this.blockDependents(row,'failed');
       }
     }
     this.faceActive = this.faceActive.filter(row => {
       const state = this.executors.face.status(row);
       if (state.started && row.displayedAt == null) { row.displayedAt = now; this.record('action_started', row, { executor: 'face' }); }
       if (!state.done) return true;
-      row.status = 'completed'; this.record('action_completed', row, { executor: 'face' }); return false;
+      row.status = state.failed ? 'failed' : 'completed';
+      this.record(`action_${row.status}`, row, { executor: 'face', reason:state.reason??null });
+      if(state.failed)this.blockDependents(row,'face_failed');return false;
     });
 
     // A pure blink can coexist with a body gesture, including native/activity.
@@ -189,6 +208,7 @@ export class CharacterBodyDirector {
       const ok = this.executors.face?.start(def, row, this.getActorState()) === true;
       row.status = ok ? 'admitted' : 'rejected'; this.record(ok ? 'action_admitted' : 'action_rejected', row, { executor: 'face' });
       if (ok) this.faceActive.push(row);
+      else this.blockDependents(row,'face_rejected');
     }
     if (this.active || !this.executors[this.executor].canYield()) return this.snapshot();
     const index = this.pending.findIndex(row => CHARACTER_ACTIONS[row.action].channel !== 'face');
@@ -199,7 +219,7 @@ export class CharacterBodyDirector {
     const reason = bodyAdmission(def, actor) ?? this.executors[def.executor]?.check?.(def, actor) ?? null;
     if (reason || !this.executors[def.executor]) {
       this.pending.splice(index, 1); row.status = 'rejected'; row.reason = reason ?? 'executor_unavailable';
-      this.record('action_rejected', row, { reason: row.reason }); return this.snapshot();
+      this.record('action_rejected', row, { reason: row.reason }); this.blockDependents(row,'rejected');return this.snapshot();
     }
     // start is synchronous and transactional: a refusal cannot steal ownership.
     const oldExecutor = this.executor;
@@ -208,7 +228,7 @@ export class CharacterBodyDirector {
     catch (error) { row.reason = `executor_error:${error.message}`; }
     this.pending.splice(index, 1);
     if (!accepted) { row.status = 'rejected'; row.reason ??= 'executor_refused';
-      this.record('action_rejected', row, { reason: row.reason }); return this.snapshot(); }
+      this.record('action_rejected', row, { reason: row.reason }); this.blockDependents(row,'rejected');return this.snapshot(); }
     this.executor = def.executor; this.active = row; row.status = 'admitted'; row.admittedAt = now;
     this.record('body_handover', row, { from: oldExecutor, to: this.executor,
       support: actor.support, held: held(actor).map(([id]) => id) });

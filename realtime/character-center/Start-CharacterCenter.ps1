@@ -1,6 +1,7 @@
 param([string]$WaiRoot='F:\AI-Shared\WAI',[string]$OutputDirectory='',
  [string]$DataDirectory='', [int]$Port=18808,[int]$AssetPort=18809,
  [string]$ResumeSource='', [string]$ResumeEvidence='', [string]$ResumeStatus='', [string]$ResumeState='',
+ [int]$TurnLimit=12,[int]$ListenerLimit=18,[int]$VoiceLimit=30,[int]$ActionLimit=60,[int]$BackgroundLimit=120,[int]$PcmSeconds=480,
  [switch]$EnableCloud,[switch]$UseLocalProxy,[switch]$NoBrowser)
 $ErrorActionPreference='Stop'
 $CenterRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -29,6 +30,8 @@ if ($EnableCloud) {
  if ((Test-Path -LiteralPath $DataDirectory) -and @(Get-ChildItem -LiteralPath $DataDirectory -Force).Count) { throw 'Runtime data exists. No automatic reset or repeated cloud batch.' }
  & (Join-Path $WaiRoot 'scripts\Start-Embedding.ps1')
  $CenterArgs+=@('--enable-cloud','--env-file',(Join-Path $CenterRuntime 'runtime.env'),'--data-dir',[IO.Path]::GetFullPath($DataDirectory))
+ $CenterArgs+=@('--turn-limit',[string]$TurnLimit,'--listener-limit',[string]$ListenerLimit,
+ '--voice-limit',[string]$VoiceLimit,'--action-limit',[string]$ActionLimit,'--background-limit',[string]$BackgroundLimit,'--pcm-seconds',[string]$PcmSeconds)
  if ($UseLocalProxy) { $CenterArgs+='--local-proxy' }
  if ($ResumeSource) {
   if (-not $ResumeEvidence -or -not $ResumeStatus) { throw 'Resume requires evidence and status receipts.' }

@@ -107,6 +107,8 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
                     await session.actor_state(command)
                 elif kind == "playback_receipt":
                     await session.playback_receipt(command)
+                elif kind == "action_receipt":
+                    session.spawn(session.receive_action_receipt(command))
                 elif kind == "listener_resume":
                     await session.resume_listener()
                 elif kind == "cancel":
@@ -230,6 +232,12 @@ def main():
     parser.add_argument("--port", type=int, default=18808)
     parser.add_argument("--asset-port", type=int, default=18809)
     parser.add_argument("--enable-cloud", action="store_true")
+    parser.add_argument("--turn-limit", type=int, default=12)
+    parser.add_argument("--listener-limit", type=int, default=18)
+    parser.add_argument("--voice-limit", type=int, default=30)
+    parser.add_argument("--action-limit", type=int, default=60)
+    parser.add_argument("--background-limit", type=int, default=120)
+    parser.add_argument("--pcm-seconds", type=int, default=480)
     parser.add_argument("--local-proxy", action="store_true")
     parser.add_argument("--resume-source", type=Path)
     parser.add_argument("--resume-state", type=Path)
@@ -259,7 +267,9 @@ def main():
         import os
         os.environ.update(WAI_LIFE_THREADS="1", WAI_PREPARATION_PROBE="1", WAI_LATENCY_BATCH1="1", WAI_REPLY_PREWARM_POLICY="after_request")
         from budget import CenterBudget
-        budget = CenterBudget(args.output / "ledger.json")
+        budget = CenterBudget(args.output / "ledger.json", max_turns=args.turn_limit,
+            limits={"listener":args.listener_limit,"voice":args.voice_limit,
+                    "action":args.action_limit,"background":args.background_limit}, pcm_seconds=args.pcm_seconds)
         from provider_accounting import install_accounting
         install_accounting(budget)
         runtime, module = (bootstrap_resumed(config, recovery, process_alive=psutil.pid_exists)

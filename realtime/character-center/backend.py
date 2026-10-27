@@ -32,6 +32,7 @@ model = _module("character_center_model_base", HERE.parent / "model-director" / 
 base = model.base
 protocol = _module("character_center_protocol", HERE / "protocol.py")
 queue_module = _module("character_center_semantic_queue", HERE / "semantic_queue.py")
+input_view = _module("character_center_planner_input", HERE / "planner_input.py")
 EXPERIMENT = "continuous-character-center-20261025"
 
 
@@ -80,6 +81,14 @@ class CharacterCenterSession(model.ModelDuplexSession):
         self._turn_contexts = {}
         self._voice_wait = {}
         self._semantic_context = {}
+        self.issued_actions = {}
+        self.action_history = []
+        self.body_goals = {}
+        self.feedback_seen = set()
+        self.failed_decisions = set()
+        self._media_frames = {}
+        self._semantic_submitted = {}
+        self._execution_feedback_lock = asyncio.Lock()
         self._assistant_streams = {}
         self._playback = {}
         self._audit_task = None
@@ -362,11 +371,12 @@ class CharacterCenterSession(model.ModelDuplexSession):
     async def reply(self, turn, messages, chunks, *, phase=None, allow_handoff=False):
         # Capture actual business facts independently of semantic/model work.
         # Source authority is retained outside the JSON audit turn records.
-        messages = await self._with_activity_context(turn, messages)
         if turn["id"] not in self._turn_contexts and not turn["cancel"].is_set():
             self._turn_contexts[turn["id"]] = deepcopy(messages)
-            self._voice_wait[turn["id"]] = asyncio.Event()
+            # These messages already came from WAI's fresh, protected retrieval.
+            # Start sidecar preparation before voice activity/context/socket ACKs.
             self.spawn(self._plan_user(turn, messages))
+        messages = await self._with_activity_context(turn, messages)
         # Bypass only the old one-shot planner hook, not the protected voice path.
         return await base.DuplexSession.reply(self, turn, messages, chunks,
                                              phase=phase, allow_handoff=allow_handoff)
@@ -467,22 +477,41 @@ class CharacterCenterSession(model.ModelDuplexSession):
         return await super().acknowledge(command)
 
     async def _payload(self, turn=None, messages=None):
+        start = time.monotonic()
         state = await asyncio.to_thread(base.character_snapshot, self.main, 0, self.actor)
-        value = base.planner_payload(turn, messages or [], state) if turn else {
-            "character_state": state, "delivered_context": [], "future_reply_available": False}
-        value.pop("allowed_intents", None)
+        state_at = time.monotonic()
+        value = {"character_state": input_view.state_view(state), "future_reply_available": False,
+                 **input_view.context_view(messages or [], turn["text"] if turn else "")}
+        if turn:
+            value["current_user_text"] = turn["text"]
+            value["dialogue_state"] = {"delivered": bool(turn.get("acknowledged")),
+                "cancelled": turn["cancel"].is_set(), "playback": deepcopy(self.actor.get("communication", {}))}
         if turn and turn["id"] in self._activity_voice_snapshots:
             # The legacy planner truncates the system excerpt to 2400 chars;
             # preserve these separately guarded facts for dialogue motions too.
-            value["background_activity"] = deepcopy(self._activity_voice_snapshots[turn["id"]])
-        value.update(available_actions=self.catalog,
+            saved = self._activity_voice_snapshots[turn["id"]]
+            value["background_activity"] = {"context": input_view.activity_view(saved.get("context", saved))}
+        elif self.activities:
+            value["background_activity"] = [input_view.activity_view(s) for s in self.activities.values()]
+        goals = [v for k,v in self.body_goals.items() if k in {"activity:"+a for a in self.activities}
+                 or turn and (k == "user:"+turn["id"] or k.startswith("assistant:"+turn["id"]+":"))]
+        context_at = time.monotonic()
+        value.update(available_actions=input_view.compact_catalog(self.catalog),
+            current_plan=deepcopy(goals),
+            execution_feedback=deepcopy(self.action_history[-8:]),
             execution_policy="model selects; actual body conditions checked locally; no per-turn action cap")
+        await self._character_emit("character_input_ready", turnId=turn["id"] if turn else None,
+            preparationMs=round((time.monotonic()-start)*1000, 3), inputMetrics=input_view.metrics(value),
+            preparationSteps={"stateSnapshotMs":round((state_at-start)*1000,3),
+                "contextSummaryMs":round((context_at-state_at)*1000,3),
+                "catalogAndFeedbackMs":round((time.monotonic()-context_at)*1000,3)})
         return value
 
     def _submit(self, source_key, scope, version, payload, *, turn=None, priority=1, replace=False):
         job = self.semantic_queue.submit(source_key, scope, version, payload, priority=priority, replace=replace)
         if job:
             self._semantic_context[job.request_id] = {"turn": turn}
+            self._semantic_submitted[job.request_id] = time.monotonic()
         return job
 
     async def _plan_user(self, turn, messages):
@@ -514,11 +543,22 @@ class CharacterCenterSession(model.ModelDuplexSession):
             return {"queued": False, "reason": "same_activity_fact"}
         if self.current_turn and not self.current_turn.get("acknowledged") and not self.current_turn["cancel"].is_set():
             return {"queued": False, "reason": "foreground_dialogue"}
+        # Progress does not invalidate an ongoing model-selected body goal.
+        # User attention, pause and source revocation still retire its epoch.
+        if old and old.get("status") == snapshot.get("status") == "running":
+            key = "activity:" + identity
+            planning = any(j and j.source_key == key and not j.invalidated for j in
+                           (self.semantic_queue.active, self.semantic_queue.pending))
+            executing = any(r["job"].source_key == key and not r.get("retired")
+                            and len(r["results"]) < len(r["command"]["actions"])
+                            for r in self.issued_actions.values())
+            if planning or executing:
+                return {"queued": False, "reason": "progress_preserves_current_goal"}
         payload = await self._payload()
         if self.activities.get(identity) != snapshot:
             return {"queued": False, "reason": "activity_changed_during_snapshot"}
         evidence = "activity:" + identity + ":" + str(version)
-        payload.update(source_scope="activity", activity=deepcopy(snapshot), activity_id=identity,
+        payload.update(source_scope="activity", activity=input_view.activity_view(snapshot), activity_id=identity,
             evidence_refs=[evidence], media_anchor={"kind": "immediate"})
         job = self._submit("activity:" + identity, "activity", version, payload, priority=0, replace=bool(old))
         return {"queued": job is not None, "requestId": job.request_id if job else None}
@@ -526,6 +566,9 @@ class CharacterCenterSession(model.ModelDuplexSession):
     async def cancel_activity(self, identity, reason="activity_revoked"):
         self.activities.pop(identity, None)
         key = "activity:" + identity
+        for issued in self.issued_actions.values():
+            if issued["job"].source_key == key:
+                issued["retired"] = True
         self.semantic_queue.invalidate(key, reason)
         await self._character_emit("character_revoke", sourceKey=key, activityId=identity,
             turnId=None, reason=reason, preserveAttitude=True)
@@ -552,10 +595,6 @@ class CharacterCenterSession(model.ModelDuplexSession):
             self._terminal_notified.add(payload["turnId"])
         if kind == "turn_error" and payload.get("turnId"):
             self._error_notified.add(payload["turnId"])
-        if kind == "request_sent":
-            event = self._voice_wait.get(payload.get("turnId"))
-            if event:
-                event.set()
         row = await super().emit(kind, **payload)
         if not hasattr(self, "semantic_queue") or self.character_closing:
             return row
@@ -567,6 +606,10 @@ class CharacterCenterSession(model.ModelDuplexSession):
         elif kind == "input_partial":
             # Existing text/stash has no immutable-prefix contract. No semantic call.
             pass
+        elif kind == "audio" and payload.get("turnId") and not payload.get("revoked"):
+            import base64
+            key = (payload["turnId"], payload.get("segmentIndex", 0))
+            self._media_frames[key] = self._media_frames.get(key, 0) + len(base64.b64decode(payload["pcm"])) // 2
         elif kind in {"subtitle", "response_done"} and payload.get("turnId"):
             turn_id, index = payload["turnId"], payload.get("segmentIndex", 0)
             result = payload.get("result") or {}
@@ -582,8 +625,13 @@ class CharacterCenterSession(model.ModelDuplexSession):
             final = kind == "response_done"
             if (text and text != stream["submitted"] and (final or re.search(r"[。！？!?；;\n]$", text))):
                 stream["submitted"] = text
-                anchor = {"kind": "segment_end", "turnId": turn_id, "segmentIndex": index,
-                          "providerConnectionId": provider, "responseId": response}
+                # Audio-frontier synchronization, NOT word/phoneme alignment.
+                # A model sees only received text; the browser must reach the
+                # observed PCM frontier, not wait for response.done/whole reply.
+                anchor = {"kind": "audio_frame", "turnId": turn_id, "segmentIndex": index,
+                          "providerConnectionId": provider, "responseId": response,
+                          "frame": self._media_frames.get((turn_id, index), 0),
+                          "alignment": "received_pcm_frontier_not_word_aligned"}
                 self.spawn(self._plan_assistant(turn_id, key, text, anchor, final))
         return row
 
@@ -591,6 +639,9 @@ class CharacterCenterSession(model.ModelDuplexSession):
         turn = self.turns.get(turn_id) if turn_id else self.current_turn
         if turn and hasattr(self, "semantic_queue"):
             identity = turn["id"]
+            for issued in self.issued_actions.values():
+                if issued["turn"] is turn:
+                    issued["retired"] = True
             self.semantic_queue.invalidate("user:" + identity, reason)
             for key in list(self._assistant_streams):
                 if key.startswith("assistant:" + identity + ":"):
@@ -619,6 +670,118 @@ class CharacterCenterSession(model.ModelDuplexSession):
         self._playback[key] = frame
         return {"accepted": True, "historyAcknowledged": False}
 
+    def _remember_actions(self, command_id, job, command):
+        context = self._semantic_context.get(job.request_id, {})
+        if command["operation"] in {"replace", "clear"}:
+            for issued in self.issued_actions.values():
+                if issued["job"].source_key == job.source_key:
+                    issued["retired"] = True
+        self.issued_actions[command_id] = {"job": job, "turn": context.get("turn"),
+            "command": deepcopy(command), "results": {}, "reviewed": False}
+        if command.get("goal"):
+            self.body_goals[job.source_key] = {"goal": command["goal"], "source": job.source_key,
+                "actions": [a["action"] for a in command["actions"]], "status": "issued_not_completed"}
+        if command["operation"] == "clear":
+            self.body_goals.pop(job.source_key, None)
+
+    async def action_receipt(self, command):
+        """Actual browser execution feedback, separate from voice/history ACK.
+
+        The model selects any continuation. This method never chooses an action.
+        Receipts are checked against an exact issued command and step index.
+        """
+        command_id, index = command.get("commandId"), command.get("index")
+        issued = self.issued_actions.get(command_id) if isinstance(command_id, str) else None
+        status = command.get("status")
+        terminal = {"completed", "rejected", "failed", "expired", "cancelled"}
+        if (not issued or type(index) is not int or not 0 <= index < len(issued["command"]["actions"])
+                or status not in terminal or command.get("action") != issued["command"]["actions"][index]["action"]):
+            return {"accepted": False, "reason": "unissued_execution_receipt"}
+        key = (command_id, index)
+        if key in self.feedback_seen:
+            return {"accepted": False, "reason": "duplicate_execution_receipt"}
+        if issued.get("retired"):
+            return {"accepted": False, "reason": "retired_body_plan"}
+        job, turn = issued["job"], issued["turn"]
+        if (turn and (turn["cancel"].is_set() or self.current_turn is not turn)):
+            return {"accepted": False, "reason": "retired_turn"}
+        if isinstance(command.get("actorState"), dict):
+            try:
+                await self.actor_state({"actorState": command["actorState"]})
+            except (base.ProtocolError, ValueError, TypeError):
+                return {"accepted": False, "reason": "invalid_execution_state"}
+        self.feedback_seen.add(key)
+        result = {"action": command["action"], "status": status,
+                  "source": job.source_key, "commandId": command_id, "index": index,
+                  "reason": str(command.get("reason") or "")[:180],
+                  "actor": input_view.actor_view(self.actor)}
+        issued["results"][index] = result
+        self.action_history.append(result)
+        self.action_history = self.action_history[-16:]
+        await self._character_emit("character_execution_feedback", commandId=command_id, index=index,
+            result=result, turnId=turn["id"] if turn else None, historyAcknowledged=False)
+        if issued["reviewed"] or status == "cancelled":
+            return {"accepted": True, "replanned": False}
+        failed = status in {"rejected", "failed", "expired"}
+        if status == "expired" and issued["command"]["actions"][index].get("late") == "skip":
+            return {"accepted": True, "replanned": False, "reason": "model_chose_skip_missed_anchor"}
+        complete = len(issued["results"]) == len(issued["command"]["actions"])
+        review = issued["command"].get("review", "on_finish")
+        if not failed and (not complete or review != "on_finish"):
+            return {"accepted": True, "replanned": False}
+        issued["reviewed"] = True
+        goal = self.body_goals.get(job.source_key)
+        if goal:
+            goal["status"] = "needs_decision_after_failure" if failed else "selected_steps_completed"
+        if failed:
+            signature = base.digest([job.source_key, {k:result[k] for k in ("action","status","reason","actor")},
+                                     self.body_goals.get(job.source_key, {}).get("goal")])
+            if signature in self.failed_decisions:
+                return {"accepted": True, "replanned": False, "reason": "unchanged_failure_waits_for_new_fact"}
+            self.failed_decisions.add(signature)
+        if self.stopping or self.character_closing:
+            return {"accepted": True, "replanned": False}
+        available = getattr(self.budget, "available", None)
+        if callable(available) and not available("activity_planner" if job.source_scope == "activity" else "action_planner"):
+            return {"accepted": True, "replanned": False, "reason": "action_budget_unavailable"}
+        if job.source_scope == "activity":
+            snapshot = self.activities.get(job.payload.get("activity_id"))
+            if not snapshot or snapshot.get("status") not in {"running", "done"}:
+                return {"accepted": True, "replanned": False, "reason": "activity_not_current"}
+            payload = await self._payload()
+            version = str(snapshot["version"])
+            payload.update(activity=input_view.activity_view(snapshot), activity_id=snapshot["id"])
+        else:
+            if not turn:
+                return {"accepted": True, "replanned": False, "reason": "missing_turn"}
+            try:
+                await self.check_direct_context(turn, "execution_feedback")
+            except base.ProtocolError:
+                return {"accepted": True, "replanned": False, "reason": "context_revoked"}
+            payload = await self._payload(turn, self._turn_contexts.get(turn["id"], []))
+            version = job.source_version
+            payload["turn_id"] = turn["id"]
+        evidence = "execution:" + str(len(self.feedback_seen))
+        payload.update(source_scope=job.source_scope, trigger="actual_body_result", evidence_refs=[evidence],
+                       latest_execution=result, media_anchor={"kind": "immediate"})
+        if issued.get("retired") or turn and (turn["cancel"].is_set() or self.current_turn is not turn):
+            return {"accepted": True, "replanned": False, "reason": "source_changed_during_feedback"}
+        if job.source_scope == "activity" and self.activities.get(snapshot["id"]) != snapshot:
+            return {"accepted": True, "replanned": False, "reason": "activity_changed_during_feedback"}
+        followup = self._submit(job.source_key, job.source_scope, version, payload, turn=turn,
+                               priority=0 if job.source_scope == "activity" else 1)
+        return {"accepted": True, "replanned": followup is not None}
+
+    async def receive_action_receipt(self, command):
+        # This worker must not hold the websocket input reader while validating
+        # sources/preparing the next decision. Failures affect this sidecar only.
+        try:
+            async with self._execution_feedback_lock:
+                result = await self.action_receipt(command)
+            await self._character_emit("character_receipt_result", commandId=command.get("commandId"), **result)
+        except Exception as exc:
+            await self._character_emit("character_feedback_error", code=type(exc).__name__)
+
     async def _valid(self, job, *, check_memory=False):
         if not self.semantic_queue.valid(job) or self.stopping or self.character_closing:
             return False
@@ -634,10 +797,10 @@ class CharacterCenterSession(model.ModelDuplexSession):
         if job.source_scope == "activity":
             identity = job.payload["activity_id"]
             state = self.activities.get(identity)
-            if not state or str(state.get("version")) != job.source_version:
+            if not state or state.get("status") != job.payload.get("activity", {}).get("status"):
                 return False
             if self.activity_validator:
-                current = self.activity_validator(identity, job.source_version)
+                current = self.activity_validator(identity, str(state.get("version")))
                 if inspect.isawaitable(current):
                     current = await current
                 if not current:
@@ -652,6 +815,10 @@ class CharacterCenterSession(model.ModelDuplexSession):
         response_id = None
         calls, items, buffers = {}, {}, {}
         origin = time.monotonic()
+        timings = {"queueMs": round((origin-self._semantic_submitted.get(job.request_id, origin))*1000, 3)}
+        marks = {}
+        def mark(name):
+            marks.setdefault(name, round((time.monotonic()-origin)*1000, 3))
         async def event(kind, **fields):
             return await self._character_emit(kind, requestId=job.request_id,
                 semanticRevision=job.semantic_revision, sourceScope=job.source_scope,
@@ -660,8 +827,10 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 plannerConnectionId=connection.id if connection else None,
                 plannerResponseId=response_id, semanticMs=round((time.monotonic()-origin)*1000, 3), **fields)
         try:
+            mark("guard_start")
             if not await self._valid(job, check_memory=True):
                 return
+            mark("guard_done")
             self.schedule_planner_warm()
             warm = self.planner_warm_task
             # Claim before awaiting: a preempting foreground request must never
@@ -671,35 +840,42 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 warm_connection = self.planner_warm_connection
                 self.planner_warm_task = self.planner_warm_connection = None
             connection = await asyncio.shield(warm) if warm else None
+            mark("connection_ready")
             if not connection:
                 await event("character_semantic_skipped", reason="planner_unavailable")
                 return
+            mark("guard_after_connection_start")
             if not await self._valid(job, check_memory=True):
                 return
-            await connection.add_context([{"role": "user", "content": json.dumps(job.payload, ensure_ascii=False)}], batch=True)
-            turn = self._semantic_context.get(job.request_id, {}).get("turn")
-            ready = self._voice_wait.get(turn["id"]) if turn and job.source_scope == "user" else None
-            while ready and not ready.is_set():
-                if not await self._valid(job) or time.monotonic()-origin > 25:
-                    return
-                await asyncio.sleep(.01)
+            mark("guard_after_connection_done")
+            mark("context_send")
+            await connection.add_context([{"role": "user", "content": input_view.encoded(job.payload)}], batch=True)
+            mark("context_confirmed")
+            mark("guard_before_budget_start")
             if not await self._valid(job, check_memory=True):
                 return
+            mark("guard_before_budget_done")
             role = "activity_planner" if job.source_scope == "activity" else "action_planner"
             available = getattr(self.budget, "available", None)
             if callable(available) and not available(role):
                 await event("character_semantic_skipped", reason="action_budget_unavailable")
                 return
+            mark("budget_start")
             reservation = await self.budget.acall("reserve", role, connection.id, job.request_id)
+            mark("budget_reserved")
+            mark("final_guard_start")
             if not await self._valid(job):
                 await self.budget.acall("unused", reservation)
                 terminal = True
                 return
+            mark("final_guard_done")
             connection.claimed = True
             sent = True
             await connection.send({"type": "response.create", "response": {"modalities": ["text"]}})
+            mark("request_sent")
             await event("character_semantic_request", contextHash=base.digest(job.payload),
-                        evidenceRefs=job.payload["evidence_refs"], futureReplyAvailable=False)
+                        evidenceRefs=job.payload["evidence_refs"], futureReplyAvailable=False,
+                        inputMetrics=input_view.metrics(job.payload), timings={**timings, **marks})
             self.schedule_planner_warm()
             deadline, cancel_sent = time.monotonic()+20, False
             while time.monotonic() < deadline:
@@ -716,6 +892,7 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 kind = value.get("type", "")
                 rid = value.get("response_id") or value.get("response", {}).get("id")
                 if kind == "response.created":
+                    mark("response_created")
                     await self.budget.acall("created", reservation, rid)
                     response_id = rid
                 elif kind.startswith("response.") and (not response_id or rid != response_id):
@@ -723,14 +900,17 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 if kind == "response.output_item.added":
                     item = value.get("item", {})
                     if item.get("type") == "function_call":
+                        mark("first_tool_item")
                         items[item.get("id", item.get("call_id"))] = (item.get("name"), item.get("call_id"))
                 elif kind == "response.function_call_arguments.delta":
+                    mark("first_argument_delta")
                     key = value.get("item_id", value.get("call_id"))
                     delta = value.get("delta")
                     if not isinstance(delta, str) or len(buffers.get(key, ""))+len(delta) > protocol.MAX_PACKET:
                         raise base.ProtocolError("character_argument_limit")
                     buffers[key] = buffers.get(key, "") + delta
                 elif kind == "response.function_call_arguments.done":
+                    mark("first_complete_arguments")
                     defaults = items.get(value.get("item_id"), (None, None))
                     name, call_id = value.get("name", defaults[0]), value.get("call_id", defaults[1])
                     try:
@@ -750,9 +930,14 @@ class CharacterCenterSession(model.ModelDuplexSession):
                         await event("character_command_rejected", callId=call_id, reason="invalid_complete_tool")
                         continue
                     calls[call_id] = name
+                    mark("first_body_arguments" if output_kind == "character_actions" else "first_expression_arguments")
                     if await self._valid(job, check_memory=True) and self.semantic_queue.commit(job):
+                        mark("first_body_delivery" if output_kind == "character_actions" else "first_expression_delivery")
+                        command_id = connection.id+":"+call_id
+                        if output_kind == "character_actions":
+                            self._remember_actions(command_id, job, command)
                         await event(output_kind, command=command, callId=call_id,
-                            commandId=connection.id+":"+call_id, outputFinal=True,
+                            commandId=command_id, outputFinal=True, timings={**timings, **marks},
                             evidenceRef=command.get("evidenceRef", job.payload["evidence_refs"][0]),
                             mediaAnchor=deepcopy(job.payload["media_anchor"]))
                     else:
@@ -760,10 +945,12 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 elif kind == "response.audio.delta":
                     raise base.ProtocolError("character_planner_unexpected_audio")
                 elif kind == "response.done":
+                    mark("provider_done")
                     await self.budget.acall("settle", reservation, value["response"])
                     terminal = True
                     await event("character_semantic_done", status=value["response"].get("status"),
-                                usageState=reservation["state"], budget=self.budget.snapshot())
+                                usageState=reservation["state"], budget=self.budget.snapshot(),
+                                timings={**timings, **marks}, usage=value["response"].get("usage"))
                     # Tools are one-way notifications. No second response.create.
                     if value["response"].get("status") == "completed":
                         for call_id in calls:

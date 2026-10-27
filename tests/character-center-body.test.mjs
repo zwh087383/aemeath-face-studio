@@ -50,6 +50,33 @@ function setup(initial = standing()) {
   return { director, calls, adapters, setState(value) { state = value; }, setLive(value) { live = value; } };
 }
 
+test('failed actual step stops its model-selected continuation without fabricating a replacement',()=>{
+ const {director:d,adapters,calls}=setup();const source={...owner(),requestId:'decision-1'};
+ assert.equal(d.submit(command(['gesture:wave','gesture:curious']),source).accepted,true);d.update(0,0);
+ adapters.conversation.status=()=>({started:true,done:true,failed:true,reason:'actual_executor_failure'});
+ d.update(.1,.1);
+ assert.deepEqual(d.rows.map(r=>r.status),['failed','cancelled']);assert.equal(d.pending.length,0);
+ assert.equal(calls.filter(x=>x.type==='start').length,1);
+ assert.equal(d.events.find(e=>e.type==='action_failed').index,0);
+ assert.equal(d.events.find(e=>e.type==='action_cancelled').index,1);
+});
+
+test('missed voice command cancels dependent steps but not a different request',()=>{
+ const {director:d}=setup();d.setMedia({audioStatus:'playing',audioTime:.2,mediaOwner:{turnId:'test'}});
+ d.submit({operation:'append',actions:[{action:'gesture:wave',anchor:'voice',late:'reconsider'},
+ {action:'gesture:curious',anchor:'immediate'}]},{...owner(),requestId:'one'});
+ d.submit(command(['gesture:curious']),{...owner(1,'activity'),requestId:'other'});
+ d.update(.2,.2);assert.deepEqual(d.rows.map(r=>r.status),['expired','cancelled','admitted']);
+ assert.equal(d.active.action,'gesture:curious');
+});
+
+test('model keep preserves the moving executor and does not fabricate a completion',()=>{
+ const {director:d,calls}=setup();const source={...owner(),requestId:'one'};
+ d.submit(command(['gesture:wave']),source);d.update(0,0);const id=d.active.id;
+ d.submit({operation:'keep',actions:[]},{...source,requestId:'two'});d.update(.1,.1);
+ assert.equal(d.active.id,id);assert.equal(calls.length,1);assert.equal(d.events.some(e=>e.type==='action_completed'),false);
+});
+
 test('the wire catalogue contains existing 73 choices unchanged plus the exact two native and eight activity entries', () => {
   assert.equal(Object.keys(MODEL_ACTIONS).length, 73);
   assert.equal(Object.keys(CHARACTER_ACTIONS).length, 83);

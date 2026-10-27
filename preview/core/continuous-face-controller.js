@@ -21,6 +21,7 @@ export class ContinuousFaceController {
     this.count = morphCount; this.responseSeconds = responseSeconds; this.profiles = profiles;
     this.recipes = new Map(); this.mouth = new Set(mouthIndices); this.corners = new Set(); this.smiles = new Set(); this.closures = new Set();
     this.expressionIndices = new Set(); this.blinkIndices = new Set(); this.openEyes = new Set();
+    this.nonMouth = new Set(); this.unilateralClosures = new Set(); this.happyBrows = new Set();
     for (const recipe of recipes) {
       if (!recipe.id || this.recipes.has(recipe.id) || !Array.isArray(recipe.mapping)) throw Error('Invalid or duplicate face recipe');
       for (const channel of recipe.mapping) for (const leaf of channel.leaves) {
@@ -31,10 +32,14 @@ export class ContinuousFaceController {
         if (isClosure(channel.source)) this.closures.add(leaf.index);
         if (channel.source === 'E_Close' || channel.source === 'まばたき') this.blinkIndices.add(leaf.index);
         if (channel.source === 'E_Stare' || channel.source === 'びっくり') this.openEyes.add(leaf.index);
+        if (/^(B_|E_|Pupil_|P_Nose_|C_.*Face|S_20$)/.test(channel.source) || channel.source === '真面目') this.nonMouth.add(leaf.index);
+        if (/^E_Smile_[RL]$/.test(channel.source) || /^(ウィンク|ウィンク右)$/.test(channel.source)) this.unilateralClosures.add(leaf.index);
+        if (channel.source === 'B_Happy' || channel.source === 'にこり') this.happyBrows.add(leaf.index);
       }
       this.recipes.set(recipe.id, { ...recipe, sampler: recipe.nativeData ? new NativeExpression(recipe.nativeData) : null });
     }
-    this.articulators = new Set([...this.mouth].filter(i => !this.corners.has(i)));
+    // Geometric overlap alone used to classify 真面目 (brows) as a viseme.
+    this.articulators = new Set([...this.mouth].filter(i => !this.corners.has(i) && !this.nonMouth.has(i)));
     this.weights = new Float64Array(morphCount); this.velocity = new Float64Array(morphCount); this.output = new Float64Array(morphCount);
     this.base = new Float64Array(morphCount); this.fatigue = new Float64Array(morphCount); this.math = null; this.mathRevision = -1;
     this.attitude = null; this.reactions = new Map(); this.completedReactions = new Set(); this.overlays = new Map(); this.latest = new Map(); this.cancelled = new Map();
@@ -71,6 +76,18 @@ export class ContinuousFaceController {
     if (!values && kind !== 'attention') return null;
     return { ...entry, recipeId: id, values: values ?? new Float64Array(this.count) };
   }
+  sustained(values, kind) {
+    const result = Float64Array.from(values);
+    // Keep complete native acting poses for explicit short reactions. Sustained
+    // faces do not hold vowels/teeth/lip thickness or a unilateral wink.
+    for (const i of this.articulators) result[i] = 0;
+    for (const i of this.unilateralClosures) result[i] = 0;
+    if (['warm','excited','playful'].includes(kind)) {
+      for (const i of this.happyBrows) result[i] = Math.max(result[i], kind === 'excited' ? .16 : .08);
+      if (kind === 'excited') for (const i of this.openEyes) result[i] = Math.max(result[i], .12);
+    }
+    return result;
+  }
   setMathematical(snapshot, revision) {
     if (!validRevision(revision) || revision <= this.mathRevision) return this.reject('stale-mathematical');
     const emotion = snapshot?.emotion ?? snapshot;
@@ -78,14 +95,16 @@ export class ContinuousFaceController {
     const stress = finite(emotion.S) ? unit(emotion.S) : 0;
     const energy = finite(snapshot?.effectiveEnergy) ? unit(snapshot.effectiveEnergy) : null;
     const base = new Float64Array(this.count);
-    const add = (kind, amount) => { const p = this.profile(kind); if (p) for (let i = 0; i < this.count; i++) base[i] += p.values[i] * p.gain * amount; };
+    const add = (kind, amount) => { const p = this.profile(kind); if (p) {
+      const values=this.sustained(p.values,kind);for (let i = 0; i < this.count; i++) base[i] += values[i] * p.gain * amount;
+    } };
     const positive = Math.max(0, emotion.V), negative = Math.max(0, -emotion.V), tense = unit((emotion.A - .45) / .55) * stress;
     add('warm', positive * (1 - .55 * emotion.A)); add('excited', positive * .55 * emotion.A);
     add('sad', negative * (1 - tense)); add('anger', negative * tense);
     this.fatigue.fill(0);
     if (energy !== null) {
       const tired = this.profile('tired'), gain = Math.max(0, (.45 - energy) / .45) * .7;
-      if (tired) for (let i = 0; i < this.count; i++) { this.fatigue[i] = tired.values[i] * tired.gain * gain; base[i] += this.fatigue[i]; }
+      if (tired) { const values=this.sustained(tired.values,'tired');for (let i = 0; i < this.count; i++) { this.fatigue[i] = values[i] * tired.gain * gain; base[i] += this.fatigue[i]; } }
     }
     this.math = clone(snapshot); this.mathRevision = revision; this.base.set(base); return true;
   }
@@ -160,16 +179,18 @@ export class ContinuousFaceController {
     const target = Float64Array.from(this.base), attitude = this.attitudeState();
     if (attitude) {
       const p = this.profile(attitude.kind, attitude.recipeId);
-      for (const i of this.expressionIndices) target[i] = p.values[i] * p.gain * attitude.strength * (1 - attitude.fade);
+      const values=this.sustained(p.values,attitude.kind);
+      for (const i of this.expressionIndices) target[i] = values[i] * p.gain * attitude.strength * (1 - attitude.fade);
       for (const i of this.blinkIndices) target[i] = Math.max(target[i], this.fatigue[i]);
       // Expiry becomes noncommittal attention, not the formerly suppressed smile.
     }
-    const apply = (cue, amount) => {
+    const apply = (cue, amount, sustained = false) => {
       if (!actionFaceCompatible(attitude?.effectiveKind, cue.kind)) return;
       const p = this.profile(cue.kind, cue.recipeId); if (!p) return;
-      for (const i of this.expressionIndices) target[i] += (p.values[i] * p.gain * cue.strength - target[i]) * amount;
+      const values=sustained?this.sustained(p.values,cue.kind):p.values;
+      for (const i of this.expressionIndices) target[i] += (values[i] * p.gain * cue.strength - target[i]) * amount;
     };
-    for (const cue of this.overlays.values()) if (!(attitude?.fade >= 1 && cue.kind !== 'attention')) apply(cue, unit(cue.phase ?? 1) * .45);
+    for (const cue of this.overlays.values()) if (!(attitude?.fade >= 1 && cue.kind !== 'attention')) apply(cue, unit(cue.phase ?? 1) * .45, true);
     for (const [key, cue] of this.reactions) {
       const age = this.now - cue.started, total = cue.attack + cue.hold + cue.release;
       if (age >= total) { this.reactions.delete(key); this.completedReactions.add(key); continue; }

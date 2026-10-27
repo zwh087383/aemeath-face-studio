@@ -151,6 +151,19 @@ test('a still-moving old action cannot indefinitely renew an expired specific at
 });
 
 const realPath = 'outputs/action-execution-preparation-20261023/face-playback.json';
+test('real sustained math and attitudes never hold a vowel, exposed teeth or one-sided wink', { skip: !fs.existsSync(realPath) },()=>{
+ const data=JSON.parse(fs.readFileSync(realPath));
+ const create=()=>new ContinuousFaceController({recipes:data.recipes,morphCount:data.model.morphCount,mouthIndices:data.mouthIndices});
+ for(const sample of LOCAL_MATH_SAMPLES){const c=create();c.setMathematical(sample,1);advance(c,1);
+  for(const i of c.articulators)assert.ok(Math.abs(c.output[i])<1e-8,`${sample.id}: mouth ${i}`);
+  for(const i of c.unilateralClosures)assert.ok(Math.abs(c.output[i])<1e-8,`${sample.id}: wink ${i}`);
+ }
+ for(const kind of ['attention','concern','serious','warm','curious','playful','sad','excited']){
+  const c=create();c.setAttitude(attitude({id:kind,kind,strength:1}));advance(c,1);
+  for(const i of c.articulators)assert.ok(Math.abs(c.output[i])<1e-8,`${kind}: mouth ${i}`);
+  assert.equal(c.articulators.has(0),false,'真面目 is a brow, not a phoneme');
+ }
+});
 test('actual 17 character-native recipes keep their signed expanded leaves and all published profiles resolve', { skip: !fs.existsSync(realPath) }, () => {
   const data = JSON.parse(fs.readFileSync(realPath)), c = new ContinuousFaceController({ recipes: data.recipes, morphCount: data.model.morphCount, mouthIndices: data.mouthIndices });
   const native = data.recipes.filter(recipe => recipe.sourceScope === 'aimisi-character'); assert.equal(native.length, 17);

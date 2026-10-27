@@ -334,7 +334,9 @@ def test_subtitle_tokens_do_not_each_launch_a_semantic_request(tmp_path):
                 responseId="r", providerConnectionId="p", delta=delta)
             await asyncio.sleep(0)
         assert len(planned) == 1 and planned[0][2] == "这是第一句。"
-        assert planned[0][3]["kind"] == "segment_end"
+        assert planned[0][3]["kind"] == "audio_frame"
+        assert planned[0][3]["frame"] == 0
+        assert planned[0][3]["alignment"] == "received_pcm_frontier_not_word_aligned"
         await session.emit("response_done", turnId="turn_1", segmentIndex=0, result={
             "responseId": "r", "connectionId": "p", "transcript": "这是第一句。", "status": "completed"})
         await asyncio.sleep(0)

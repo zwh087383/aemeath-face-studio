@@ -46,15 +46,18 @@ export const ACTION_ANCHORS = Object.freeze(['immediate', 'prepare', 'voice', 's
 
 export function validateCharacterCommands(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)
-      || Object.keys(value).some(key => !['operation', 'actions'].includes(key))
-      || !['append', 'replace', 'clear'].includes(value.operation) || !Array.isArray(value.actions))
+      || Object.keys(value).some(key => !['operation', 'actions', 'goal', 'review'].includes(key))
+      || !['keep', 'append', 'replace', 'clear'].includes(value.operation) || !Array.isArray(value.actions))
     throw Error('invalid_command');
-  if (value.operation === 'clear' && value.actions.length) throw Error('clear_has_actions');
-  return { operation: value.operation, actions: value.actions.map(row => {
+  if (['clear','keep'].includes(value.operation) && value.actions.length) throw Error('clear_has_actions');
+  if(value.goal!==undefined&&(typeof value.goal!=='string'||value.goal.length>160))throw Error('invalid_goal');
+  if(value.review!==undefined&&!['on_finish','on_failure','wait'].includes(value.review))throw Error('invalid_review');
+  return { ...value, actions: value.actions.map(row => {
     if (!row || typeof row !== 'object' || Array.isArray(row)
-        || Object.keys(row).some(key => !['action', 'anchor', 'delay_ms'].includes(key))
+        || Object.keys(row).some(key => !['action', 'anchor', 'delay_ms', 'late'].includes(key))
         || !Object.hasOwn(CHARACTER_ACTIONS, row.action) || !ACTION_ANCHORS.includes(row.anchor)
-        || !Number.isSafeInteger(row.delay_ms) || row.delay_ms < 0) throw Error('invalid_action');
-    return { ...row };
+        || !Number.isSafeInteger(row.delay_ms??0) || (row.delay_ms??0) < 0
+        || !['skip','start_if_speaking','reconsider'].includes(row.late??'start_if_speaking')) throw Error('invalid_action');
+    return { ...row,delay_ms:row.delay_ms??0 };
   }) };
 }
