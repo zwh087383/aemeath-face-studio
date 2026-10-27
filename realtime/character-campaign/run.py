@@ -85,13 +85,14 @@ def main():
                 if process.poll() is not None: raise RuntimeError("server_startup_exit")
                 try:
                     health=http(url+"/api/duplex/status")
-                    if health.get("cloudEnabled"): break
+                    if health.get("cloudEnabled"):
+                        if http(url+'/api/campaign/case').get('id')!=identity:raise RuntimeError('wrong_case_owns_port')
+                        break
                 except Exception: pass
                 time.sleep(.4)
             else: raise TimeoutError("server_health_deadline")
-            nav=browser("goto",url+"/character-center/?campaign="+identity)
-            if nav.returncode or "not open" in nav.stdout.lower():
-                nav=browser("open",url+"/character-center/?campaign="+identity,"--headed")
+            browser('close',timeout=30)
+            nav=browser("open",url+"/character-center/?campaign="+identity,"--headed")
             (caseout/"browser-navigation.txt").write_text(nav.stdout+nav.stderr,encoding="utf-8")
             if nav.returncode: raise RuntimeError("browser_navigation_failed")
             run=browser("run-code","--filename="+str(HERE/"run-browser.js"))
@@ -126,6 +127,14 @@ def main():
             try: save(caseout/"final-server-status.json",http(url+"/api/duplex/status"))
             except Exception: pass
             if process.poll() is None:
+                # Windows venv launchers may own a second Python process. Stop
+                # this exact descendant tree, not unrelated runtime services.
+                try:children=psutil.Process(process.pid).children(recursive=True)
+                except psutil.NoSuchProcess:children=[]
+                for child in reversed(children):
+                    try:child.terminate()
+                    except psutil.NoSuchProcess:pass
+                psutil.wait_procs(children,timeout=5)
                 process.terminate()
                 try: process.wait(timeout=10)
                 except subprocess.TimeoutExpired: process.kill();process.wait(timeout=5)
@@ -134,6 +143,8 @@ def main():
             state["cases"][identity]["ledgerSha256"]=hashlib.sha256((caseout/"ledger.json").read_bytes()).hexdigest() if(caseout/"ledger.json").exists() else None
             save(path,state)
         print(json.dumps({"case":identity,"event":"finished","status":state["cases"][identity]["status"],"completed":len(state["cases"])},ensure_ascii=False),flush=True)
+        if state['cases'][identity]['status']=='infrastructure_failed':
+            state['stopped']='infrastructure_fault_requires_inspection';save(path,state);break
     state["current"]=None;state["endedAt"]=time.time();save(path,state)
 
 if __name__=="__main__": main()
