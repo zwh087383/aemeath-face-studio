@@ -35,7 +35,7 @@ def locked(function):
 class CenterBudget(DurableBudget):
     experiment_id = EXPERIMENT
 
-    def __init__(self, path, *, max_turns=12, limits=None, pcm_seconds=480):
+    def __init__(self, path, *, max_turns=12, limits=None, pcm_seconds=480, stop_on_unknown=False):
         self._lock = threading.RLock()
         self._async_lock = asyncio.Lock()
         self.path = Path(path)
@@ -58,12 +58,16 @@ class CenterBudget(DurableBudget):
         self.data["channelLimits"] = {k: min(v, self.data["channelLimits"][k]) for k, v in selected.items()}
         self.data["responseLimit"] = sum(self.data["channelLimits"].values())
         self.data["pcmByteLimit"] = min(self.data["pcmByteLimit"], int(pcm_seconds * 32000))
+        if stop_on_unknown:
+            self.data["stopOnUnknown"] = True
         # A crash cannot refund a partially sent durable one-second PCM credit.
         self.data["pcmBytes"] = max(self.data["pcmBytes"], self.data.get("pcmReservedBytes", 0))
         for row in self.data["responses"]:
             if row["state"] in {"reserved", "active"}:
                 row["state"] = "unknown"
                 self.data["frozenChannels"][row["channel"]] = "unfinished_reservation_on_restart"
+        if self.data.get("stopOnUnknown") and any(row["state"] == "unknown" for row in self.data["responses"]):
+            self.data["blocked"] = True
         self.flush()
 
     @staticmethod
@@ -85,11 +89,17 @@ class CenterBudget(DurableBudget):
         return not self.data["blocked"] and channel not in self.data["frozenChannels"] and count < self.data["channelLimits"][channel]
 
     @locked
-    def reserve(self, role, connection_id, owner):
+    def reserve(self, role, connection_id, owner, token_bound=None):
         channel = self.channel(role)
         if not self.available(role):
             raise ProtocolError("channel_admission_blocked:" + channel)
         bound = dict(QWEN_BOUND) if channel != "background" else {"input": 131072, "output": 4096, "source": "bounded_utf8_payload_and_explicit_max_tokens"}
+        if token_bound is not None:
+            if (channel != "action" or set(token_bound) != {"input", "output", "source"}
+                    or any(type(token_bound[k]) is not int or not 0 < token_bound[k] <= 1048576 for k in ("input", "output"))
+                    or not isinstance(token_bound["source"], str) or len(token_bound["source"]) > 240):
+                raise ProtocolError("invalid_action_token_bound")
+            bound = dict(token_bound)
         row = {"id": uuid4().hex, "role": role, "channel": channel, "connectionId": connection_id,
                "owner": str(owner), "state": "reserved", "responseId": None, "usage": None,
                "reservedAt": time.time(), "maxTokens": bound, "terminalObserved": False}
@@ -121,6 +131,9 @@ class CenterBudget(DurableBudget):
         # the retained maximum allow later calls within the original cap.
         if row["state"] == "unknown":
             row["unknownReason"] = "terminal_usage_missing_or_invalid"
+            if self.data.get("stopOnUnknown"):
+                self.data["blocked"] = True
+                self.data["reasons"].append("terminal_usage_missing_or_invalid")
         self.flush()
 
     @locked
@@ -133,6 +146,8 @@ class CenterBudget(DurableBudget):
             self.data["frozenChannels"][reservation["channel"]] = reason
         if reason not in self.data["reasons"]:
             self.data["reasons"].append(reason)
+        if self.data.get("stopOnUnknown"):
+            self.data["blocked"] = True
         self.flush()
 
     @locked

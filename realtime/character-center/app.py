@@ -23,7 +23,7 @@ def load(name, path):
     return module
 
 
-def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, session_class=None, factory=None):
+def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, session_class=None, factory=None, action_provider="qwen"):
     legacy = load("center_static_guard", ROOT / "realtime/qwen/server.py")
     from tools.voice_avatar.bootstrap import evidence_snapshot, wait_quiescent
     from tools.voice_avatar.duplex_transport import save_json, ProtocolError
@@ -55,6 +55,7 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
         allow(request)
         return web.json_response({"experimentId": budget.data["experimentId"], "experimental": True,
             "cloudEnabled": cloud, "connected": bool(active), "budget": budget.snapshot(),
+            "actionProvider": action_provider,
             "memory": "actual_WAI_isolated" if runtime else "local_component_preview",
             "plannerKnowsFutureAnswer": False, "activity": await asyncio.to_thread(activity.snapshot) if activity else None,
             "cases": activity.records if activity else {}, "savedSessions": [p.stem for p in sorted(output.glob("duplex-*.json"))],
@@ -239,6 +240,7 @@ def main():
     parser.add_argument("--background-limit", type=int, default=120)
     parser.add_argument("--pcm-seconds", type=int, default=480)
     parser.add_argument("--local-proxy", action="store_true")
+    parser.add_argument("--action-provider", choices=("qwen", "deepseek"), default="qwen")
     parser.add_argument("--resume-source", type=Path)
     parser.add_argument("--resume-state", type=Path)
     parser.add_argument("--resume-evidence", type=Path)
@@ -269,7 +271,8 @@ def main():
         from budget import CenterBudget
         budget = CenterBudget(args.output / "ledger.json", max_turns=args.turn_limit,
             limits={"listener":args.listener_limit,"voice":args.voice_limit,
-                    "action":args.action_limit,"background":args.background_limit}, pcm_seconds=args.pcm_seconds)
+                    "action":args.action_limit,"background":args.background_limit}, pcm_seconds=args.pcm_seconds,
+            stop_on_unknown=args.action_provider == "deepseek")
         from provider_accounting import install_accounting
         install_accounting(budget)
         runtime, module = (bootstrap_resumed(config, recovery, process_alive=psutil.pid_exists)
@@ -280,11 +283,18 @@ def main():
         import hashlib
         paths = sorted(Path(__file__).parent.glob("*"))
         save_json(args.output / ("source-manifest-" + uuid4().hex + ".json"), {
-            "experimental": True, "dataDirectory": str(config.data_dir), "initialConditions": "four_explicit_math_fixtures",
+            "experimental": True, "dataDirectory": str(config.data_dir), "initialConditions": "isolated_seed_optional_explicit_math_fixtures",
+            "actionProvider": args.action_provider,
             "sourceHashes": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                              for p in paths if p.is_file() and p.suffix in {".py", ".mjs", ".html", ".css", ".json"}}})
         from backend import CharacterCenterSession
         session_class = CharacterCenterSession
+        if args.action_provider == "deepseek":
+            from functools import partial
+            from deepseek_planner import DeepSeekConfig, DeepSeekPlannerConnection
+            planner_config = DeepSeekConfig.from_file(args.env_file, proxy="http://127.0.0.1:7890" if args.local_proxy else None)
+            session_class = partial(CharacterCenterSession,
+                planner_connection_class=partial(DeepSeekPlannerConnection, config=planner_config))
         if args.local_proxy:
             factory = load("center_proxy_transport", ROOT / "realtime/parallel-duplex/app.py").existing_local_proxy_socket
     else:
@@ -294,7 +304,7 @@ def main():
                 return {"turns": 0, "turnLimit": 0, "responses": 0, "responseLimit": 0, "unknown": 0, "blocked": False}
         budget = LocalBudget()
     web.run_app(create_app(runtime, module, budget, args.output, cloud=args.enable_cloud, asset_port=args.asset_port,
-                           session_class=session_class, factory=factory), host="127.0.0.1", port=args.port)
+                           session_class=session_class, factory=factory, action_provider=args.action_provider), host="127.0.0.1", port=args.port)
 
 
 if __name__ == "__main__":

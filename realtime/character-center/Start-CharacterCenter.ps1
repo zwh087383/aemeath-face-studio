@@ -2,6 +2,7 @@ param([string]$WaiRoot='F:\AI-Shared\WAI',[string]$OutputDirectory='',
  [string]$DataDirectory='', [int]$Port=18808,[int]$AssetPort=18809,
  [string]$ResumeSource='', [string]$ResumeEvidence='', [string]$ResumeStatus='', [string]$ResumeState='',
  [int]$TurnLimit=12,[int]$ListenerLimit=18,[int]$VoiceLimit=30,[int]$ActionLimit=60,[int]$BackgroundLimit=120,[int]$PcmSeconds=480,
+ [ValidateSet('qwen','deepseek')][string]$ActionProvider='qwen',
  [switch]$EnableCloud,[switch]$UseLocalProxy,[switch]$NoBrowser)
 $ErrorActionPreference='Stop'
 $CenterRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -14,7 +15,7 @@ $CenterOutput=[IO.Path]::GetFullPath($OutputDirectory)
 $CenterUrl='http://127.0.0.1:'+$Port
 try { $CenterExisting=Invoke-RestMethod -Uri ($CenterUrl+'/api/duplex/status') -TimeoutSec 2 } catch { $CenterExisting=$null }
 if ($CenterExisting) {
- if ($CenterExisting.experimentId -ne 'continuous-character-center-20261025' -or $CenterExisting.cloudEnabled -ne [bool]$EnableCloud) { throw 'Port already serves another mode. Choose another port; do not stop unrelated work.' }
+ if ($CenterExisting.experimentId -ne 'continuous-character-center-20261025' -or $CenterExisting.cloudEnabled -ne [bool]$EnableCloud -or ($CenterExisting.actionProvider -and $CenterExisting.actionProvider -ne $ActionProvider)) { throw 'Port already serves another mode. Choose another port; do not stop unrelated work.' }
  if (-not $NoBrowser) { Start-Process ($CenterUrl+'/character-center/') }
  Write-Output ($CenterUrl+'/character-center/');return
 }
@@ -24,7 +25,7 @@ $CenterAssetProcess=$null
 if (-not (Get-NetTCPConnection -State Listen -LocalPort $AssetPort -ErrorAction SilentlyContinue)) {
  $CenterAssetProcess=Start-Process -FilePath 'node' -ArgumentList @((Join-Path $PSScriptRoot 'assets.mjs'),'--port',[string]$AssetPort) -WorkingDirectory $CenterRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $CenterOutput 'assets-stdout.log') -RedirectStandardError (Join-Path $CenterOutput 'assets-stderr.log')
 }
-$CenterArgs=@('-u',(Join-Path $PSScriptRoot 'app.py'),'--wai-root',$WaiRoot,'--output',$CenterOutput,'--port',[string]$Port,'--asset-port',[string]$AssetPort)
+$CenterArgs=@('-u',(Join-Path $PSScriptRoot 'app.py'),'--wai-root',$WaiRoot,'--output',$CenterOutput,'--port',[string]$Port,'--asset-port',[string]$AssetPort,'--action-provider',$ActionProvider)
 if ($EnableCloud) {
  if (-not $DataDirectory) { $DataDirectory=Join-Path $CenterRuntime 'voice-experiments\character-center-20261025' }
  if ((Test-Path -LiteralPath $DataDirectory) -and @(Get-ChildItem -LiteralPath $DataDirectory -Force).Count) { throw 'Runtime data exists. No automatic reset or repeated cloud batch.' }

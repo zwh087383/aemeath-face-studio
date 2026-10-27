@@ -62,8 +62,11 @@ class CharacterCenterSession(model.ModelDuplexSession):
     voice_warm_ttl_seconds = 60
 
     def __init__(self, *args, catalog=None, math_interval=.1, activity_validator=None,
-                 activity_context_provider=None, activity_context_validator=None, **kwargs):
+                 activity_context_provider=None, activity_context_validator=None,
+                 planner_connection_class=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if planner_connection_class is not None:
+            self.planner_connection_class = planner_connection_class
         self.catalog = protocol.load_catalog(catalog)
         self.action_schema = tuple(row["id"] for row in self.catalog)
         self.actor = {"posture": "unknown", "hands": "unknown", "activity": "unknown"}
@@ -825,6 +828,7 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 sourceKey=job.source_key, sourceVersion=job.source_version,
                 turnId=job.payload.get("turn_id"), activityId=job.payload.get("activity_id"),
                 plannerConnectionId=connection.id if connection else None,
+                plannerProvider=getattr(connection, "provider", "qwen"),
                 plannerResponseId=response_id, semanticMs=round((time.monotonic()-origin)*1000, 3), **fields)
         try:
             mark("guard_start")
@@ -861,7 +865,11 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 await event("character_semantic_skipped", reason="action_budget_unavailable")
                 return
             mark("budget_start")
-            reservation = await self.budget.acall("reserve", role, connection.id, job.request_id)
+            token_bound = getattr(connection, "token_bound", None)
+            if token_bound is None:
+                reservation = await self.budget.acall("reserve", role, connection.id, job.request_id)
+            else:
+                reservation = await self.budget.acall("reserve", role, connection.id, job.request_id, token_bound)
             mark("budget_reserved")
             mark("final_guard_start")
             if not await self._valid(job):
