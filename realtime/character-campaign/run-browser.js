@@ -5,12 +5,18 @@ async page => {
   const api=window.characterCenter, now=()=>performance.now(), sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const post=async(url,data)=>{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw Error('http_'+r.status+':'+url);return r.json();};
   const spec=await(await fetch('/api/campaign/case')).json();
-  const result=window.campaign={id:spec.id,phase:'starting',startedAt:new Date().toISOString(),turns:[],gaps:[],activities:[],samples:[],interruptions:[],errors:[]};
+  const result=window.campaign={id:spec.id,phase:'starting',startedAt:new Date().toISOString(),turns:[],gaps:[],activities:[],samples:[],bodyEvents:[],interruptions:[],errors:[]};
   let timer, busy=false, lastTick=0;
-  const compact=()=>{const {samples,...rest}=result;return {...rest,sampleCount:samples.length};};
-  const observe=()=>{const s=api.state();return {at:now(),ready:s.ready,blocked:s.blocked,audio:s.audio,activity:s.activity,
-    body:s.body,face:s.face,renderFault:s.renderFault,mathSource:'actual_WAI_stream'};};
-  const publish=()=>post('/api/campaign/progress',compact());
+  const compact=()=>{const {samples,bodyEvents,...rest}=result;return {...rest,sampleCount:samples.length,bodyEventCount:bodyEvents.length};};
+  const seenBody=new Set();
+  const observe=()=>{const s=api.state();for(const e of s.body.events){const key=`${e.id}:${e.type}:${e.at}`;if(!seenBody.has(key)){seenBody.add(key);result.bodyEvents.push(e);}}
+    const actor=s.body.actorState;return {at:now(),ready:s.ready,blocked:s.blocked,audio:s.audio,activity:s.activity,
+    body:{active:s.body.active,pending:s.body.pending,executor:s.body.executor,actorState:{posture:actor.posture,support:actor.support,hands:actor.hands,
+      props:actor.props,phase:actor.phase,canYield:actor.canYield,bones:actor.bones,rotations:actor.rotations}},
+    face:{time:s.face.time,math:s.face.math,attitude:s.face.attitude,reactions:s.face.reactions,last:s.face.last,weights:s.face.weights},
+    renderFault:s.renderFault,mathSource:'actual_WAI_stream'};};
+  let publishTail=Promise.resolve();
+  const publish=()=>{const value=compact();publishTail=publishTail.catch(()=>{}).then(()=>post('/api/campaign/progress',value));return publishTail;};
   const wait=async(test,label,seconds=90)=>{result.phase=label;const until=now()+seconds*1000;while(now()<until){const s=api.state();
     if(s.renderFault)throw Error('render_fault:'+s.renderFault.message);if(s.blocked)throw Error('blocked_session');
     const found=await test(s);if(found)return found;await sleep(100);}throw Error('deadline:'+label);};

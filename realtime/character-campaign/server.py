@@ -82,12 +82,14 @@ def main():
     async def case_get(request):
         allowed(request)
         return web.json_response(case)
+    progress_lock=asyncio.Lock()
     async def progress(request):
         allowed(request,True)
         value=await request.json()
         if value.get("id")!=case["id"]: raise web.HTTPBadRequest(text="wrong_case")
         value["serverReceivedAt"]=time.time()
-        await asyncio.to_thread(save_json,out/"progress.json",value)
+        async with progress_lock:
+            await asyncio.to_thread(save_json,out/"progress.json",value)
         return web.json_response({"saved":True})
     async def sample_report(request):
         allowed(request,True)

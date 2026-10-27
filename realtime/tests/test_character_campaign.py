@@ -69,3 +69,15 @@ def test_fixture_runner_cannot_choose_actions():
     for prohibited in ("componentCommand(","gesture:wave","actions:[","character_actions","setAttitude(","local-wave"):
         assert prohibited not in runner
     assert "gap.actualSeconds" in runner and "performance.now()" in runner
+
+def test_execution_event_stages_with_same_action_id_are_not_deduplicated(tmp_path):
+    import json
+    analyzer=module("campaign_analysis",ROOT/"realtime/character-campaign/analyze.py")
+    case=next(s for s in manifest.build()["scenarios"] if s["kind"]=="single")
+    folder=tmp_path/"cases"/case["id"];folder.mkdir(parents=True)
+    events=[{"id":"same-action","type":kind,"at":i,"action":"gesture:agree"}
+            for i,kind in enumerate(("action_queued","action_started","action_completed"))]
+    (folder/"campaign-observations.json").write_text(json.dumps({"phase":"finished","samples":[{"body":{"events":events}}, {"body":{"events":events}}]}))
+    result=analyzer.case_summary(tmp_path,case)
+    assert result["actions"]=={"gesture:agree":1}
+    assert result["bodyEventCounts"]=={"action_queued":1,"action_started":1,"action_completed":1}
