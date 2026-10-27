@@ -38,6 +38,15 @@ def main():
     install_accounting(budget)
     runtime,module=bootstrap_runtime(cfg)
     from tools.voice_avatar.duplex_transport import save_json
+    original_save_json=save_json
+    def save_json(path,value):
+        # The Windows dashboard/runner may briefly hold the destination open.
+        # Retry only this measurement-file replace, never a model request.
+        for attempt in range(8):
+            try:return original_save_json(path,value)
+            except PermissionError:
+                if attempt==7:raise
+                time.sleep(.025*(attempt+1))
     from activity import ReadingActivities
     from aiohttp import web
     from app import create_app,load

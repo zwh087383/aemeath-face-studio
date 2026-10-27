@@ -18,7 +18,11 @@ ROOT=HERE.parents[1]
 def save(path,value):
     path=Path(path);temp=path.with_suffix(path.suffix+".tmp")
     temp.write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding="utf-8")
-    temp.replace(path)
+    for attempt in range(8):
+        try:temp.replace(path);return
+        except PermissionError:
+            if attempt==7:raise
+            time.sleep(.025*(attempt+1))
 
 def read(path,default=None):
     try: return json.loads(Path(path).read_text(encoding="utf-8-sig"))
@@ -61,7 +65,7 @@ def main():
         charged={key:0 for key in data['totals']['limits']};pcm_charged=0
         for evidence_root in (out,a.prior_output):
             if evidence_root is None:continue
-            for ledger_path in evidence_root.glob('cases/*/ledger.json'):
+            for ledger_path in evidence_root.glob('**/ledger.json'):
                 old=read(ledger_path,{});pcm_charged+=old.get('pcmBytes',0)/32000
                 for row in old.get('responses',[]):
                     if row.get('state')!='unused':charged[row['channel']]+=1

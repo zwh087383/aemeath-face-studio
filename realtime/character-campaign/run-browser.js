@@ -1,6 +1,7 @@
 async page => {
  await page.waitForFunction(()=>window.characterCenter?.ready===true,null,{timeout:90000});
  await page.locator('[data-view="full"]').click();
+ await page.evaluate(()=>{for(const el of document.querySelectorAll('button,input,select,textarea')){el.style.pointerEvents='none';el.tabIndex=-1;}const note=document.createElement('p');note.textContent='自动测试正在运行。此页只读观看；进度和回放请看汇总页。';note.style.cssText='padding:12px;background:#dce9df;font-weight:600';document.querySelector('main').prepend(note);});
  return await page.evaluate(async()=>{
   const api=window.characterCenter, now=()=>performance.now(), sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const post=async(url,data)=>{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw Error('http_'+r.status+':'+url);return r.json();};
