@@ -68,6 +68,7 @@ def case_summary(root,spec):
          "channels":dict(Counter(r.get("channel") for r in ledger.get("responses",[]) if r.get("state")!="unused")),"pcmSeconds":ledger.get("pcmBytes",0)/32000,
          "unknown":len(unknown),"active":len(active),"unknownMaxReservedTokens":sum(sum(r.get("maxTokens",{}).get(k,0) for k in ("input","output")) for r in unknown)},
       "renderFault":raw.get("finalBrowser",{}).get("renderFault"),"runtimeEvidence":raw.get("runtimeEvidence",{}),
+      "recordingStartedAt":raw.get("recordingStartedAt"),"renderPerformance":raw.get("renderPerformance"),
       "video":next((p.name for p in folder.glob("preview-*-original-speed.webm")),None)}
     if signature:CACHE[signature]=result
     return result

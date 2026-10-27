@@ -8,8 +8,9 @@ async page => {
   const result=window.campaign={id:spec.id,phase:'starting',startedAt:new Date().toISOString(),turns:[],gaps:[],activities:[],samples:[],bodyEvents:[],interruptions:[],errors:[]};
   let timer, busy=false, lastTick=0;
   const compact=()=>{const {samples,bodyEvents,...rest}=result;return {...rest,sampleCount:samples.length,bodyEventCount:bodyEvents.length};};
-  const seenBody=new Set();
-  const observe=()=>{const s=api.state();for(const e of s.body.events){const key=`${e.id}:${e.type}:${e.at}`;if(!seenBody.has(key)){seenBody.add(key);result.bodyEvents.push(e);}}
+  const seenBody=new Set();let lastFrameAt=-1;result.renderPerformance={frames:0,elapsedMs:0,maxFrameMs:0,over50ms:0,hiddenFrames:0};
+  const observe=()=>{const s=api.state();for(const f of s.frames){if(f.at<=lastFrameAt)continue;lastFrameAt=f.at;const p=result.renderPerformance;p.frames++;p.elapsedMs+=f.dt;p.maxFrameMs=Math.max(p.maxFrameMs,f.dt);if(f.dt>50)p.over50ms++;if(f.hidden)p.hiddenFrames++;}
+    for(const e of s.body.events){const key=`${e.id}:${e.type}:${e.at}`;if(!seenBody.has(key)){seenBody.add(key);result.bodyEvents.push(e);}}
     const actor=s.body.actorState;return {at:now(),ready:s.ready,blocked:s.blocked,audio:s.audio,activity:s.activity,
     body:{active:s.body.active,pending:s.body.pending,executor:s.body.executor,actorState:{posture:actor.posture,support:actor.support,hands:actor.hands,
       props:actor.props,phase:actor.phase,canYield:actor.canYield,bones:actor.bones,rotations:actor.rotations}},
@@ -26,7 +27,7 @@ async page => {
   const postFault=async()=>{await api.activityRevoke();result.interruptions.push({kind:'background_source_revoked',at:now(),state:observe()});};
   window.campaignTask=(async()=>{
    const status=await api.refresh();if(status.actionProvider!=='deepseek'||!status.cloudEnabled||status.budget.turns!==0)throw Error('wrong_or_used_case');
-   api.recordStart();await api.connect();
+   result.recordingStartedAt=now();api.recordStart();await api.connect();
    result.initialCondition=await post('/api/character-center/initial-state',{fixtureId:spec.id});
    timer=setInterval(async()=>{if(busy)return;busy=true;try{result.samples.push(observe());if(now()-lastTick>3000){lastTick=now();await publish();}}catch(e){result.errors.push('sample:'+e.message);}finally{busy=false;}},1000);
    for(let i=0;i<spec.turns.length;i++){
