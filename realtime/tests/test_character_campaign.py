@@ -113,3 +113,17 @@ def test_transcription_capacity_does_not_change_stimuli_or_global_ceiling():
     single=next(c for c in original['scenarios'] if c['kind']=='single')
     assert policy.effective_case(single,20)==single
     with pytest.raises(ValueError):policy.effective_case(case,21)
+
+
+def test_split_transcripts_cannot_count_as_more_dialogue_fixtures():
+    analyzer=module('campaign_coverage_analysis',ROOT/'realtime/character-campaign/analyze.py')
+    spec={'turns':[{'id':'one'},{'id':'two'},{'id':'three'}]}
+    inputs=[{'id':'one','at':100,'sentPackets':50,'finishedAt':300},
+            {'id':'two','at':500,'sentPackets':0}]
+    turns=[{'id':str(i),'input':{'startAt':at},'metrics':{'lastSpeechToVoiceMs':2000}}
+           for i,at in enumerate((150,250))]
+    coverage=analyzer.input_coverage(spec,inputs,turns)
+    assert len(coverage[0]['responseIds'])==2
+    assert sum(r['voiced'] for r in coverage)==1
+    assert sum(r['sent'] for r in coverage)==1
+    assert sum(r['feedComplete'] for r in coverage)==1
