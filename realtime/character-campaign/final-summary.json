@@ -1,0 +1,772 @@
+{
+  "experimental": true,
+  "campaign": "character-campaign-simtime-20261027",
+  "completedAt": "2026-10-28",
+  "catalogCapabilities": 83,
+  "finishedScenarios": 100,
+  "plannedInputs": 180,
+  "submittedInputs": 174,
+  "voicedInputs": 171,
+  "coverage": {
+    "single": {
+      "planned": 80,
+      "completeInputAndVoiceCoverage": 79
+    },
+    "short": {
+      "planned": 10,
+      "completeInputAndVoiceCoverage": 10
+    },
+    "long": {
+      "planned": 10,
+      "completeInputAndVoiceCoverage": 7
+    }
+  },
+  "incompleteScenarios": [
+    {
+      "id": "long-02",
+      "kind": "long",
+      "planned": 5,
+      "submitted": 4,
+      "voicedFixtures": 4,
+      "errors": [
+        "sample:http_500:/api/campaign/progress",
+        "listener_not_recoverably_idle"
+      ]
+    },
+    {
+      "id": "long-04",
+      "kind": "long",
+      "planned": 5,
+      "submitted": 2,
+      "voicedFixtures": 1,
+      "errors": [
+        "input_stopped"
+      ]
+    },
+    {
+      "id": "long-07",
+      "kind": "long",
+      "planned": 5,
+      "submitted": 3,
+      "voicedFixtures": 2,
+      "errors": [
+        "input_stopped"
+      ]
+    },
+    {
+      "id": "single-027",
+      "kind": "single",
+      "planned": 1,
+      "submitted": 1,
+      "voicedFixtures": 0,
+      "errors": [
+        "input_stopped"
+      ]
+    }
+  ],
+  "normalRenderResponses": 169,
+  "excludedRenderCases": [
+    "single-071",
+    "single-079"
+  ],
+  "phaseMs": {
+    "tail_to_stop": {
+      "n": 169,
+      "median": 970.32,
+      "p95": 1272.51,
+      "max": 7060.04
+    },
+    "stop_to_transcript": {
+      "n": 169,
+      "median": 242.1,
+      "p95": 456.8,
+      "max": 723.9
+    },
+    "transcript_to_request": {
+      "n": 169,
+      "median": 814.7,
+      "p95": 2879.6,
+      "max": 6978
+    },
+    "request_to_voice": {
+      "n": 169,
+      "median": 1262.24,
+      "p95": 2125.43,
+      "max": 3397.85
+    }
+  },
+  "latencyMs": {
+    "all:lastSpeechToVoiceMs": {
+      "n": 171,
+      "median": 3430.9,
+      "p95": 6397.61,
+      "max": 10670.98
+    },
+    "ordinaryRender:lastSpeechToVoiceMs": {
+      "n": 169,
+      "median": 3443.79,
+      "p95": 6397.61,
+      "max": 10670.98
+    },
+    "all:requestToVoiceMs": {
+      "n": 171,
+      "median": 1262.24,
+      "p95": 2125.43,
+      "max": 3397.85
+    },
+    "ordinaryRender:requestToVoiceMs": {
+      "n": 169,
+      "median": 1262.24,
+      "p95": 2125.43,
+      "max": 3397.85
+    },
+    "all:commandLeadMs": {
+      "n": 171,
+      "median": -137.35,
+      "p95": 553.53,
+      "max": 2235.05
+    },
+    "ordinaryRender:commandLeadMs": {
+      "n": 169,
+      "median": -137.35,
+      "p95": 553.53,
+      "max": 2235.05
+    },
+    "all:bodyStartLeadMs": {
+      "n": 171,
+      "median": -203.72,
+      "p95": 475.71,
+      "max": 2168.95
+    },
+    "ordinaryRender:bodyStartLeadMs": {
+      "n": 169,
+      "median": -202.84,
+      "p95": 475.71,
+      "max": 2168.95
+    },
+    "all:visibleBodyLeadMs": {
+      "n": 171,
+      "median": -325.16,
+      "p95": 272.75,
+      "max": 1925.55
+    },
+    "ordinaryRender:visibleBodyLeadMs": {
+      "n": 169,
+      "median": -323.26,
+      "p95": 272.75,
+      "max": 1925.55
+    },
+    "all:visibleFaceLeadMs": {
+      "n": 163,
+      "median": -178.62,
+      "p95": 555.93,
+      "max": 2382.25
+    },
+    "ordinaryRender:visibleFaceLeadMs": {
+      "n": 161,
+      "median": -177.96,
+      "p95": 555.93,
+      "max": 2382.25
+    }
+  },
+  "lateRelativeToVoiceMs": {
+    "commandLeadMs": {
+      "n": 169,
+      "median": 137.35,
+      "p95": 1147.97,
+      "max": 2276.93
+    },
+    "bodyStartLeadMs": {
+      "n": 169,
+      "median": 202.84,
+      "p95": 1317.63,
+      "max": 2337.33
+    },
+    "visibleBodyLeadMs": {
+      "n": 169,
+      "median": 323.26,
+      "p95": 1402.47,
+      "max": 2564.03
+    },
+    "visibleFaceLeadMs": {
+      "n": 161,
+      "median": 177.96,
+      "p95": 1548.86,
+      "max": 23229.67
+    }
+  },
+  "synchronization": {
+    "all:commandLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 80,
+        "n": 171
+      },
+      {
+        "withinMs": 500,
+        "count": 127,
+        "n": 171
+      },
+      {
+        "withinMs": 1000,
+        "count": 158,
+        "n": 171
+      }
+    ],
+    "ordinaryRender:commandLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 79,
+        "n": 169
+      },
+      {
+        "withinMs": 500,
+        "count": 126,
+        "n": 169
+      },
+      {
+        "withinMs": 1000,
+        "count": 156,
+        "n": 169
+      }
+    ],
+    "all:bodyStartLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 70,
+        "n": 171
+      },
+      {
+        "withinMs": 500,
+        "count": 124,
+        "n": 171
+      },
+      {
+        "withinMs": 1000,
+        "count": 156,
+        "n": 171
+      }
+    ],
+    "ordinaryRender:bodyStartLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 70,
+        "n": 169
+      },
+      {
+        "withinMs": 500,
+        "count": 124,
+        "n": 169
+      },
+      {
+        "withinMs": 1000,
+        "count": 155,
+        "n": 169
+      }
+    ],
+    "all:visibleBodyLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 57,
+        "n": 171
+      },
+      {
+        "withinMs": 500,
+        "count": 102,
+        "n": 171
+      },
+      {
+        "withinMs": 1000,
+        "count": 155,
+        "n": 171
+      }
+    ],
+    "ordinaryRender:visibleBodyLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 57,
+        "n": 169
+      },
+      {
+        "withinMs": 500,
+        "count": 102,
+        "n": 169
+      },
+      {
+        "withinMs": 1000,
+        "count": 154,
+        "n": 169
+      }
+    ],
+    "all:visibleFaceLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 69,
+        "n": 163
+      },
+      {
+        "withinMs": 500,
+        "count": 110,
+        "n": 163
+      },
+      {
+        "withinMs": 1000,
+        "count": 141,
+        "n": 163
+      }
+    ],
+    "ordinaryRender:visibleFaceLeadMs": [
+      {
+        "withinMs": 250,
+        "count": 69,
+        "n": 161
+      },
+      {
+        "withinMs": 500,
+        "count": 110,
+        "n": 161
+      },
+      {
+        "withinMs": 1000,
+        "count": 140,
+        "n": 161
+      }
+    ]
+  },
+  "decisionTimingMs": {
+    "request_sent": {
+      "n": 928,
+      "median": 16.0,
+      "p95": 125.0,
+      "max": 3157.0
+    },
+    "first_argument_delta": {
+      "n": 928,
+      "median": 765.0,
+      "p95": 1329.0,
+      "max": 4157.0
+    },
+    "first_complete_arguments": {
+      "n": 928,
+      "median": 1421.5,
+      "p95": 2016.0,
+      "max": 4954.0
+    },
+    "first_body_delivery": {
+      "n": 809,
+      "median": 1453.0,
+      "p95": 2078.0,
+      "max": 4657.0
+    },
+    "user_body_decision_ms": {
+      "n": 418,
+      "median": 1453.0,
+      "p95": 2110.0,
+      "max": 4657.0
+    }
+  },
+  "activityLifecycle": {
+    "complete": {
+      "planned": 10,
+      "started": 10,
+      "matched": 9,
+      "done": 9,
+      "failed": 1
+    },
+    "interrupted": {
+      "planned": 5,
+      "started": 4,
+      "matched": 4,
+      "done": 4,
+      "not_started": 1
+    },
+    "failed": {
+      "planned": 5,
+      "started": 5,
+      "matched": 5,
+      "failed": 5
+    }
+  },
+  "activityModelChoices": {
+    "action:head_settle": 6,
+    "gesture:breath_settle": 2,
+    "action:look_up": 3,
+    "gesture:refocus": 16,
+    "gesture:attentive_tilt": 14,
+    "gesture:offer_turn": 3,
+    "gesture:look_up": 1,
+    "gesture:weight_settle": 2,
+    "gesture:finger_release": 1,
+    "gesture:listening_pause": 2,
+    "gesture:listen": 5,
+    "gesture:invite_continue": 1
+  },
+  "executedActionKinds": 54,
+  "executedActions": {
+    "gesture:celebration_compact": 21,
+    "gesture:delighted": 43,
+    "gesture:laugh": 2,
+    "action:head_settle": 21,
+    "gesture:breath_settle": 21,
+    "gesture:chest": 12,
+    "gesture:agree": 40,
+    "action:nod": 35,
+    "action:look_up": 2,
+    "gesture:refocus": 18,
+    "gesture:attentive_tilt": 50,
+    "action:tilt": 35,
+    "gesture:enumerate_two": 48,
+    "action:listen_dip": 12,
+    "gesture:concerned": 15,
+    "gesture:comfort": 54,
+    "gesture:listening_pause": 19,
+    "gesture:compare_options": 19,
+    "gesture:explain": 41,
+    "gesture:offer_turn": 19,
+    "gesture:curious": 11,
+    "gesture:listen": 81,
+    "action:thought_tilt": 14,
+    "action:tiny_agree": 22,
+    "gesture:reassure": 22,
+    "gesture:amused": 16,
+    "gesture:explain_sequence": 5,
+    "gesture:surprise": 1,
+    "gesture:micro_ack": 21,
+    "gesture:shy": 1,
+    "gesture:outline_space": 4,
+    "gesture:thinking_glance": 5,
+    "gesture:think": 27,
+    "gesture:recall_up": 31,
+    "gesture:invite_continue": 9,
+    "gesture:greet": 8,
+    "gesture:weight_settle": 9,
+    "gesture:finger_release": 1,
+    "gesture:small_no": 3,
+    "gesture:determined": 2,
+    "gesture:present_left": 3,
+    "gesture:emphasize_down": 11,
+    "action:double_nod": 9,
+    "gesture:wave": 2,
+    "action:acknowledge": 15,
+    "gesture:look_up": 2,
+    "gesture:clarify": 5,
+    "gesture:storytelling_arc": 1,
+    "gesture:relieved": 1,
+    "gesture:farewell_linger": 1,
+    "gesture:warm_welcome": 3,
+    "gesture:ask_check": 1,
+    "action:blink": 1,
+    "gesture:grateful": 2
+  },
+  "executionReceipts": {
+    "action_queued": 1492,
+    "action_expired": 321,
+    "body_handover": 879,
+    "action_admitted": 880,
+    "action_started": 877,
+    "action_completed": 692,
+    "action_cancelled": 316
+  },
+  "expiredReasons": {
+    "voice_anchor_missed": 321
+  },
+  "cancelReasons": {
+    "confirmed_voice_barge_in": 133,
+    "model_replace": 124,
+    "paused": 5,
+    "explicit_user_interrupt": 43,
+    "browser_disconnected": 1,
+    "dependency_expired": 7,
+    "direct_context_revoked": 2,
+    "failed": 1
+  },
+  "expressionCommands": {
+    "reaction:surprise": 9,
+    "attitude:excited": 35,
+    "attitude:warm": 648,
+    "attitude:attention": 44,
+    "attitude:concern": 66,
+    "reaction:concern": 3,
+    "attitude:curious": 25,
+    "attitude:playful": 13,
+    "reaction:smile": 23,
+    "attitude:serious": 4,
+    "reaction:confused": 4
+  },
+  "interruptions": {
+    "reasons": {
+      "confirmed_voice_barge_in": 15,
+      "explicit_user_interrupt": 20,
+      "disconnect": 6,
+      "direct_context_revoked": 1
+    },
+    "buttonCallbacksMs": {
+      "n": 20,
+      "median": 1.1,
+      "p95": 2.5,
+      "max": 3.1
+    },
+    "allRecordedSourcesCleared": true,
+    "localVoicePauses": [
+      {
+        "case": "short-01",
+        "accepted": true,
+        "sourcesBefore": 15,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 6009.5,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "long-06",
+        "accepted": true,
+        "sourcesBefore": 0,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 2768.9,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "long-06",
+        "accepted": true,
+        "sourcesBefore": 0,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 3064.7,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "short-03",
+        "accepted": true,
+        "sourcesBefore": 33,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 5920.8,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "short-09",
+        "accepted": true,
+        "sourcesBefore": 12,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 6223.5,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "short-07",
+        "accepted": true,
+        "sourcesBefore": 17,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 5468.9,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "short-05",
+        "accepted": true,
+        "sourcesBefore": 20,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 3878.1,
+        "reason": "confirmed_voice_barge_in"
+      },
+      {
+        "case": "long-10",
+        "accepted": true,
+        "sourcesBefore": 0,
+        "sourcesAfter": 0,
+        "confirmationWaitMs": 255.7,
+        "reason": "confirmed_voice_barge_in"
+      }
+    ]
+  },
+  "history": {
+    "roles": {
+      "assistant": 140,
+      "user": 182
+    },
+    "queueFailures": [
+      {
+        "case": "long-02",
+        "queue": "reply_effects",
+        "failed": 1
+      },
+      {
+        "case": "long-02",
+        "queue": "input_maintenance",
+        "failed": 1
+      },
+      {
+        "case": "single-064",
+        "queue": "input_maintenance",
+        "failed": 1
+      },
+      {
+        "case": "single-002",
+        "queue": "input_maintenance",
+        "failed": 1
+      },
+      {
+        "case": "long-09",
+        "queue": "input_maintenance",
+        "failed": 2
+      },
+      {
+        "case": "long-03",
+        "queue": "reply_effects",
+        "failed": 1
+      },
+      {
+        "case": "single-027",
+        "queue": "input_maintenance",
+        "failed": 1
+      }
+    ],
+    "successfulDrainCases": 94,
+    "correctionReceipts": [
+      {
+        "case": "single-047",
+        "type": "revoked",
+        "reason": "direct_context_revoked"
+      }
+    ],
+    "settledResponses": 140,
+    "revokedAndSettledCases": []
+  },
+  "audioSampling": {
+    "statusCounts": {
+      "idle": 708,
+      "playing": 1713,
+      "ended": 1488,
+      "buffering": 131,
+      "cancelled": 226,
+      "paused": 34
+    },
+    "faultCases": [],
+    "midstreamBufferSamples": 2,
+    "midstreamBufferCases": [
+      "long-01",
+      "long-08"
+    ],
+    "limitation": "Approximate one-second snapshots cannot exclude short underruns or physical audible gaps."
+  },
+  "emotionInitialCoverage": {
+    "high_sad": {
+      "planned": 10,
+      "finished": 10,
+      "voiced": 18
+    },
+    "high_excited": {
+      "planned": 10,
+      "finished": 10,
+      "voiced": 17
+    },
+    "mild_sad": {
+      "planned": 40,
+      "finished": 40,
+      "voiced": 67
+    },
+    "happy": {
+      "planned": 40,
+      "finished": 40,
+      "voiced": 69
+    }
+  },
+  "emotionThresholdCoverage": {
+    "highSadCases": 10,
+    "highExcitedCases": 10
+  },
+  "gaps": {
+    "short": {
+      "logicalSeconds": {
+        "n": 35,
+        "median": 3.16,
+        "p95": 6.25,
+        "max": 6.25
+      },
+      "realSeconds": {
+        "n": 40,
+        "median": 3.42,
+        "p95": 6.36,
+        "max": 6.51
+      }
+    },
+    "long": {
+      "logicalSeconds": {
+        "n": 35,
+        "median": 168,
+        "p95": 187,
+        "max": 189.06
+      },
+      "realSeconds": {
+        "n": 35,
+        "median": 17.46,
+        "p95": 19.16,
+        "max": 19.53
+      }
+    }
+  },
+  "usage": {
+    "channels": {
+      "listener": 247,
+      "background": 1096,
+      "action": 991,
+      "voice": 181
+    },
+    "states": {
+      "reported": 2494,
+      "unused": 102,
+      "unknown": 19,
+      "reserved": 2
+    },
+    "reportedTokens": 7948190,
+    "unknownMaxReservedTokens": 3905536,
+    "pcmSeconds": 1401.0240624999992
+  },
+  "unsettledReservedMaxTokens": 151552,
+  "sourceVersionCounts": {
+    "realtime\\character-campaign\\analyze.py": 2,
+    "realtime\\character-campaign\\dashboard.py": 1,
+    "realtime\\character-campaign\\manifest.py": 1,
+    "realtime\\character-campaign\\preserve.py": 1,
+    "realtime\\character-campaign\\run-browser.js": 5,
+    "realtime\\character-campaign\\run.py": 5,
+    "realtime\\character-campaign\\server.py": 3,
+    "realtime\\character-campaign\\simclock.py": 1,
+    "realtime\\character-center\\action-face.mjs": 1,
+    "realtime\\character-center\\activity.py": 1,
+    "realtime\\character-center\\activity_context.py": 1,
+    "realtime\\character-center\\app.py": 1,
+    "realtime\\character-center\\assets.mjs": 1,
+    "realtime\\character-center\\audio-options.mjs": 1,
+    "realtime\\character-center\\backend.py": 1,
+    "realtime\\character-center\\body-director.mjs": 1,
+    "realtime\\character-center\\budget.py": 1,
+    "realtime\\character-center\\catalog.json": 1,
+    "realtime\\character-center\\catalog.mjs": 1,
+    "realtime\\character-center\\center.mjs": 1,
+    "realtime\\character-center\\client.mjs": 1,
+    "realtime\\character-center\\compact_protocol.py": 1,
+    "realtime\\character-center\\deepseek_planner.py": 1,
+    "realtime\\character-center\\face-profiles.mjs": 1,
+    "realtime\\character-center\\format_probe.py": 1,
+    "realtime\\character-center\\initial_state.py": 1,
+    "realtime\\character-center\\inputs.json": 1,
+    "realtime\\character-center\\measurement.mjs": 1,
+    "realtime\\character-center\\planner_input.py": 1,
+    "realtime\\character-center\\protocol.py": 1,
+    "realtime\\character-center\\provider_accounting.py": 1,
+    "realtime\\character-center\\provider_probe.py": 1,
+    "realtime\\character-center\\report.py": 1,
+    "realtime\\character-center\\resume.py": 1,
+    "realtime\\character-center\\scene.mjs": 1,
+    "realtime\\character-center\\semantic_queue.py": 1,
+    "realtime\\character-center\\suite.mjs": 1,
+    "realtime\\character-center\\viewer.mjs": 1,
+    "realtime\\character-campaign\\policy.py": 1,
+    "realtime\\character-campaign\\browser-config.json": 2,
+    "realtime\\character-campaign\\quality.py": 1
+  },
+  "evidenceBoundaries": [
+    "Synthetic user PCM; real Qwen voice and DeepSeek tool calls.",
+    "Idle scheduling at up to 10x; speech and animations at original speed.",
+    "Lifecycle success is not complete physical reading performance.",
+    "Visible-face threshold is not a semantic expression accuracy metric.",
+    "Callback return time is not microphone-to-speaker interruption latency.",
+    "The separate 262-capability library was not tested in this campaign."
+  ]
+}

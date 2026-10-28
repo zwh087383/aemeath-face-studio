@@ -24,6 +24,16 @@ def main():
         check(request)
         async with lock:value=await asyncio.to_thread(summarize,output)
         return web.json_response(value,headers={"Cache-Control":"no-store"})
+    async def final_audit(request):
+        check(request)
+        path = HERE / "final-summary.json"
+        if not path.is_file(): raise web.HTTPNotFound()
+        return web.FileResponse(path, headers={"Cache-Control": "no-store"})
+    async def report(request):
+        check(request)
+        path = HERE / "RESULTS.md"
+        if not path.is_file(): raise web.HTTPNotFound()
+        return web.Response(text=await asyncio.to_thread(path.read_text, encoding="utf-8"), content_type="text/plain", charset="utf-8")
     async def evidence(request):
         check(request);identity,name=request.match_info["identity"],request.match_info["name"]
         if not re.fullmatch(r"(?:single-\d{3}|(?:short|long)-\d{2})",identity) or not re.fullmatch(r"preview-[\w-]+\.(?:webm|png)",name):raise web.HTTPNotFound()
@@ -31,6 +41,7 @@ def main():
         if not path.is_file():raise web.HTTPNotFound()
         return web.FileResponse(path)
     app=web.Application();app.router.add_get("/",index);app.router.add_get("/api/summary",summary);app.router.add_get("/case/{identity}/{name}",evidence)
+    app.router.add_get("/api/final-audit",final_audit);app.router.add_get("/report",report)
     web.run_app(app,host="127.0.0.1",port=a.port)
 
 if __name__=="__main__":main()
