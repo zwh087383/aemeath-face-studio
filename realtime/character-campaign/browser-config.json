@@ -2,6 +2,7 @@
   "browser": {
     "browserName": "chromium",
     "launchOptions": {
+      "channel": "chrome",
       "args": [
         "--disable-background-timer-throttling",
         "--disable-backgrounding-occluded-windows",
