@@ -110,7 +110,7 @@ def main():
                 time.sleep(.4)
             else: raise TimeoutError("server_health_deadline")
             browser('close',timeout=30)
-            nav=browser("open",url+"/character-center/?campaign="+identity,"--headed")
+            nav=browser("open",url+"/character-center/?campaign="+identity,"--headed","--config="+str(HERE/"browser-config.json"))
             (caseout/"browser-navigation.txt").write_text(nav.stdout+nav.stderr,encoding="utf-8")
             if nav.returncode: raise RuntimeError("browser_navigation_failed")
             run=browser("run-code","--filename="+str(HERE/"run-browser.js"))

@@ -1,4 +1,5 @@
 async page => {
+ await page.bringToFront();
  await page.waitForFunction(()=>window.characterCenter?.ready===true,null,{timeout:90000});
  await page.locator('[data-view="full"]').click();
  await page.evaluate(()=>{for(const el of document.querySelectorAll('button,input,select,textarea')){el.style.pointerEvents='none';el.tabIndex=-1;}const note=document.createElement('p');note.textContent='自动测试正在运行。此页只读观看；进度和回放请看汇总页。';note.style.cssText='padding:12px;background:#dce9df;font-weight:600';document.querySelector('main').prepend(note);});
@@ -27,6 +28,8 @@ async page => {
     revoked:t.revoked,historySettled:t.historySettled,settledAt:t.settledAt,error:t.error};};
   const postFault=async()=>{await api.activityRevoke();result.interruptions.push({kind:'background_source_revoked',at:now(),state:observe()});};
   window.campaignTask=(async()=>{
+   result.renderPreflight=await new Promise(resolve=>{const start=now();let frames=0;const frame=()=>{frames++;if(now()-start>=1500)resolve({frames,elapsedMs:now()-start,hidden:document.hidden,focused:document.hasFocus()});else requestAnimationFrame(frame);};requestAnimationFrame(frame);});
+   if(result.renderPreflight.frames*1000/result.renderPreflight.elapsedMs<20)throw Error('render_cadence_below_20fps_before_cloud');
    const available=new Set([...document.getElementById('fixture').options].map(o=>o.value));
    if(spec.turns.some(t=>!available.has(t.id)))throw Error('stale_input_manifest_before_cloud_connect');
    const status=await api.refresh();if(status.actionProvider!=='deepseek'||!status.cloudEnabled||status.budget.turns!==0)throw Error('wrong_or_used_case');
