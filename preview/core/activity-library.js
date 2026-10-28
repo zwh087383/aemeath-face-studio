@@ -2,7 +2,7 @@
 // +X character-left. Planted feet are activity-world targets, never root-relative.
 // This is authored procedural animation, not motion capture or a physics simulation.
 import { POSTURES } from './motion-profile.js';
-import { readingBookPlan, samplePropPlacement, samplePropPickup } from './activity-prop-execution.js';
+import { readingBookPlan, samplePropPlacement, samplePropPickup, propPlacementPreparationSeconds } from './activity-prop-execution.js';
 import { propGripPair } from './activity-prop-layout.js';
 import { qeuler, qrotate, qmul, qconj } from './motion-math.js';
 import { PARTITIONED_DESK, deskLayout, deskWorldFrame, deskPropState } from './activity-desk-layout.js';
@@ -193,6 +193,16 @@ function jump(p, t, d, c) {
 }
 
 function sitDown(t, c, slow = false) {
+  if (c.safeSeatEntry) {
+    // Begin at the physically free front-of-chair stance. Reversing the
+    // supported rise keeps both feet ahead of the cushion throughout lowering.
+    // This is not a generic root bridge through the chair's occupied volume.
+    const sourceTime = Math.max(0, 3.3 - t * (slow ? 3.3 / 4.4 : 1));
+    const p = standUp(sourceTime, c);
+    p.support = sourceTime <= .6 ? 'seated' : 'standing';
+    p.phase = sourceTime <= .6 ? 'seated' : 'front_supported_lower';
+    return p;
+  }
   const p = neutral(c), target = seat(c), shiftEnd = slow ? 2.1 : 1.7, lowerEnd = slow ? 4.5 : 3.5;
   p.props = { chair: true };
   for (const [s, start] of [['L', .15], ['R', .8]]) {
@@ -218,7 +228,7 @@ function standUp(t, c) {
   p.pelvis.offset = p.pelvis.offset.map(v => u === 1 ? 0 : v * (1 - u));
   p.body.lean = .28 * Math.sin(Math.PI * clamp(t / 2.9));
   p.hands = blendPose(seat(c), neutral(c), smooth((t - 1.3) / 1.5)).hands;
-  p.support = t < 1 ? 'seated' : 'standing'; p.phase = t < .6 ? 'lean_forward' : t < 2.6 ? 'rise' : 'standing';
+  p.support = t <= .6 ? 'seated' : 'standing'; p.phase = t < .6 ? 'lean_forward' : t < 2.6 ? 'rise' : 'standing';
   return p;
 }
 
@@ -226,7 +236,7 @@ function standUpFromDesk(t, c) {
   // The reading desk has a retained chair behind the exit. Its explicit wider
   // retreat creates room for the existing side-step without changing the
   // default clip, moving the desk, or reducing the walking knee/body motion.
-  const retreat = c.deskRetreat === 5.5 ? 5.5 : 3.5, shiftBegin = .25, shiftEnd = 2.8, riseBegin = 3.35;
+  const retreat = Number.isFinite(c.deskRetreat) && c.deskRetreat >= .15 && c.deskRetreat <= 7.05 ? c.deskRetreat : 3.5, shiftBegin = .25, shiftEnd = 2.8, riseBegin = 3.35;
   const shiftAt = time => retreat * smooth((time - shiftBegin) / (shiftEnd - shiftBegin));
   if (t >= riseBegin) {
     const p = standUp(t - riseBegin, c);
@@ -262,6 +272,17 @@ function standUpFromDesk(t, c) {
   }
   p.body.lean = .05 * Math.sin(Math.PI * clamp(t / riseBegin));
   p.phase = t < .3 ? 'desk_prepare_retreat' : t < 3.15 ? 'desk_retreat_seated' : 'desk_ready_to_rise';
+  return p;
+}
+
+function approachDeskSeated(t, c) {
+  const advance = c.deskAdvance ?? 7;
+  const p = standUpFromDesk(Math.max(0, 3.35 - t), { ...c, deskRetreat: advance });
+  p.root.position[2] += advance;
+  for (const side of ['L', 'R']) p.feet[side].position[2] += advance;
+  p.props.chair.position[2] += advance;
+  p.seatOffset = [0, 0, p.root.position[2]];
+  p.support = 'seated'; p.phase = t < .2 ? 'desk_approach_prepare' : t >= 3.35 ? 'seated_at_desk' : 'desk_approach_seated';
   return p;
 }
 
@@ -469,6 +490,9 @@ define('stand_up', '从椅子上站起', 'seated', 3.3, { kind: 'stand_up', init
 define('stand_up_from_desk', '退椅离桌后起身', 'seated', 6.85, { kind: 'stand_up_from_desk', initialSupport: 'seated', endSupport: 'standing', requires: ['chair', 'table'],
   description: '保持坐姿把椅子向后移，双脚交替后移，再在桌外站起；桌子留在原处。',
   descriptionEn: 'Retreat with the chair using alternating backward foot placements, then stand clear of the table retained in place.' });
+define('approach_desk_seated', '坐稳后移椅到桌前', 'seated', 3.35, { kind: 'approach_desk_seated', initialSupport: 'seated', endSupport: 'seated', requires: ['chair', 'table'],
+  description: '已在拉出的真椅上坐稳，椅桌朝向与横向对齐，距离在0.15至7.05模型单位内；脚交替支撑前移椅子和身体，桌及物品留在原处，原持物不放开。',
+  descriptionEn: 'While actually seated on the pulled-out aligned chair, use alternating planted feet to move the chair to the fixed desk. Preserve held items. Requires 0.15 to 7.05 model units of clear aligned travel.' });
 for (const [id, name, kind, duration] of [
   ['sit_listen', '坐着认真倾听', 'sit_listen', 7], ['sit_relax', '坐着放松休息', 'sit_relax', 8],
   ['sit_talk', '坐着抬手交谈', 'sit_talk', 6], ['sit_stretch', '坐着伸个懒腰', 'sit_stretch', 6],
@@ -531,12 +555,21 @@ for (const definition of Object.values(library)) {
     definition.heldVariant = 'carry-preserving-locomotion';
     definition.heldVariantDescription = '持物版本保留原步幅、落脚和身体运动；持物的手继续承重，不称为空手摆臂版本。';
   }
-  if (['sit_down', 'stand_up', 'stand_up_from_desk', 'sit_listen', 'sit_relax', 'ankle_cross'].includes(definition.kind)
+  if (['sit_down', 'stand_up', 'stand_up_from_desk', 'approach_desk_seated', 'sit_listen', 'sit_relax', 'ankle_cross'].includes(definition.kind)
     && !definition.freeHands?.length) {
     definition.heldVariant = 'supported-posture-transfer';
     definition.heldVariantDescription = '明确的持物坐站/静候版本；保留原座面、脚下支撑与身体幅度，手部保持可靠持物。';
   }
 }
+
+// Extend only the event-free working middle. Acquisition, page turns and lid
+// opening/closing stay outside these windows and always keep source speed.
+for (const [id, start, end, blend] of [
+  ['read_standing', 1.2, 4.6, .4], ['read_seated', 1.2, 4.6, .4],
+  ['write_at_desk', 1.8, 6.6, .4], ['type_at_desk', 2, 5.8, .4],
+  ['sit_listen', 1.3, 5.6, .4], ['sit_relax', 1.3, 6.6, .4],
+  ['study_at_desk', 4, 7.6, .4],
+]) library[id].continuation = { start, end, blend };
 
 export const ACTIVITY_LIBRARY = deepFreeze(library);
 export const ACTIVITY_IDS = Object.freeze(Object.keys(ACTIVITY_LIBRARY));
@@ -545,27 +578,41 @@ export function sampleActivity(id, time, context = {}) {
   if (!Object.hasOwn(ACTIVITY_LIBRARY, id)) throw new RangeError(`Unknown activity: ${id}`);
   const d = ACTIVITY_LIBRARY[id];
   if (!Number.isFinite(time)) throw new TypeError('Activity time must be finite');
-  const t = clamp(time, 0, d.duration);
+  const duration = d.duration + propPlacementPreparationSeconds(d, context);
+  const t = clamp(time, 0, duration);
   let p = d.initialSupport === 'seated' ? seat(context) : neutral(context);
   if (d.kind === 'gait') gait(p, t, d, context);
   else if (d.kind === 'jump') jump(p, t, d, context);
   else if (d.kind === 'sit_down') p = sitDown(t, context, d.slow);
   else if (d.kind === 'stand_up') p = standUp(t, context);
   else if (d.kind === 'stand_up_from_desk') p = standUpFromDesk(t, context);
+  else if (d.kind === 'approach_desk_seated') p = approachDeskSeated(t, context);
   else if (d.kind === 'put_prop') p = samplePropPlacement(p, t, d, context);
   else if (d.kind === 'take_prop') p = samplePropPickup(p, t, d, context);
   else if (d.reading) reading(p, t, d, context);
   else if (d.category === 'exercise') exercise(p, t, d, context);
   else daily(p, t, d, context);
-  return { ...p, id, time: t, duration: d.duration, done: time >= d.duration, endSupport: d.endSupport };
+  return { ...p, id, time: t, duration, done: time >= duration, endSupport: d.endSupport };
 }
 
+const safeDeskSequenceSetup = { ...PARTITIONED_DESK.setupProps,
+  chair: { visible: true, attachment: 'floor', position: [0, 0, -8.2] } };
+const safeDeskSequenceStep = (activity, index) => ({ activity,
+  context: { deskLayout: 'partitioned', ...(activity === 'stand_up_from_desk' ? { deskRetreat: 7 } : {}) },
+  ...(index < 2 ? { satisfiedWhen: 'already-seated-at-same-desk' } : {}),
+  ...(index === 0 ? { setupProps: safeDeskSequenceSetup } : {}) });
+const safeDeskInitialScene = { kind: 'pulled-out-desk-entry', chairRetreat: 7,
+  description: '独立预览在已拉出的椅子前布置真实站位；运行中的现有桌椅不移动，紧桌站姿必须先取得真实进入空间。' };
+
 export const ACTIVITY_SEQUENCES = deepFreeze({
-  reading_break: { name: '走来坐下，读书后绕开桌椅离开', description: '行走、分区阅读桌前落座、从真实桌上拿书，阅读翻页和抬头合书后放回；把椅子退远再起身，向左侧移绕开保留的桌椅，转身后走远。', steps: ['walk_stop', 'sit_down', 'take_book_seated', 'read_seated', 'page_turn_seated', 'read_look_up', 'close_book', 'put_book_seated', 'stand_up_from_desk', 'walk_left', 'turn_around', 'walk_forward'].map((activity, index) => ({ activity, context: { deskLayout: 'partitioned', ...(index === 8 ? { deskRetreat: 5.5 } : {}) }, ...(index < 2 ? { satisfiedWhen: 'already-seated-at-same-desk' } : {}), ...(index === 1 ? { setupProps: PARTITIONED_DESK.setupProps } : {}) })) },
+  reading_break: { name: '椅前坐下，读书后绕开桌椅离开', description: '从拉出的椅前真正落座，再用脚轮换支撑把椅子移到桌边；拿书、阅读、翻页、抬头、合书并放回，退椅起身后绕开保留的家具离开。', initialScene: safeDeskInitialScene,
+    steps: ['sit_down', 'approach_desk_seated', 'take_book_seated', 'read_seated', 'page_turn_seated', 'read_look_up', 'close_book', 'put_book_seated', 'stand_up_from_desk', 'walk_left', 'turn_around', 'walk_forward'].map(safeDeskSequenceStep) },
   morning_movement: { name: '晨间舒展与慢跑', description: '肩膀和侧腰热身，深蹲、左右弓步、慢跑，最后拉伸。', steps: ['shoulder_roll', 'stretch_up', 'stretch_left', 'stretch_right', 'squat', 'lunge_left', 'lunge_right', 'jog_forward', 'forward_fold'] },
   agility_practice: { name: '多方向步伐与跳跃', description: '前后左右移动，转向、开合跳、向前跳和缓冲落地。', steps: ['walk_forward', 'walk_backward', 'side_shuffle_left', 'side_shuffle_right', 'turn_left', 'jumping_jack', 'jump_forward', 'balance_right'] },
-  desk_session: { name: '坐下写作与休息', description: '纸、笔、闭书、电脑与杯从起始就在独立桌区；真实取放，电脑随手开合，物品持续留在原处。', steps: ['sit_down', 'take_pencil_seated', 'write_at_desk', 'put_pencil_seated', 'take_book_seated', 'study_at_desk', 'close_book', 'put_book_seated', 'type_at_desk', 'take_mug_seated', 'drink_seated', 'put_mug_seated', 'sit_stretch', 'stand_up_from_desk'].map((activity, index) => ({ activity, context: { deskLayout: 'partitioned' }, ...(index ? {} : { setupProps: PARTITIONED_DESK.setupProps }) })) },
-  quiet_afternoon: { name: '安静的午后阅读', description: '分区阅读桌前慢慢落座，拿书阅读翻页后合书归位，再聆听、拿杯喝水归位和放松；已放物持续保留。', steps: ['sit_down_carefully', 'take_book_seated', 'read_seated', 'page_turn_seated', 'close_book', 'put_book_seated', 'sit_listen', 'take_mug_seated', 'drink_seated', 'put_mug_seated', 'sit_relax'].map((activity, index) => ({ activity, context: { deskLayout: 'partitioned' }, ...(index ? {} : { setupProps: PARTITIONED_DESK.setupProps }) })) },
+  desk_session: { name: '坐下写作与休息', description: '椅前落座并移椅到桌前；纸、笔、闭书、电脑与杯从起始就在独立桌区，真实取放，电脑随手开合，物品持续留在原处。', initialScene: safeDeskInitialScene,
+    steps: ['sit_down', 'approach_desk_seated', 'take_pencil_seated', 'write_at_desk', 'put_pencil_seated', 'take_book_seated', 'study_at_desk', 'close_book', 'put_book_seated', 'type_at_desk', 'take_mug_seated', 'drink_seated', 'put_mug_seated', 'sit_stretch', 'stand_up_from_desk'].map(safeDeskSequenceStep) },
+  quiet_afternoon: { name: '安静的午后阅读', description: '从真实拉出的椅前慢慢落座，移椅到桌边，拿书阅读翻页后合书归位，再聆听、拿杯喝水归位和放松；已放物持续保留。', initialScene: safeDeskInitialScene,
+    steps: ['sit_down_carefully', 'approach_desk_seated', 'take_book_seated', 'read_seated', 'page_turn_seated', 'close_book', 'put_book_seated', 'sit_listen', 'take_mug_seated', 'drink_seated', 'put_mug_seated', 'sit_relax'].map(safeDeskSequenceStep) },
   balance_flow: { name: '平衡与重心流动', description: '左右单腿平衡、侧弓步、缓慢转体和推掌。', steps: ['balance_left', 'balance_right', 'side_lunge_left', 'side_lunge_right', 'torso_twist', 'tai_chi_shift', 'stretch_up'] },
   carry_delivery: { name: '取起物品后退离桌', description: '从台面取起箱子，双手保持托举后向后退，避开保留在原处的桌子。',
     descriptionEn: 'Pick up the box from the table after actual palm contact, then keep holding it while stepping backward clear of the retained furniture.', steps: [{ activity: 'pickup_box', setupProps: { table: true, box: { visible: true, attachment: 'table', position: [0, 8.9, 3.8] } } }, 'carry_box'] },

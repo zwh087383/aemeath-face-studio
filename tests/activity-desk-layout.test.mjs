@@ -5,8 +5,8 @@ import { registerHooks } from 'node:module';
 import * as THREE from '../preview/node_modules/three/build/three.module.js';
 import { skeletonFromInspection } from '../preview/core/motion-skeleton.js';
 import { FullBodyController } from '../preview/core/full-body-controller.js';
-import { ActivityDirector } from '../realtime/activities/director.mjs';
-import { sampleActivity } from '../preview/core/activity-library.js';
+import { ActivityDirector, initializeEmptyActivityScene } from '../realtime/activities/director.mjs';
+import { sampleActivity, ACTIVITY_SEQUENCES } from '../preview/core/activity-library.js';
 import { PARTITIONED_DESK, partitionedDeskConflict } from '../preview/core/activity-desk-layout.js';
 const hooks = registerHooks({ resolve(s, c, next) { return s === 'three' ? { url: new URL('../preview/node_modules/three/build/three.module.js', import.meta.url).href, shortCircuit: true } : next(s, c); } });
 const { createActivityProps } = await import('../realtime/activities/props.mjs'); hooks.deregister();
@@ -15,7 +15,8 @@ const distance = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
 
 test('whole partitioned desk recipe keeps every actual hand constraint reachable including laptop lid contact', () => {
   const body = new FullBodyController({ skeleton }), director = new ActivityDirector(body), props = createActivityProps(new THREE.Scene());
-  director.playSequence('desk_session'); let now = 0, maximumError = 0, maximumReach = 0, frames = 0;
+  initializeEmptyActivityScene(body, props, ACTIVITY_SEQUENCES.desk_session);
+  assert.equal(director.playSequence('desk_session'), true, JSON.stringify(director.lastRejection)); let now = 0, maximumError = 0, maximumReach = 0, frames = 0;
   for (; frames < 6000 && director.sequence; frames++) {
     now += 1 / 30; const clock = director.tick(now); body.update(clock.now, clock.dt);
     const hands = body.handAnchors();

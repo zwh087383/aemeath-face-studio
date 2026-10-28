@@ -1,5 +1,19 @@
 # Aemeath Face Studio
 
+## 完整动作库实验分支（2026-10-27）
+
+本分支把交流、原生身体行为、生活活动和连续表情接入统一执行目录，新增坐姿/持物交流、可延长工作中段、实际暂停恢复及真实入座衔接。目录有 262 项可调用能力；数量包含 3 项活动控制，不把原生起势/循环/收势重复计作独立动作。
+
+在已有本机私有资源的环境运行 `Start-Full-Motion-Library.bat`，主动打开 <http://127.0.0.1:18820/library-expansion/>。也可用 `scripts/character-center/Start-Library-Preview.ps1 -AssetRoot <原资源目录>` 指定资源。启动器只开本地服务，不调用云端，不自动弹出浏览器。本分支不复制或提交原生游戏资源与本轮运行数据。
+
+- [实施说明与证据范围](docs/full-motion-library-implementation-20261027.md)
+- [逐项目录、验收与未开放来源](docs/full-motion-library-catalog-and-acceptance-20261027.md)
+- [生活活动、持物与入座](docs/library-activity-validation-20261027.md)
+- [原生来源与目标模型验证](docs/native-library-integration-evidence-2026-10-27.md)
+- [真实画面耗时、资源故障与音频连续性](docs/full-motion-library-performance-20261028.md)
+
+这是实验性接入：本地脚本验证执行与保护，模型现场是否自然使用整库以及最终连续观感另行审阅。原速单次/旧表情按钮是同一播放器内的表现对照；完整旧源码性能对照使用冻结的基线，二者不混称。
+
 独立的人物表情渲染与 Audio2Face 语音口型驱动试验。包含爱弥斯 PMX、贴图、两套浏览器预览、原生 GPU 驱动程序、中文示例音频、已生成的动画曲线与恢复脚本。
 
 ![六格口型对照](outputs/preview-contact-sheet.png)

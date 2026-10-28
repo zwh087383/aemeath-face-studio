@@ -3,6 +3,17 @@
 export const ATTITUDE_KINDS = Object.freeze(['attention', 'concern', 'serious', 'warm', 'curious', 'playful', 'sad', 'excited']);
 export const REACTION_KINDS = Object.freeze(['surprise', 'confused', 'smile', 'concern']);
 
+// A secondary stance is a small, explicit nuance of the same fresh semantic
+// evidence. It cannot replace the primary stance's conflict policy or WAI math.
+export const SECONDARY_STANCE_BLEND = .35;
+export const SECONDARY_STANCE_REGIONS = Object.freeze({
+  attention: Object.freeze([]),
+  concern: Object.freeze(['brows']), serious: Object.freeze(['brows']),
+  warm: Object.freeze(['corners']), curious: Object.freeze(['eyes']),
+  playful: Object.freeze(['corners']), sad: Object.freeze(['brows']),
+  excited: Object.freeze(['corners', 'eyes']),
+});
+
 export const FACE_PROFILES = Object.freeze({
   attention: { recipeId: 'authored-expression:neutral', gain: 1, positive: false },
   serious: { recipeId: 'authored-expression:focus', gain: .46, positive: false },

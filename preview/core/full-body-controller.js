@@ -3,10 +3,15 @@ import { POSTURES } from './motion-profile.js';
 import { buildFullBodyRig, solveFullBodyPose, toWorld, toModel, rootRotation } from './full-body-ik.js';
 import { add, sub, len, lerp3, qmul, qconj, qslerp, qrotate, qeuler, smoother, clamp } from './motion-math.js';
 import { blendTrajectoryChannels, inheritHeldProps, measurePoseVelocity, quinticBoundary, velocityMagnitude, heldPropSides, propAdmissionConflict, activityPropNeed } from './activity-continuity.js';
-import { enforceActivityPropContacts, buildHeldPropBridge, applyHeldPropBridge, applyHeldPropTableClearance } from './activity-prop-execution.js';
+import { enforceActivityPropContacts, buildHeldPropBridge, applyHeldPropBridge, applyHeldPropTableClearance, propPlacementPreparationSeconds } from './activity-prop-execution.js';
 import { ACTIVITY_PROP_LAYOUT, propGripPair } from './activity-prop-layout.js';
+import { createActivityContinuation, sampleActivityContinuation, releaseActivityContinuation } from './activity-continuation.js';
+import { SupportedConversationOverlay } from './supported-conversation.js';
+import { seatAccess, seatEntryStandingRoot } from './activity-seat-access.js';
+import { needsActivityRouteCheck, validateActivityRoute } from './activity-route-access.js';
 
 const SIDES = ['L', 'R'];
+const ROUTE_PROBE = Symbol('isolated-route-preparation');
 const clone = value => structuredClone(value);
 const angleDelta = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 const numbers = (a = {}, b = {}, k) => Object.fromEntries([...new Set([...Object.keys(a), ...Object.keys(b)])]
@@ -28,6 +33,8 @@ export class FullBodyController {
     this.revision = 0; this.done = true; this.now = 0;
     this.velocity = measurePoseVelocity(null, this.pose, 0); this.sceneProps = {};
     this.previousDisplayedPose = null; this.displayedDt = 0;
+    this.continuation = null; this.attention = null; this.attentionRate = 1;
+    this.attentionOverlay = new SupportedConversationOverlay(); this.displayPose = null;
     this.solve();
   }
 
@@ -38,13 +45,91 @@ export class FullBodyController {
       face: { preset: 'neutral', intensity: .5 }, props: {}, support: 'standing', phase: 'idle', terminal: true };
   }
 
+  /** Read-only start/duration preparation on an isolated controller state.
+   * The shared rig/library are immutable descriptions; pose, clocks, transfers,
+   * maps and attention ownership are copied. This never advances the live body
+   * or creates a prop receipt. totalSeconds includes the actual entry bridge.
+   * A range is a hard permission boundary; a scalar reports the nearest longer
+   * source-preserving duration if entry plus exit cannot fit the desired time. */
+  preparationProbe() {
+    const probe = Object.create(FullBodyController.prototype);
+    for (const [key, value] of Object.entries(this)) {
+      if (['rig', 'library', 'sampler'].includes(key)) probe[key] = value;
+      else if (key === 'attentionOverlay') {
+        probe[key] = new SupportedConversationOverlay(); probe[key].active = clone(value.active);
+      } else probe[key] = clone(value);
+    }
+    probe[ROUTE_PROBE] = true;
+    return probe;
+  }
+
+  /** Uses a disposable prepared trajectory; neither this method nor a refusal
+   * changes the current displayed owner, prop receipts, clock or furniture. */
+  routeAdmission(id, options = {}) {
+    if (!needsActivityRouteCheck(this.library[id])) return { accepted: true, reason: 'route_not_required' };
+    const probe = this.preparationProbe();
+    if (!probe.play(id, options)) return { accepted: false, reason: 'activity_start_refused' };
+    if (probe.activeId !== id || probe.queued || probe.afterPrerequisite || probe.afterSeatBrake)
+      return { accepted: false, reason: 'activity_requires_explicit_prerequisite' };
+    return validateActivityRoute(probe);
+  }
+
+  preparePlay(id, { totalSeconds, durationChoice = .5, ...options } = {}, { adopt = null } = {}) {
+    const probe = this.preparationProbe();
+    const rejected = (reason, detail = {}) => ({ accepted: false, reason, sourceRevision: this.revision, ...detail });
+    if (adopt && !probe.adoptSupportedState(adopt)) return rejected('supported_pose_capture_failed');
+    const seatAdmission = seatAccess(probe, id);
+    if (!seatAdmission.accepted) return rejected(seatAdmission.reason, seatAdmission);
+    const baselineOptions = { ...options };
+    if (totalSeconds !== undefined) { delete baselineOptions.targetDuration; baselineOptions.hold = false; baselineOptions.speed = 1; }
+    let accepted;
+    try { accepted = probe.play(id, baselineOptions); } catch (error) { return rejected('activity_prepare_error:' + error.message); }
+    if (!accepted) return rejected('activity_start_refused');
+    if (probe.activeId !== id || probe.afterPrerequisite || probe.queued || probe.afterSeatBrake)
+      return rejected('activity_requires_explicit_prerequisite');
+    const route = validateActivityRoute(probe);
+    if (!route.accepted) return rejected(route.reason, route);
+    if (this.library[id].kind === 'take_prop') {
+      const gate = probe.sample(this.library[id].takeRequestAt ?? 1.45);
+      if (gate.preparationBlocker) return rejected(gate.preparationBlocker);
+      if (gate.propContacts?.ready !== true) return rejected('actual_prop_grip_unreachable', { contact: clone(gate.propContacts) });
+    }
+    const entrySeconds = probe.bridge?.duration ?? 0, sourceRemainingSeconds = (probe.duration - probe.elapsed) / probe.speed;
+    const minimumSeconds = entrySeconds + sourceRemainingSeconds;
+    if (totalSeconds === undefined) return { accepted: true, sourceRevision: this.revision, options: clone(options),
+      entrySeconds, bodySeconds: probe.duration, elapsedAtStart: probe.elapsed, totalSeconds: minimumSeconds, minimumSeconds };
+    const range = Array.isArray(totalSeconds) ? totalSeconds : [totalSeconds, totalSeconds];
+    if (range.length !== 2 || range.some(value => !Number.isFinite(value) || value <= 0) || range[0] > range[1]
+      || !Number.isFinite(durationChoice)) return rejected('invalid_total_seconds');
+    if (!this.library[id]?.continuation) return rejected('activity_has_no_extendable_middle');
+    if (Array.isArray(totalSeconds) && range[1] + 1e-9 < minimumSeconds)
+      return rejected('unreachable_total_duration', { minimumSeconds, entrySeconds });
+    const desired = range[0] + (range[1] - range[0]) * clamp(durationChoice);
+    const actual = Math.max(minimumSeconds, desired), targetDuration = actual - entrySeconds + probe.elapsed;
+    return { accepted: true, sourceRevision: this.revision,
+      options: { ...clone(options), targetDuration, speed: 1, hold: false },
+      entrySeconds, bodySeconds: targetDuration, elapsedAtStart: probe.elapsed, minimumSeconds, totalSeconds: actual,
+      requested: clone(totalSeconds), exact: Math.abs(actual - desired) < 1e-9, preservesSourceSpeed: true };
+  }
+
   /** Invalid commands do not disturb the current owner. A replacement in flight
    * is queued until the next landing instead of snapping the character down. */
-  play(id, { loop = false, speed = 1, context = {} } = {}) {
+  play(id, { loop = false, speed = 1, context = {}, targetDuration, hold = false, microSet = [] } = {}) {
     if (typeof id !== 'string' || !Object.hasOwn(this.library, id) || !Number.isFinite(speed) || speed <= 0) return false;
+    const seatAdmission = seatAccess(this, id);
+    if (!seatAdmission.accepted) return false;
+    context = { ...context, ...seatAdmission.context };
     if (propAdmissionConflict(this.library[id], this.pose.props)) return false;
     if (this.library[id].kind === 'take_prop' && heldPropSides(this.pose.props?.[this.library[id].propId]).length) return false;
-    const request = { id, options: { loop: !!loop, speed: clamp(speed, .5, 1.6), context } };
+    let continuation;
+    try { continuation = createActivityContinuation(this.library[id], { targetDuration, hold, microSet }); } catch { return false; }
+    if (!this[ROUTE_PROBE] && needsActivityRouteCheck(this.library[id])) {
+      const route = this.routeAdmission(id, { loop, speed, context, targetDuration, hold, microSet });
+      if (!route.accepted) return false;
+    }
+    const request = { id, options: { loop: !!loop && !continuation, speed: continuation ? 1 : clamp(speed, .5, 1.6), context,
+      targetDuration, hold: !!hold, microSet: [...microSet] } };
+    this.clearAttention(true);
     this.retirePropTransfers(); this.paused = false; this.revision++;
     this.propTransferReceipts = {}; this.releaseBlendPending = false;
     if (this.airborne()) { this.queued = request; this.stopMode = 'landing'; this.status = 'landing'; return true; }
@@ -55,6 +140,11 @@ export class FullBodyController {
     this.afterSeatBrake = null;
     this.queued = null; this.afterPrerequisite = null; this.start(request); return true;
   }
+
+  /** Explicit scene reset/approach helpers. This only computes a target; it
+   * never teleports the current avatar or changes existing furniture. */
+  seatEntryStandingRoot() { return seatEntryStandingRoot(this.sceneProps, this.context); }
+  seatAccess(id) { return seatAccess(this, id); }
 
   start({ id, options }) {
     // Internal prerequisite/landing boundaries may enter here before the outer
@@ -71,11 +161,11 @@ export class FullBodyController {
     const needsSeat = (definition.initialSupport ?? definition.startState) === 'seated';
     if (needsSeat && !seated && this.library.sit_down && id !== 'sit_down') {
       this.afterPrerequisite = { id, options };
-      this.start({ id: 'sit_down', options: { ...options, loop: false } }); return;
+      this.start({ id: 'sit_down', options: { ...options, loop: false, targetDuration: undefined, hold: false, microSet: [] } }); return;
     }
     if (seated && !needsSeat && definition.seatedStartTime === undefined && id !== 'stand_up' && this.library.stand_up) {
       this.afterPrerequisite = { id, options };
-      this.start({ id: 'stand_up', options: { ...options, loop: false } }); return;
+      this.start({ id: 'stand_up', options: { ...options, loop: false, targetDuration: undefined, hold: false, microSet: [] } }); return;
     }
     const heldProp = definition.reading ? 'book' : definition.kind === 'drink' ? 'mug' : definition.kind === 'write' ? 'pencil' : definition.kind === 'carry' ? 'box' : null;
     const heldState = heldProp && previous.props?.[heldProp];
@@ -83,7 +173,7 @@ export class FullBodyController {
     const takeId = heldProp === 'box' ? 'pickup_box' : heldProp ? `take_${heldProp}_${seated ? 'seated' : 'standing'}` : null;
     if (takeId && !alreadyHeld && this.library[takeId]) {
       this.afterPrerequisite = { id, options };
-      this.start({ id: takeId, options: { ...options, loop: false } }); return;
+      this.start({ id: takeId, options: { ...options, loop: false, targetDuration: undefined, hold: false, microSet: [] } }); return;
     }
     const continueSeat = seated && (definition.seatedStartTime !== undefined || needsSeat || id === 'stand_up');
     if (!continueSeat) this.anchor = { position: [...this.root.position], yaw: this.root.yaw };
@@ -101,7 +191,9 @@ export class FullBodyController {
       initialHandAnchors: this.handAnchors(), activityAnchor: clone(this.anchor),
       sceneProps: clone({ ...sceneSetupProps, ...this.sceneProps, ...options.context.sceneProps }) };
     this.elapsed = continueSeat ? (definition.seatedStartTime ?? 0) : 0;
-    this.duration = definition.duration; this.done = false; this.stopMode = null; this.status = 'playing';
+    this.continuation = createActivityContinuation(definition, options);
+    this.duration = this.continuation?.duration ?? definition.duration + propPlacementPreparationSeconds(definition, this.sampleContext);
+    this.done = false; this.stopMode = null; this.status = 'playing'; this.lastRouteRejection = null;
     const target = this.sample(this.elapsed);
     // Before a new activity's clock starts, move from the actual pose to its
     // starting stance. Feet relocate one at a time with lift; planted contacts
@@ -113,7 +205,8 @@ export class FullBodyController {
   }
 
   sample(time) {
-    const sample = clone(this.sampler(this.activeId, time, this.sampleContext));
+    const sample = sampleActivityContinuation(this.continuation, time, sourceTime => this.sampler(this.activeId, sourceTime, this.sampleContext),
+      { occupiedHands: Object.values(this.sampleContext?.initialPose?.props ?? {}).flatMap(heldPropSides) });
     const q = rootRotation(this.anchor), localRoot = sample.root ?? { position: [0, 0, 0], yaw: 0 };
     sample.root = { position: toWorld(this.anchor, localRoot.position), yaw: this.anchor.yaw + (localRoot.yaw ?? 0) };
     for (const side of SIDES) {
@@ -166,9 +259,14 @@ export class FullBodyController {
   airborne() { return this.pose.support === 'airborne' || (this.activeId && SIDES.every(side => !this.pose.feet[side].contact)); }
 
   stop() {
+    this.clearAttention(true);
+    this.releaseHold();
     this.retirePropTransfers();
     this.queued = null; this.afterPrerequisite = null; this.afterSeatBrake = null; this.paused = false; this.loop = false; this.revision++;
     this.propTransferReceipts = {}; this.releaseBlendPending = false;
+    if (['stand_up', 'stand_up_from_desk'].includes(this.library[this.activeId]?.kind) && /(^|_)rise$/.test(this.pose.phase ?? '')) {
+      this.stopMode = 'rise'; this.status = 'rising'; return;
+    }
     if (this.pose.support === 'seated') { this.holdSeat(); return; }
     if (this.airborne()) { this.stopMode = 'landing'; this.status = 'landing'; return; }
     // A stop while lowering onto the chair finishes that supported transfer.
@@ -250,9 +348,66 @@ export class FullBodyController {
 
   pause(value = !this.paused) { this.paused = !!value; return this.paused; }
 
+  releaseHold() {
+    if (!releaseActivityContinuation(this.continuation, this.elapsed)) return false;
+    // Finishing the task is an explicit new command. A stopped activity clock
+    // must not prevent its already-authorized safe exit from completing.
+    if (this.attention) {
+      this.attention.paused = false; this.attentionOverlay.cancel(this.attention.id); this.status = 'finishing';
+    }
+    this.duration = this.continuation.duration; return true;
+  }
+
+  /** Pause only a supported, event-free working middle. Its clock and object
+   * ownership remain alive until an explicit matching resume or cancellation. */
+  pauseForAttention({ id, kind = 'listen', strength = .7 } = {}) {
+    if (!id || this.done || this.bridge || !this.activeId || !['standing', 'seated'].includes(this.pose.support)) return false;
+    const window = this.library[this.activeId]?.continuation;
+    const tailStart = this.duration - (this.library[this.activeId].duration - (window?.end ?? 0));
+    if (!window || this.elapsed < window.start || this.elapsed + this.attentionRate * .11 >= tailStart) return false;
+    if (this.attention) return this.attention.id === id && this.attention.paused;
+    if (!this.attentionOverlay.begin({ id, kind, strength, hold: true })) return false;
+    this.attention = { id, revision: this.revision, paused: true, activeId: this.activeId };
+    this.status = 'attention-pausing'; return true;
+  }
+
+  resumeFromAttention(id) {
+    const a = this.attention;
+    if (!a || a.id !== id || a.revision !== this.revision || a.activeId !== this.activeId || !a.paused || this.done) return false;
+    a.paused = false; this.attentionOverlay.cancel(id); this.status = 'attention-resuming'; return true;
+  }
+
+  clearAttention(adoptDisplayed = false) {
+    if (adoptDisplayed && this.attention && this.displayPose) this.pose = clone(this.displayPose);
+    this.attention = null; this.attentionRate = 1; this.attentionOverlay?.clear(); this.displayPose = null;
+  }
+
+  /** A scene handoff supplies measured canonical coordinates. A support label
+   * alone never manufactures a chair or resets a native pose to standing. */
+  adoptSupportedState({ pose, sceneProps = {} } = {}) {
+    if (!pose || !['standing', 'seated'].includes(pose.support) || !Array.isArray(pose.root?.position)
+      || pose.root.position.length !== 3 || !pose.root.position.every(Number.isFinite) || !Number.isFinite(pose.root.yaw)
+      || SIDES.some(side => !Array.isArray(pose.feet?.[side]?.position) || pose.feet[side].position.length !== 3 || !pose.feet[side].position.every(Number.isFinite))
+      || pose.support === 'standing' && !SIDES.some(side => pose.feet[side].contact)
+      || pose.support === 'seated' && !(sceneProps.chair?.visible || pose.props?.chair)) return false;
+    if (!Array.isArray(pose.pelvis?.offset) || pose.pelvis.offset.length !== 3 || !pose.pelvis.offset.every(Number.isFinite)
+      || SIDES.some(side => !Array.isArray(pose.hands?.[side]?.hand) || pose.hands[side].hand.length !== 3 || !pose.hands[side].hand.every(Number.isFinite))) return false;
+    const candidate = clone(pose); let contact, check;
+    try { contact = enforceActivityPropContacts(this.rig, candidate); check = solveFullBodyPose(this.rig, candidate, new Map(), new Map()); } catch { return false; }
+    if (!contact.ready || !check.finite || Object.values(check.legs).some(leg => leg.error > .08)) return false;
+    this.clearAttention(); this.pose = candidate; this.root = clone(candidate.root); this.anchor = clone(candidate.anchor ?? candidate.root);
+    this.sceneProps = clone(sceneProps); this.activeId = null; this.elapsed = this.duration = 0; this.continuation = null;
+    this.queued = this.afterPrerequisite = this.afterSeatBrake = this.bridge = this.stopMode = null;
+    this.propTransferReceipts = {}; this.releaseBlendPending = false; this.loop = false; this.paused = false;
+    this.done = true; this.status = candidate.support === 'seated' ? 'seated' : 'idle'; this.revision++;
+    this.velocity = measurePoseVelocity(null, candidate, 0); this.velocityFeet = {}; this.previousDisplayedPose = null; this.displayedDt = 0;
+    this.solve(); return true;
+  }
+
   /** Explicit laboratory reset, distinct from a conversational stop. Only this
    * operation returns the whole character to the origin and clears its seat. */
   reset() {
+    this.clearAttention(); this.continuation = null;
     this.anchor = { position: [0, 0, 0], yaw: 0 }; this.root = clone(this.anchor);
     this.pose = this.standing(this.root); this.status = 'idle'; this.paused = false;
     this.activeId = null; this.elapsed = 0; this.duration = 0; this.speed = 1;
@@ -333,7 +488,10 @@ export class FullBodyController {
     if (this.paused || paused) return this.locals;
     this.now = Number.isFinite(now) ? now : this.now;
     dt = clamp(dt, 0, .1);
-    const displayedBefore = clone(this.pose);
+    const displayedBefore = clone(this.displayPose ?? this.pose);
+    const targetRate = this.attention?.paused ? 0 : 1, rateDecay = Math.exp(-dt / .11);
+    const activityDt = targetRate * dt + (this.attentionRate - targetRate) * .11 * (1 - rateDecay);
+    this.attentionRate = targetRate + (this.attentionRate - targetRate) * rateDecay;
     if (this.releaseBlendPending && !this.bridge && this.activeId) {
       this.releaseBlendPending = false;
       const target = this.sample(this.elapsed);
@@ -357,7 +515,7 @@ export class FullBodyController {
         // between display frames. Discarding this remainder produces a single
         // slow frame precisely at a nonzero-velocity trajectory boundary.
         if (bridge.after === 'playing' && remainder > 1e-10 && this.activeId && !this.done && !this.bridge) {
-          this.elapsed = Math.min(this.duration, this.elapsed + remainder * this.speed);
+          this.elapsed = Math.min(this.duration, this.elapsed + remainder * this.speed * this.attentionRate);
           this.pose = this.sample(this.elapsed);
         }
         if (this.bridge && remainder > 1e-10) {
@@ -366,7 +524,7 @@ export class FullBodyController {
         }
       }
     } else if (this.activeId && !this.done) {
-      const previousElapsed = this.elapsed, requestedElapsed = this.elapsed + dt * this.speed;
+      const previousElapsed = this.elapsed, requestedElapsed = this.elapsed + activityDt * this.speed;
       const remainder = Math.max(0, (requestedElapsed - this.duration) / this.speed);
       this.elapsed = Math.min(this.duration, requestedElapsed);
       const activeDefinition = this.library[this.activeId], operation = this.transferOperation(activeDefinition);
@@ -381,6 +539,8 @@ export class FullBodyController {
         if (queued) this.start(queued); else this.recover();
       } else if (this.stopMode === 'seat' && this.pose.support === 'seated') {
         this.holdSeat();
+      } else if (this.stopMode === 'rise' && /(^|_)standing$/.test(this.pose.phase ?? '')) {
+        this.stopMode = null; this.recover();
       } else if (operation && !this.propTransferReceipts[activeDefinition.propId]?.released
         && (this.elapsed >= this.duration - 1e-9 || operation === 'take' && this.elapsed >= (activeDefinition.takeRequestAt ?? 1.45) - 1e-9)) {
         this.status = this.pose.preparationBlocker ? `${operation}-blocked` : operation === 'place' ? 'awaiting-prop-release' : 'awaiting-prop-grasp';
@@ -394,14 +554,24 @@ export class FullBodyController {
           const cycle = this.cycle + 1;
           this.velocity = measurePoseVelocity(displayedBefore, this.pose, Math.max(1e-8, (this.duration - previousElapsed) / this.speed));
           this.root = clone(this.pose.root);
-          this.start({ id: this.activeId, options: { loop: true, speed: this.speed, context: this.sampleContext } }); this.cycle = cycle;
-          if (this.bridge && remainder > 1e-10) { this.bridge.elapsed = Math.min(this.bridge.duration, remainder); this.pose = this.bridgePose(this.bridge); }
+          const options = { loop: true, speed: this.speed, context: this.sampleContext };
+          const route = this.routeAdmission(this.activeId, options);
+          if (!route.accepted) {
+            this.loop = false; this.done = true; this.status = 'route-blocked'; this.lastRouteRejection = route;
+          } else {
+            this.start({ id: this.activeId, options }); this.cycle = cycle;
+            if (this.bridge && remainder > 1e-10) { this.bridge.elapsed = Math.min(this.bridge.duration, remainder); this.pose = this.bridgePose(this.bridge); }
+          }
         } else { this.done = true; this.status = this.pose.support === 'seated' ? 'seated' : 'ended'; }
       }
     }
-    this.root = clone(this.pose.root); this.solve();
+    this.root = clone(this.pose.root); this.solve(dt);
+    if (this.attention?.paused && this.attentionRate < .001) this.status = 'attention-paused';
+    else if (this.attention && !this.attention.paused && !this.attentionOverlay.active && this.attentionRate > .999) {
+      this.attention = null; this.attentionRate = 1; this.status = this.done ? this.status : 'playing';
+    }
     this.previousDisplayedPose = displayedBefore; this.displayedDt = dt;
-    this.velocity = measurePoseVelocity(displayedBefore, this.pose, dt);
+    this.velocity = measurePoseVelocity(displayedBefore, this.displayPose ?? this.pose, dt);
     this.velocityFeet = Object.fromEntries(SIDES.map(side => [side, this.pose.feet[side].position.map((value, i) => dt > 0 ? (value - displayedBefore.feet[side].position[i]) / dt : 0)]));
     for (const [id, prop] of Object.entries(this.pose.props ?? {})) {
       if (prop === false || prop?.visible === false) delete this.sceneProps[id];
@@ -536,9 +706,13 @@ export class FullBodyController {
     delete pose.props.chair.worldTransform;
   }
 
-  solve() {
-    this.diagnostics = solveFullBodyPose(this.rig, this.pose, this.locals, this.fk);
-    this.diagnostics.propContacts = clone(this.pose.propContacts ?? { ready: true, props: {} });
+  solve(dt = 0) {
+    const overlay = this.attentionOverlay?.active ? this.attentionOverlay.update(dt, this.pose, { rig: this.rig }) : null;
+    this.displayPose = overlay?.pose ?? null;
+    const displayed = this.displayPose ?? this.pose;
+    this.diagnostics = solveFullBodyPose(this.rig, displayed, this.locals, this.fk);
+    this.diagnostics.propContacts = clone(overlay?.contact ?? displayed.propContacts ?? { ready: true, props: {} });
+    if (overlay) this.diagnostics.attention = { accepted: overlay.accepted, reason: overlay.reason };
     const anchors = this.handAnchors();
     for (const [id, state] of Object.entries(this.pose.props ?? {})) {
       if (!state || !['both', 'left', 'right'].includes(state.attachment) || !ACTIVITY_PROP_LAYOUT[id]) continue;
@@ -555,9 +729,12 @@ export class FullBodyController {
 
   snapshot() {
     return { activeId: this.activeId, status: this.status, paused: this.paused, done: this.done,
-      elapsed: this.elapsed, duration: this.duration, phase: this.pose.phase, support: this.pose.support, variant: this.pose.variant ?? 'authored',
-      root: clone(this.root), anchor: clone(this.anchor), pose: clone(this.pose), diagnostics: clone(this.diagnostics),
+      elapsed: this.elapsed, duration: Number.isFinite(this.duration) ? this.duration : null, phase: this.pose.phase, support: this.pose.support, variant: this.pose.variant ?? 'authored',
+      root: clone(this.root), anchor: clone(this.anchor), pose: clone(this.displayPose ?? this.pose), diagnostics: clone(this.diagnostics),
+      continuation: this.continuation ? { ...clone(this.continuation), duration: Number.isFinite(this.duration) ? this.duration : null } : null,
+      attention: this.attention ? { ...clone(this.attention), rate: this.attentionRate } : null,
       contacts: Object.fromEntries(SIDES.map(side => [side, !!this.pose.feet[side].contact])),
-      revision: this.revision, cycle: this.cycle, queued: this.queued?.id ?? this.afterPrerequisite?.id ?? this.afterSeatBrake?.id ?? null, stopMode: this.stopMode };
+      revision: this.revision, cycle: this.cycle, lastRouteRejection: clone(this.lastRouteRejection ?? null),
+      queued: this.queued?.id ?? this.afterPrerequisite?.id ?? this.afterSeatBrake?.id ?? null, stopMode: this.stopMode };
   }
 }

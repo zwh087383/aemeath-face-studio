@@ -6,12 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { registerHooks } from 'node:module';
 import * as THREE from '../preview/node_modules/three/build/three.module.js';
 import { FullBodyController } from '../preview/core/full-body-controller.js';
-import { ActivityDirector } from '../realtime/activities/director.mjs';
+import { ActivityDirector, initializeEmptyActivityScene } from '../realtime/activities/director.mjs';
 import { ACTIVITY_LIBRARY, ACTIVITY_SEQUENCES, sampleActivity } from '../preview/core/activity-library.js';
 import { skeletonFromInspection } from '../preview/core/motion-skeleton.js';
 import { quinticBoundary } from '../preview/core/activity-continuity.js';
 import { toWorld } from '../preview/core/full-body-ik.js';
 import { ACTIVITY_PROP_LAYOUT, propGripPair } from '../preview/core/activity-prop-layout.js';
+import { PARTITIONED_DESK } from '../preview/core/activity-desk-layout.js';
+import { pulledOutDeskEntryFixture } from '../preview/core/activity-seat-access.js';
 import { qrotate } from '../preview/core/motion-math.js';
 import { fingerprintDependencies, verifyFingerprints } from '../scripts/action-preparation/source-fingerprints.mjs';
 
@@ -52,7 +54,8 @@ function observeHolding(body, reports) {
     metric.samples++; metric.maximumTargetGap = Math.max(metric.maximumTargetGap, maximumGap); metric.maximumArmReach = Math.max(metric.maximumArmReach, armReach);
     metric.allReady &&= contact.ready === true;
     if (!metric.firstBadPhase && (maximumGap > .025 || armReach > .995001 || contact.ready !== true)) metric.firstBadPhase = {
-      phase: body.pose.phase, elapsed: body.elapsed, gap: maximumGap, armReach, ready: contact.ready };
+      phase: body.pose.phase, elapsed: body.elapsed, gap: maximumGap, armReach, ready: contact.ready, counts: coverageCounts(),
+      root: structuredClone(body.root), contact: structuredClone(contact), pose: structuredClone(body.pose) };
   }
   for (const [id, report] of Object.entries(reports.props ?? {})) {
     if (!report.visible || !['both', 'left', 'right'].includes(report.attachment)) continue;
@@ -98,27 +101,49 @@ function makeRun(hz = 60) {
   }, dispose() { props.dispose(); } };
   return run;
 }
-function arrangeSource(run, activity) {
+function acceptedPlay(run, id, options = {}) {
+  assert.equal(run.director.play(id, { ...options, context: { deskLayout: 'partitioned',
+    ...(id === 'stand_up_from_desk' ? { deskRetreat: 7 } : {}), ...options.context } }), true,
+  `${id}: ${JSON.stringify(run.director.lastRejection)}`);
+}
+function finishedPlay(run, id, options = {}) {
+  acceptedPlay(run, id, options); run.until(() => run.body.done, 40);
+  assert.equal(run.body.activeId, id, 'preparation must finish the requested real clip');
+}
+function freshRecipe(run, id) {
+  const definition = ACTIVITY_SEQUENCES[id];
+  initializeEmptyActivityScene(run.body, run.props, definition);
+  assert.equal(run.director.playSequence(id), true, `${id}: ${JSON.stringify(run.director.lastRejection)}`);
+}
+function arrangeSource(run, activity, { atDesk = activity !== 'read_seated' } = {}) {
   const def = ACTIVITY_LIBRARY[activity];
-  const propId = def.propId ?? (def.reading ? 'book' : def.kind === 'drink' ? 'mug' : def.kind === 'write' ? 'pencil' : def.kind === 'carry' || def.kind === 'pickup' ? 'box' : null);
-  if (!propId) return;
-  const state = { visible: true, attachment: 'table', ...(propId === 'book' ? { openness: .8 } : {}),
-    ...(propId === 'pencil' ? { position: [-2.6, 8.961, 3.2], rotation: [0, 0, -Math.PI / 2] } : {}),
-    ...(propId === 'box' ? { position: [0, 8.9, 3.8] } : {}) };
-  run.props.update({ table: true, [propId]: state }, { anchor: run.body.anchor, time: run.director.time });
+  const held = def.reading ? 'book' : ({ drink: 'mug', write: 'pencil', carry: 'box' })[def.kind];
+  const propId = def.propId ?? held;
+  const required = new Set(def.requires ?? []);
+  if (propId) { required.add(propId); required.add('table'); }
+  if (def.initialSupport === 'seated') required.add('chair');
+  const setup = Object.fromEntries([...required].map(id => [id, structuredClone(PARTITIONED_DESK.setupProps[id] ?? true)]));
+  if (required.has('box')) setup.box = { visible: true, attachment: 'table', position: [0, 8.9, 3.8] };
+  const fixture = required.has('chair') ? pulledOutDeskEntryFixture(run.body.context, { props: setup }) : { sceneProps: setup, initialRoot: { position: [0, 0, 0], yaw: 0 } };
+  assert.equal(Object.values(run.props.snapshot().props).some(prop => prop.visible), false, 'only a fresh scene may be initialized');
+  run.props.update(fixture.sceneProps, { anchor: { position: [0, 0, 0], yaw: 0 }, time: run.director.time });
   run.body.setRenderedPropsSnapshot(run.props.snapshot());
+  assert.equal(run.body.adoptSupportedState({ pose: run.body.standing(fixture.initialRoot), sceneProps: run.body.sceneProps }), true);
+  if (def.initialSupport === 'seated') {
+    finishedPlay(run, 'sit_down');
+    if (activity !== 'stand_up' && activity !== 'approach_desk_seated' && required.has('table')) finishedPlay(run, 'approach_desk_seated');
+  }
+  if (held) finishedPlay(run, held === 'box' ? 'pickup_box' : `take_${held}_${def.initialSupport === 'seated' ? 'seated' : 'standing'}`);
+  if (activity === 'read_seated' && !atDesk) {
+    finishedPlay(run, 'stand_up_from_desk'); finishedPlay(run, 'sit_down');
+  }
 }
 function arrangePlacement(run, id) {
   const def = ACTIVITY_LIBRARY[id];
   if (def.kind !== 'put_prop') { arrangeSource(run, id); return; }
   const predecessor = def.propId === 'book' ? def.initialSupport === 'seated' ? 'study_at_desk' : 'read_standing'
     : def.propId === 'mug' ? def.initialSupport === 'seated' ? 'drink_seated' : 'drink_standing' : 'write_at_desk';
-  assert.ok(ACTIVITY_LIBRARY[predecessor], predecessor);
-  arrangeSource(run, predecessor);
-  run.director.play(predecessor, { context: { sceneProps: { table: true } } });
-  run.until(() => run.body.done);
-  // A real scene setup supplies the table explicitly; a requirement field is
-  // never interpreted as evidence that a surface exists.
+  arrangeSource(run, predecessor, { atDesk: true }); finishedPlay(run, predecessor);
   run.body.setRenderedPropsSnapshot(run.props.snapshot());
 }
 
@@ -131,13 +156,13 @@ test('quintic bridge retains nonzero measured boundary velocities', () => {
 
 test('nonstationary actual PMX wrist velocity survives replacement and seated cancellation', () => {
   for (const operation of ['replace', 'stop']) {
-    const run = makeRun(240); run.director.play('sit_talk');
+    const run = makeRun(240); arrangeSource(run, 'sit_talk'); acceptedPlay(run, 'sit_talk');
     run.until(() => run.body.activeId === 'sit_talk' && run.body.elapsed >= 2.137);
     const previous = run.body.handAnchors().R.position; run.tick();
     const current = run.body.handAnchors().R.position, before = delta(current, previous, run.dt);
     assert.ok(Math.hypot(...before) > .03, 'probe must interrupt real nonzero hand velocity');
     const poseBefore = structuredClone(run.body.pose);
-    if (operation === 'replace') run.director.play('sit_listen'); else run.director.stop();
+    if (operation === 'replace') acceptedPlay(run, 'sit_listen'); else run.director.stop();
     for (const key of ['root', 'pelvis', 'hands', 'feet', 'body']) assert.deepEqual(run.body.pose[key], poseBefore[key], 'command itself must not alter displayed transforms');
     run.tick(.0001); const after = delta(run.body.handAnchors().R.position, current, .0001);
     const gap = distance(before, after);
@@ -151,20 +176,22 @@ test('nonstationary actual PMX wrist velocity survives replacement and seated ca
 });
 
 test('a body owner changed outside the director cannot resume an old sequence', () => {
-  const run = makeRun(); run.director.playSequence('carry_delivery'); run.tick();
-  run.body.play('jump_vertical'); run.tick();
+  const run = makeRun(); assert.equal(run.director.playSequence('carry_delivery'), true); run.tick();
+  assert.equal(run.body.play('walk_backward'), true); run.tick();
   assert.equal(run.director.sequence, null); run.until(() => run.body.done);
-  assert.equal(run.body.activeId, 'jump_vertical');
+  assert.equal(run.body.activeId, 'walk_backward');
   assert.ok(run.director.events.some(event => event.type === 'sequence-retired' && event.reason === 'body-owner-changed'));
   run.dispose();
 });
 
 test('a held fixed-size book retains its grip in declared variants and atomically rejects a main hand gesture', () => {
   for (const next of ['stand_up', 'turn_left', 'sit_talk', 'stretch_up', 'walk_forward']) {
-    const run = makeRun(60); arrangeSource(run, 'read_seated'); run.director.play('read_seated'); run.until(() => run.body.done);
+    const run = makeRun(60); arrangeSource(run, 'read_seated'); acceptedPlay(run, 'read_seated'); run.until(() => run.body.done);
     const source = run.props.snapshot().props.book;
     assert.equal(source.visible, true); assert.equal(source.attachment, 'both');
     let maximumGripError = source.gripError ?? 0;
+    if (['turn_left', 'walk_forward'].includes(next)) finishedPlay(run, 'stand_up');
+    if (next === 'walk_forward') finishedPlay(run, 'walk_left');
     const before = run.body.snapshot(), accepted = run.director.play(next);
     if (ACTIVITY_LIBRARY[next].freeHands?.length) {
       assert.equal(accepted, false); assert.equal(run.director.snapshot().lastRejection.reason, 'free-hands-required');
@@ -173,7 +200,7 @@ test('a held fixed-size book retains its grip in declared variants and atomicall
       assert.equal(run.director.events.filter(event => event.type === 'activity' && event.id === next).length, 0);
       addEvidence('heldTransitions',{ from: 'read_seated', to: next, accepted, reason: 'free-hands-required' }); run.dispose(); continue;
     }
-    assert.equal(accepted, true);
+    assert.equal(accepted, true, `${next}: ${JSON.stringify(run.director.lastRejection)}`);
     run.until(() => {
       const book = run.props.snapshot().props.book;
       assert.equal(book.visible, true, `${next}: held book disappeared`); assert.equal(book.attachment, 'both');
@@ -189,13 +216,13 @@ test('a held fixed-size book retains its grip in declared variants and atomicall
 
 test('a moving held book and its measured palm continue their nonzero velocity when interrupted', () => {
   for (const operation of ['replace', 'stop']) {
-    const run = makeRun(240); arrangeSource(run, 'read_seated'); run.director.play('read_seated');
+    const run = makeRun(240); arrangeSource(run, 'read_seated'); acceptedPlay(run, 'read_seated');
     run.until(() => run.body.activeId === 'read_seated' && run.body.elapsed >= .373);
     const previousPalm = run.body.handAnchors().R.position, previousBook = run.props.snapshot().props.book.position;
     run.tick(); const palm = run.body.handAnchors().R.position, book = run.props.snapshot().props.book.position;
     const beforePalm = delta(palm, previousPalm, run.dt), beforeBook = delta(book, previousBook, run.dt);
     assert.ok(Math.hypot(...beforeBook) > .03, 'held-object probe must not start at zero velocity');
-    if (operation === 'replace') run.director.play('turn_left'); else run.director.stop();
+    if (operation === 'replace') acceptedPlay(run, 'sit_listen'); else run.director.stop();
     run.tick(.0001);
     const afterPalm = delta(run.body.handAnchors().R.position, palm, .0001);
     const afterBook = delta(run.props.snapshot().props.book.position, book, .0001);
@@ -211,7 +238,7 @@ test('a moving held book and its measured palm continue their nonzero velocity w
 
 test('a placement clock never fabricates a receipt and cancelled transfer owners cannot release later', () => {
   const run = makeRun(30), { body } = run;
-  arrangeSource(run, 'read_standing'); run.director.play('read_standing'); run.until(() => body.done);
+  arrangeSource(run, 'read_standing'); acceptedPlay(run, 'read_standing'); run.until(() => body.done);
   body.play('put_book_standing');
   for (let frame = 0; frame < 400; frame++) body.update(body.now + 1 / 30, 1 / 30);
   assert.equal(body.done, false); assert.equal(body.status, 'awaiting-prop-release');
@@ -228,7 +255,7 @@ test('a placement clock never fabricates a receipt and cancelled transfer owners
 
 test('all six actual takes preserve acquired ownership when stopped, replaced or placed in the receipt frame', () => {
   for (const [id, def] of Object.entries(ACTIVITY_LIBRARY).filter(([, def]) => def.kind === 'take_prop')) for (const operation of ['stop', 'replace', 'transfer']) {
-    const run = makeRun(30); arrangeSource(run, id); run.director.play(id);
+    const run = makeRun(30); arrangeSource(run, id); acceptedPlay(run, id);
     run.until(() => run.body.propTransferReceipts[def.propId]?.released === true, 30);
     const receipt = run.body.propTransferReceipts[def.propId];
     assert.equal(receipt.operation, 'take');
@@ -254,7 +281,7 @@ test('all six actual takes preserve acquired ownership when stopped, replaced or
 
 test('every real placement permits an immediate new take in the same receipt frame', () => {
   for (const [id, def] of Object.entries(ACTIVITY_LIBRARY).filter(([, def]) => def.kind === 'put_prop')) {
-    const run = makeRun(30); arrangePlacement(run, id); run.director.play(id);
+    const run = makeRun(30); arrangePlacement(run, id); acceptedPlay(run, id);
     run.until(() => run.body.propTransferReceipts[def.propId]?.released === true, 30);
     const receipt = run.body.propTransferReceipts[def.propId];
     assert.equal(receipt.operation, 'place'); assert.equal(run.body.pose.props[def.propId].attachment, 'table');
@@ -272,7 +299,7 @@ test('every real placement permits an immediate new take in the same receipt fra
 
 test('all published activities and three different-phase cancellation probes preserve real FK and ownership', () => {
   for (const [id, def] of Object.entries(ACTIVITY_LIBRARY)) {
-    const run = makeRun(30); arrangePlacement(run, id); run.director.play(id);
+    const run = makeRun(30); arrangePlacement(run, id); acceptedPlay(run, id);
     let maximumAnkleError = 0, frames = 0;
     run.until(() => {
       frames++; assert.equal(run.body.diagnostics.finite, true, id);
@@ -290,7 +317,7 @@ test('all published activities and three different-phase cancellation probes pre
       transfer: operation ? run.body.propTransferReceipts[def.propId] : null });
     run.dispose();
     for (const probe of ['preparing', .47, .91]) {
-      const r = makeRun(30); arrangePlacement(r, id); r.director.play(id);
+      const r = makeRun(30); arrangePlacement(r, id); acceptedPlay(r, id);
       if (probe === 'preparing') { r.tick(); r.tick(.1); }
       else r.until(() => r.body.activeId === id && r.body.elapsed >= def.duration * probe);
       const at = r.body.snapshot(), previousRevision = r.body.revision;
@@ -312,9 +339,9 @@ test('all seven complete recipes use real placement receipts and do not drop per
   assert.equal(Object.keys(ACTIVITY_SEQUENCES).length, 7);
   for (const [id, definition] of Object.entries(ACTIVITY_SEQUENCES)) {
     const run = makeRun(30), completed = [];
-    run.director.playSequence(id);
-    // The recipe's explicit setupProps step creates rehearsal furniture at the
-    // attained seat anchor. No synthetic completion/receipt is injected.
+    freshRecipe(run, id);
+    // The explicit initialScene helper creates only a fresh fixture. Sit-down
+    // and chair approach still execute with real support and renderer receipts.
     let maximumAnkleError = 0, previousProps = {}, maximumPlacedMovement = 0;
     for (let frame = 0; frame < 12000 && run.director.sequence; frame++) {
       run.tick();
@@ -342,7 +369,7 @@ test('all seven complete recipes use real placement receipts and do not drop per
 test('all seven recipes cancel during preparation, a live middle activity, and the final recovery without reviving later steps', () => {
   for (const [id, definition] of Object.entries(ACTIVITY_SEQUENCES)) for (const phase of ['preparing', 'middle', 'recovery']) {
     const run = makeRun(30), expected = definition.steps.map(step => typeof step === 'string' ? step : step.activity);
-    run.director.playSequence(id);
+    freshRecipe(run, id);
     if (phase === 'preparing') { run.tick(); run.tick(.1); }
     else {
       const index = phase === 'middle' ? Math.floor(expected.length / 2) : expected.length - 1;
@@ -371,10 +398,10 @@ test('the farther reading desk retreat retains default clips and stops safely du
   assert.ok(Math.abs(normal.root.position[2] - .9052941083908079) < 1e-9, 'default 3.5-unit clip was changed');
   assert.ok(Math.abs(farther.root.position[2] - normal.root.position[2] + 2) < 1e-9); probe.dispose();
   for (const cutAt of [1.3, 4.6]) {
-    const run = makeRun(30); run.director.playSequence('reading_break');
+    const run = makeRun(30); freshRecipe(run, 'reading_break');
     run.until(() => run.director.sequence?.index === 8 && run.body.activeId === 'stand_up_from_desk' && run.body.elapsed >= cutAt);
     const before = run.body.snapshot(), placed = run.props.snapshot().props, generation = run.director.generation;
-    assert.equal(run.body.sampleContext.deskRetreat, 5.5);
+    assert.equal(run.body.sampleContext.deskRetreat, 7);
     assert.equal(before.support, cutAt < 3.35 ? 'seated' : 'standing', 'probe did not reach the actual intended support stage');
     run.director.stop(); assert.equal(run.director.sequence, null); assert.equal(run.director.generation, generation + 1);
     let previousFeet = structuredClone(run.body.pose.feet), maximumLegError = 0, maximumPlacedMovement = 0;
@@ -401,14 +428,14 @@ test('the farther reading desk retreat retains default clips and stops safely du
 test('all four real held objects enter or atomically reject all seven recipes without scene setup stealing ownership', () => {
   for (const [source, propId] of [['read_standing', 'book'], ['drink_standing', 'mug'], ['write_at_desk', 'pencil'], ['carry_box', 'box']]) {
     for (const recipe of Object.keys(ACTIVITY_SEQUENCES)) for (const cancel of [false, true]) {
-      const run = makeRun(30); arrangeSource(run, source); run.director.play(source); run.until(() => run.body.done);
+      const run = makeRun(30); arrangeSource(run, source); acceptedPlay(run, source); run.until(() => run.body.done);
       const beforeBody = run.body.snapshot(), beforeProps = run.props.snapshot(), generation = run.director.generation;
       const accepted = run.director.playSequence(recipe);
       if (!accepted) {
         assert.deepEqual(run.body.snapshot(), beforeBody, 'rejected recipe changed the current body owner');
         assert.equal(run.director.generation, generation); assert.equal(run.director.sequence, null);
         assert.ok(['hands-occupied', 'free-hands-required', 'existing-desk-object-outside-supported-zone', 'existing-desk-object-orientation-not-supported',
-          'close-existing-object-before-partitioned-desk'].includes(run.director.snapshot().lastRejection?.reason));
+          'close-existing-object-before-partitioned-desk', 'missing-measured-initial-scene', 'seated-desk-entry-not-supported', 'seat_entry_requires_front_approach', 'seat_entry_space_blocked', 'seat_exit_space_blocked', 'activity_requires_explicit_prerequisite', 'activity_route_blocked_by_table', 'activity_route_blocked_by_chair'].includes(run.director.snapshot().lastRejection?.reason));
         run.tick(); assert.equal(run.props.snapshot().props[propId].visible, true);
         assert.deepEqual(run.props.snapshot().props[propId].position, beforeProps.props[propId].position, 'atomic rejection moved a real held object');
         addEvidence('crossRecipeEntries',{ source, propId, recipe, cancel, accepted, rejection: run.director.snapshot().lastRejection });
@@ -436,7 +463,7 @@ test('all four real held objects enter or atomically reject all seven recipes wi
       assert.ok(maximumSceneMotion <= .001, `${source}->${recipe}: scene-owned object moved ${maximumSceneMotion}`);
       if (cancel) { assert.equal(cancelled, true); assert.equal(run.director.generation, recipeGeneration + 1); }
       const satisfied = run.director.events.filter(event => event.type === 'step-satisfied' && event.generation === recipeGeneration);
-      for (const event of satisfied) assert.equal(event.reason, 'already-held');
+      for (const event of satisfied) assert.ok(['already-held', 'already-seated-at-same-desk'].includes(event.reason));
       addEvidence('crossRecipeEntries',{ source, propId, recipe, cancel, accepted, cancelled, maximumSceneMotion, satisfied,
         actualAcquisitions: currentReceiptOwners(run.props.snapshot().acquisitionReceipts), actualPlacements: currentReceiptOwners(run.props.snapshot().placementReceipts) });
       run.dispose();
@@ -447,12 +474,12 @@ test('all four real held objects enter or atomically reject all seven recipes wi
 function currentReceiptOwners(receipts = {}) { return Object.fromEntries(Object.entries(receipts).map(([id, receipt]) => [id, receipt.owner])); }
 
 test('a real previously placed book keeps its attained world pose or atomically rejects an incompatible desk recipe', () => {
-  const run = makeRun(30); arrangePlacement(run, 'put_book_standing'); run.director.play('put_book_standing'); run.until(() => run.body.done);
+  const run = makeRun(30); arrangePlacement(run, 'put_book_standing'); acceptedPlay(run, 'put_book_standing'); run.until(() => run.body.done);
   const oldAcquisition = run.props.snapshot().acquisitionReceipts.book?.owner, placed = run.props.snapshot().props.book;
   const beforeBody = run.body.snapshot(), beforeScene = run.props.snapshot(), generation = run.director.generation;
   assert.equal(placed.attachment, 'table'); const accepted = run.director.playSequence('quiet_afternoon');
   if (!accepted) {
-    assert.ok(run.director.snapshot().lastRejection.reason.startsWith('existing-desk-object-'));
+    assert.ok(['existing-desk-object-outside-supported-zone', 'existing-desk-object-orientation-not-supported', 'missing-measured-initial-scene'].includes(run.director.snapshot().lastRejection.reason));
     assert.deepEqual(run.body.snapshot(), beforeBody); assert.deepEqual(run.props.snapshot(), beforeScene);
     assert.equal(run.director.generation, generation); run.tick();
     assert.deepEqual(run.props.snapshot().props.book.position, placed.position, 'a refused layout silently re-staged the placed book');
@@ -480,8 +507,8 @@ test('a real previously placed book keeps its attained world pose or atomically 
 test('a stable real seated desk entry satisfies the introduction explicitly and preserves actual acquisition ownership', () => {
   for (const held of [true, false]) for (const cancel of [false, true]) {
     const run = makeRun(30), { body, director, props } = run;
-    if (held) { arrangeSource(run, 'read_seated'); director.play('read_seated'); }
-    else director.play('sit_down', { context: { deskLayout: 'partitioned', sceneSetupProps: ACTIVITY_SEQUENCES.reading_break.steps[1].setupProps } });
+    if (held) { arrangeSource(run, 'read_seated', { atDesk: true }); acceptedPlay(run, 'read_seated'); }
+    else { initializeEmptyActivityScene(body, props, ACTIVITY_SEQUENCES.reading_break); finishedPlay(run, 'sit_down'); finishedPlay(run, 'approach_desk_seated'); }
     run.until(() => body.done); run.tick();
     const beforeBody = body.snapshot(), beforeScene = props.snapshot(), generation = director.generation;
     assert.equal(beforeBody.support, 'seated');
@@ -491,7 +518,7 @@ test('a stable real seated desk entry satisfies the introduction explicitly and 
     assert.deepEqual(props.snapshot(), beforeScene, 'admission mutated an actual scene object before display');
     const recipeGeneration = director.generation, satisfied = director.events.filter(event => event.type === 'step-satisfied' && event.generation === recipeGeneration);
     assert.deepEqual(satisfied.map(event => [event.id, event.reason]), [
-      ['walk_stop', 'already-seated-at-same-desk'], ['sit_down', 'already-seated-at-same-desk'],
+      ['sit_down', 'already-seated-at-same-desk'], ['approach_desk_seated', 'already-seated-at-same-desk'],
       ...(held ? [['take_book_seated', 'already-held']] : []),
     ]);
     const entered = new Set(); let cancelled = false, maximumRootMotionBeforeRise = 0, maximumPlacedMotion = 0, previous = beforeScene;
@@ -509,12 +536,12 @@ test('a stable real seated desk entry satisfies the introduction explicitly and 
       previous = current;
     }
     assert.equal(director.sequence, null); assert.equal(body.done, true); assert.equal(cancelled, cancel);
-    for (const id of ['stand_up', 'walk_stop', 'sit_down']) assert.equal(entered.has(id), false, `satisfied introduction still performed ${id}`);
+    for (const id of ['stand_up', 'approach_desk_seated', 'sit_down']) assert.equal(entered.has(id), false, `satisfied introduction still performed ${id}`);
     assert.ok(maximumRootMotionBeforeRise < 1e-8); assert.ok(maximumPlacedMotion < .001);
-    assert.equal(director.events.some(event => event.type === 'step-completed' && event.generation === recipeGeneration && ['walk_stop', 'sit_down'].includes(event.id)), false,
+    assert.equal(director.events.some(event => event.type === 'step-completed' && event.generation === recipeGeneration && ['approach_desk_seated', 'sit_down'].includes(event.id)), false,
       'satisfied introductory steps were falsely reported as executed');
     if (cancel) { assert.equal(body.pose.support, 'seated'); assert.ok(['left', 'both'].includes(props.snapshot().props.book.attachment)); }
-    else { assert.ok(distance(body.root.position, [10, 0, -19.094705891609192]) < 1e-7); assert.equal(props.snapshot().props.book.attachment, 'table'); }
+    else { assert.ok(distance(body.root.position, [10, 0, -20.594705891609192]) < 1e-7); assert.equal(props.snapshot().props.book.attachment, 'table'); }
     addEvidence('seatedDeskEntries', { held, cancel, accepted: true, satisfied, maximumRootMotionBeforeRise, maximumPlacedMotion,
       finalRoot: body.root, finalSupport: body.pose.support, actualAcquisitionOwner: props.snapshot().acquisitionReceipts.book?.owner }); run.dispose();
   }
@@ -522,8 +549,8 @@ test('a stable real seated desk entry satisfies the introduction explicitly and 
 
 test('unmatched or unfinished actual seated desk entries reject atomically without reenacting a standing introduction', () => {
   for (const condition of ['missing-table', 'missing-chair', 'shifted-table', 'shifted-chair', 'rotated-table', 'unfinished-seated-action']) {
-    const run = makeRun(30), { body, director, props } = run; arrangeSource(run, 'read_seated'); director.play('read_seated'); run.until(() => body.done); run.tick();
-    if (condition === 'unfinished-seated-action') { director.play('sit_listen'); run.until(() => body.elapsed >= .3); }
+    const run = makeRun(30), { body, director, props } = run; arrangeSource(run, 'read_seated', { atDesk: true }); acceptedPlay(run, 'read_seated'); run.until(() => body.done); run.tick();
+    if (condition === 'unfinished-seated-action') { acceptedPlay(run, 'sit_listen'); run.until(() => body.elapsed >= .3); }
     else {
       const id = condition.endsWith('chair') ? 'chair' : 'table', actual = props.snapshot().props[id];
       let update;

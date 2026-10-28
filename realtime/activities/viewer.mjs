@@ -1,5 +1,5 @@
 import { createActivityScene } from './scene.mjs';
-import { ActivityDirector } from './director.mjs';
+import { ActivityDirector, initializeEmptyActivityScene } from './director.mjs';
 import { ACTIVITY_LIBRARY, ACTIVITY_IDS, ACTIVITY_SEQUENCES } from '../../preview/core/activity-library.js';
 import { propAdmissionConflict, heldPropSides } from '../../preview/core/activity-continuity.js';
 
@@ -23,6 +23,7 @@ function render(){
 }
 function choose(kind,id){
   if(!ready)return false;const sequence=kind==='sequences',definition=(sequence?ACTIVITY_SEQUENCES:ACTIVITY_LIBRARY)[id];if(!definition)return false;
+  if(sequence)initializeEmptyActivityScene(scene.body,scene.props,definition);
   const ok=sequence?director.playSequence(id):director.play(id);
   if(ok){selected={tab:kind,id};$('kind').textContent=sequence?'连续生活片段':'全身活动';$('title').textContent=definition.name;$('description').textContent=definition.description;const reusedSeat=sequence&&director.events.some(event=>event.type==='step-satisfied'&&event.generation===director.generation&&event.reason==='already-seated-at-same-desk');$('status').textContent=reusedSeat?'人物已经坐在这张桌前，接着做阅读活动；走来和再次坐下不重演，取书按实际持物处理。':'已接入全身时间线。可以切换视角观察支撑与道具。';render();}
   else{
@@ -33,7 +34,9 @@ function choose(kind,id){
     else if(rejection?.reason==='existing-desk-object-outside-supported-zone'||rejection?.reason==='existing-desk-object-orientation-not-supported')$('status').textContent=`桌上的${propNames[rejection.propId]??'物品'}位置或朝向，与这套片段已经检查过的布置不一致。物品保持原位；可以继续当前活动，或明确重置舞台后再选择这套片段。`;
     else if(rejection?.reason==='close-existing-object-before-partitioned-desk')$('status').textContent=`这套片段要求桌上的${propNames[rejection.propId]??'书和电脑'}先合上。已有状态保持；可以继续当前活动，或明确重置舞台后再选择这套片段。`;
     else if(!sequence&&definition.kind==='take_prop'&&heldPropSides(props[definition.propId]).length)$('status').textContent=`已经拿着${propNames[definition.propId]??'这件物品'}，不用再取一次。当前动作和持物继续保留。`;
-    else $('status').textContent='当前身体或物品状态还不能执行这个动作。请检查持物和场景；当前动作继续保留。';
+    else if(rejection?.reason==='missing-measured-initial-scene')$('status').textContent='这套活动需要明确准备好的桌椅和椅前站位。现有场景不会被自动重排；可明确重置舞台后再开始。';
+    else if(rejection?.reason?.startsWith('seat_')||rejection?.reason?.startsWith('activity_route_'))$('status').textContent=`当前进入或移动路线不安全（${rejection.reason}）。现有身体、桌椅和持物均保留，请先选择可达的路线或明确重置场景。`;
+    else $('status').textContent=`当前身体或物品状态还不能执行这个动作（${rejection?.reason??'条件未满足'}）。请检查持物和场景；当前动作继续保留。`;
   }return ok;
 }
 function stop(){if(!ready)return;director.stop();$('status').textContent='后续活动已撤销。空中动作先落地，坐姿保持座面支撑，其余动作收稳。';}

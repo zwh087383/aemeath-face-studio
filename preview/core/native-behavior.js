@@ -75,16 +75,21 @@ export {clone as cloneNativePose, diff as nativePoseVelocity, finite as finiteNa
  * caller supplies a sampler backed by real NativeClip/NativeRetarget layers.
  * No model, speech or WAI state is called. Every plan remains preview-only. */
 export class NativeBehaviorPlayer {
-  constructor({plan,sample,initialPose,initialVelocity=null,bridgeSeconds=.4,repeat=1,align=null,stopOptions={}}) {
+  constructor({plan,sample,initialPose,initialVelocity=null,bridgeSeconds=.4,repeat=1,align=null,stopOptions={},lifecycle=null,resolveReturnPose=null}) {
     if(!Array.isArray(plan)||!plan.length||plan.some(p=>!(p.duration>0)||!p.id))throw Error('Invalid native behavior plan');
     this.plan=plan;this.sampler=sample;this.initialPose=clone(initialPose);this.bridgeSeconds=bridgeSeconds;this.repeat=Math.max(1,Math.floor(repeat));this.aligner=align;this.stopOptions=stopOptions;
+    if(lifecycle&&!['source-end','source-complete','return-entry'].includes(lifecycle.exit))throw Error('Unsupported native exit policy');
+    if(lifecycle?.exit==='source-end'&&!plan.some(p=>p.phase==='end'))throw Error('Source End policy has no same-source End');
+    if(lifecycle?.exit==='return-entry'&&(!(lifecycle.returnSeconds>0)||lifecycle.entrySupport!==lifecycle.exitSupport))throw Error('Return requires a bounded same-support route');
+    if(lifecycle&&(lifecycle.exit==='return-entry'||lifecycle.cancel==='return-entry')&&lifecycle.contactMode==='root-motion'&&!resolveReturnPose)throw Error('Moving return requires an attained-root/foot route');
+    this.lifecycle=lifecycle;this.resolveReturnPose=resolveReturnPose;
     if(initialVelocity&&(initialVelocity.length!==initialPose.length||initialVelocity.some(v=>![...v.p,...v.q,...v.s].every(Number.isFinite))))throw Error('Invalid entry velocity');
     this.initialVelocity=initialVelocity?.map(v=>({p:v.p.clone(),q:v.q.clone(),s:v.s.clone()}))??initialPose.map(()=>({p:new THREE.Vector3(),q:new THREE.Vector3(),s:new THREE.Vector3()}));
     this.epoch=0;this.reset();
   }
   reset() {
     this.epoch++;this.time=0;this.paused=false;this.cancelled=false;this.events=[];this.index=0;this.cycle=0;this.state='playing';
-    this.stop=null;this.stopAt=null;this.displayed=clone(this.initialPose);this.startSegment(0,0,this.initialPose,this.initialVelocity);
+    this.stop=null;this.stopAt=null;this.returning=null;this.exitRequested=false;this.terminalRoute=null;this.displayed=clone(this.initialPose);this.startSegment(0,0,this.initialPose,this.initialVelocity);
     return this.snapshot();
   }
   currentPlan() {return this.plan[this.index];}
@@ -99,37 +104,64 @@ export class NativeBehaviorPlayer {
     this.events.push({type:'phase',id:plan.id,phase:plan.phase,at:origin,automaticEligible:false});
   }
   evaluate(time) {
+    if(this.returning)return this.returning.bridge.apply(this.returning.target,Math.max(0,time-this.returning.at));
     if(this.stop)return this.stop.sample(Math.max(0,time-this.stopAt));
     const local=Math.max(0,time-this.origin),incoming=this.sampleAt(this.currentPlan(),local);
     return this.bridge.apply(incoming,local);
   }
   velocityAt(time) {
-    const local=time-(this.stop?this.stopAt:this.origin);
+    const local=time-(this.returning?this.returning.at:this.stop?this.stopAt:this.origin);
     if(local>EPS)return diff(this.evaluate(time-EPS),this.evaluate(time),EPS);
     return diff(this.evaluate(time),this.evaluate(time+EPS),EPS);
   }
   boundary(time) {
     const outgoing=this.evaluate(time),velocity=this.velocityAt(time),entry=this.currentPlan();
+    if(this.exitRequested){
+      const end=this.plan.findIndex(p=>p.phase==='end');
+      if(this.lifecycle.cancel==='phase-boundary-end'&&end>=0&&this.index!==end){this.exitRequested=false;this.startSegment(end,time,outgoing,velocity);this.state='cancel-exit';return;}
+      if(this.lifecycle.cancel==='return-entry'){this.beginReturn(time,outgoing,velocity);return;}
+      this.exitRequested=false;
+    }
     let next=this.index+1;
     if(entry.phase==='loop'&&++this.cycle<this.repeat)next=this.index;
     if(next<this.plan.length)this.startSegment(next,time,outgoing,velocity);
-    else {this.stop=new NativePoseStop(outgoing,velocity,this.stopOptions);this.stopAt=time;this.state='settling';this.events.push({type:'kinematic-stop',at:time,reason:'Source endpoint; support and semantic exit unapproved'});}
+    else if(this.lifecycle?.exit==='return-entry')this.beginReturn(time,outgoing,velocity);
+    else {this.stop=new NativePoseStop(outgoing,velocity,this.stopOptions);this.stopAt=time;this.state='settling';this.terminalRoute=this.lifecycle?.exit??'bounded-kinematic-stop';
+      this.events.push({type:'kinematic-stop',at:time,route:this.terminalRoute,reason:this.lifecycle?'Declared source route ended; final support must be checked by the scene':'Source endpoint; support and semantic exit unapproved'});}
+  }
+  beginReturn(time,current,velocity) {
+    if(!this.lifecycle||!(this.lifecycle.returnSeconds>0))throw Error('No authored return route');
+    // A moving route must rebase the entry shape at the attained root and feet.
+    // The player never silently translates the character back to its origin.
+    const target=this.resolveReturnPose?this.resolveReturnPose({current:clone(current),entry:clone(this.initialPose),lifecycle:this.lifecycle}):clone(this.initialPose);
+    if(!finite(target)||target.length!==current.length)throw Error('Invalid return route');
+    this.returning={at:time,target,bridge:new NativePoseBridge({current,velocity,incoming:target,incomingFuture:target,duration:this.lifecycle.returnSeconds})};
+    this.stop=null;this.exitRequested=false;this.terminalRoute='return-entry';this.state=this.cancelled?'cancel-returning':'returning';
+    this.events.push({type:'authored-return',at:time,seconds:this.lifecycle.returnSeconds,entrySupport:this.lifecycle.entrySupport,exitSupport:this.lifecycle.exitSupport,supportVerified:false});
   }
   advance(seconds) {
     if(!Number.isFinite(seconds)||seconds<0)throw Error('Nonmonotonic native clock');
     if(this.paused)return this.snapshot();
     const target=this.time+seconds;
     let guard=0;
-    while(!this.stop&&target>=this.origin+this.currentPlan().duration&&guard++<10000)this.boundary(this.origin+this.currentPlan().duration);
+    while(!this.stop&&!this.returning&&target>=this.origin+this.currentPlan().duration&&guard++<10000)this.boundary(this.origin+this.currentPlan().duration);
     if(guard>=10000)throw Error('Native phase iteration limit');
     this.time=target;this.displayed=this.evaluate(target);
-    if(this.stop&&target>=this.stopAt+this.stop.duration)this.state=this.cancelled?'cancelled-held':'complete-held';
+    if(this.stop&&target>=this.stopAt+Math.max(this.stop.duration,this.lifecycle?.settleSeconds??0))this.state=this.cancelled?'cancelled-held':'complete-held';
+    if(this.returning&&target>=this.returning.at+this.lifecycle.returnSeconds)this.state=this.cancelled?'cancelled-held':'complete-held';
     return this.snapshot();
   }
   cancel({epoch=this.epoch,useEnd=false}={}) {
     if(epoch!==this.epoch)return {accepted:false,reason:'Stale epoch'};
     if(this.cancelled)return {accepted:false,reason:'Already cancelled'};
     const current=this.evaluate(this.time),velocity=this.velocityAt(this.time);this.cancelled=true;
+    if(this.lifecycle&&['phase-boundary-end','return-entry','finish-source'].includes(this.lifecycle.cancel)){
+      if(this.returning){this.state='cancel-returning';}
+      else if(this.stop){this.state='cancel-settling';}
+      else {this.exitRequested=true;this.state='cancel-exit-pending';}
+      this.events.push({type:'cancel',at:this.time,epoch:this.epoch,route:this.lifecycle.cancel,supportVerified:false});
+      return {accepted:true,...this.snapshot()};
+    }
     const end=this.plan.findIndex(p=>p.phase==='end');
     // Direct End is opt-in PREVIEW only. No low-motion or source endpoint flag
     // silently authorizes an arbitrary-phase End or a physical contact change.
@@ -143,5 +175,7 @@ export class NativeBehaviorPlayer {
   seek(time){if(!Number.isFinite(time)||time<0)throw Error('Invalid seek');const pause=this.paused;this.reset();this.advance(time);this.pause(pause);return this.snapshot();}
   pose(){return this.displayed;}
   snapshot(){return {time:this.time,state:this.state,epoch:this.epoch,paused:this.paused,cancelled:this.cancelled,id:this.currentPlan().id,
-    phase:this.currentPlan().phase,phaseTime:this.time-this.origin,stopSeconds:this.stop?.duration??null,events:this.events.slice(-30),automaticEligible:false};}
+    phase:this.returning?'return':this.currentPlan().phase,phaseTime:this.time-(this.returning?.at??this.origin),stopSeconds:this.stop?.duration??null,
+    terminalRoute:this.terminalRoute,routeComplete:['complete-held','cancelled-held'].includes(this.state)&&!!this.lifecycle,
+    supportVerified:false,events:this.events.slice(-30),automaticEligible:false};}
 }

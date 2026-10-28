@@ -19,7 +19,16 @@ spec.loader.exec_module(protocol)
 from tools.voice_avatar.duplex_transport import ProtocolError
 
 ID = re.compile(r"^[A-Za-z0-9_.:-]{1,128}$")
-MAX_REQUEST_BYTES = 65536
+MAX_REQUEST_BYTES = 128 * 1024
+PROTOCOL_TOKEN_MARGIN = 8192
+MAX_OUTPUT_TOKENS = 2048
+
+
+def request_token_bound(size):
+    if type(size) is not int or not 0 < size <= MAX_REQUEST_BYTES:
+        raise ProtocolError("deepseek_request_size_bound")
+    return {"input": size + PROTOCOL_TOKEN_MARGIN, "output": MAX_OUTPUT_TOKENS,
+            "source": f"deepseek_compact_utf8_request_{size}_plus_protocol_{PROTOCOL_TOKEN_MARGIN}_explicit_output_{MAX_OUTPUT_TOKENS}"}
 
 
 @dataclass(frozen=True)
@@ -49,8 +58,10 @@ class DeepSeekConfig:
 
 class DeepSeekPlannerConnection:
     provider = "deepseek"
-    token_bound = {"input": MAX_REQUEST_BYTES + 8192, "output": 2048,
-                   "source": "deepseek_bounded_utf8_request_65536_plus_protocol_8192_explicit_output_2048"}
+    # Until context is frozen this is the explicit maximum. The pipeline calls
+    # add_context before reserving, so each new reservation uses its exact byte
+    # upper bound plus the same protocol allowance. Existing ledgers are untouched.
+    token_bound = request_token_bound(MAX_REQUEST_BYTES)
 
     def __init__(self, *, config, catalog=None, factory=None, http_factory=None):
         # factory is the Qwen voice socket factory; deliberately not consumed here.
@@ -62,6 +73,8 @@ class DeepSeekPlannerConnection:
         self.configured = self.claimed = self.cancelled = False
         self.client = self.task = None
         self.body = None
+        self.request_bytes = None
+        self.request_size_bytes = 0
         self.receipts = []
 
     async def open(self, **_):
@@ -86,12 +99,17 @@ class DeepSeekPlannerConnection:
             raise ProtocolError("deepseek_context_state_invalid")
         if not messages or any(m.get("role") != "user" or not isinstance(m.get("content"), str) for m in messages):
             raise ProtocolError("deepseek_context_invalid")
-        self.body = {"model": self.config.model, "messages": [{"role":"system", "content":protocol.RULES}, *messages],
+        body = {"model": self.config.model, "messages": [{"role":"system", "content":protocol.RULES}, *messages],
             "tools": protocol.tools(self.catalog), "thinking": {"type":"disabled"},
-            "stream": True, "stream_options": {"include_usage": True}, "max_tokens": 2048}
-        if len(json.dumps(self.body, ensure_ascii=False).encode()) > MAX_REQUEST_BYTES:
-            self.body = None
+            "stream": True, "stream_options": {"include_usage": True}, "max_tokens": MAX_OUTPUT_TOKENS}
+        # Serialize once and send these exact bytes. aiohttp's default json=
+        # encoding escapes Chinese text and previously differed from the size
+        # check. No action, condition, history field or tool schema is omitted.
+        encoded = json.dumps(body, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        if len(encoded) > MAX_REQUEST_BYTES:
             raise ProtocolError("deepseek_request_size_bound")
+        self.body, self.request_bytes, self.request_size_bytes = body, encoded, len(encoded)
+        self.token_bound = request_token_bound(self.request_size_bytes)
 
     async def send(self, event):
         kind = event.get("type")
@@ -101,7 +119,7 @@ class DeepSeekPlannerConnection:
         if kind == "conversation.item.create" and event.get("item", {}).get("type") == "function_call_output":
             self.receipts.append(event["item"]["call_id"])
             return  # Notification acknowledgement is not another HTTP generation.
-        if kind != "response.create" or self.body is None or self.task is not None:
+        if kind != "response.create" or self.body is None or self.request_bytes is None or self.task is not None:
             raise ProtocolError("deepseek_request_state_invalid")
         self.claimed = True
         self.task = asyncio.create_task(self._stream())
@@ -121,8 +139,8 @@ class DeepSeekPlannerConnection:
         def emit(kind, **value):
             self.events.put_nowait({"type":kind, "response_id":response_id, **value})
         try:
-            async with self.client.post(self.config.url + "/chat/completions", json=self.body,
-                    headers={"Authorization":"Bearer " + self.config.key}, proxy=self.config.proxy) as response:
+            async with self.client.post(self.config.url + "/chat/completions", data=self.request_bytes,
+                    headers={"Authorization":"Bearer " + self.config.key, "Content-Type":"application/json; charset=utf-8"}, proxy=self.config.proxy) as response:
                 if response.status != 200:
                     raise ProtocolError("deepseek_http_failed")
                 async for line in response.content:

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import * as THREE from '../preview/node_modules/three/build/three.module.js';
-import { ActivityDirector } from '../realtime/activities/director.mjs';
+import { ActivityDirector, initializeEmptyActivityScene } from '../realtime/activities/director.mjs';
 import { FullBodyController } from '../preview/core/full-body-controller.js';
 import { ACTIVITY_LIBRARY, ACTIVITY_SEQUENCES, sampleActivity } from '../preview/core/activity-library.js';
 import { skeletonFromInspection } from '../preview/core/motion-skeleton.js';
@@ -72,7 +72,8 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
   test(`real sequence ${id} executes all ${sequence.steps.length} steps and retains its final world state`, () => {
     const run = makeRun(), { body, director } = run, ids = sequence.steps.map(stepId);
     const entered = [], completed = [], doneAtStep = new Set();
-    assert.equal(director.playSequence(id), true);
+    initializeEmptyActivityScene(body, run.props, sequence);
+    assert.equal(director.playSequence(id), true, JSON.stringify(director.lastRejection));
     let previousIndex = -1, previousRoot = [...body.root.position], maxFrameTravel = 0, exitSamples = 0, colliders = null;
     for (let frame = 0; frame < 9000 && director.sequence; frame++) {
       const beforeIndex = director.sequence.index;
@@ -132,11 +133,11 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
       assert.equal(ids[2], 'take_book_seated', 'book must be genuinely acquired before reading');
       assert.equal(ids[7], 'put_book_seated', 'read sequence must place its book before rising');
       assert.equal(ids[8], 'stand_up_from_desk', 'read sequence must move the chair clear of the desk before rising');
-      assert.equal(sequence.steps[8].context.deskRetreat, 5.5, 'reading uses the separately verified farther chair retreat');
+      assert.equal(sequence.steps[8].context.deskRetreat, 7, 'reading uses the separately verified farther chair retreat');
       assert.deepEqual(ids.slice(9), ['walk_left', 'turn_around', 'walk_forward'], 'exit must route around the retained table and chair');
-      assert.ok(distance(at('stand_up_from_desk').root.position, [0, 0, 3.905294108390808]) < 1e-7);
-      assert.ok(distance(at('walk_left').root.position, [10, 0, 3.905294108390808]) < 1e-7);
-      assert.ok(distance(finalRoot.position, [10, 0, -14.094705891609192]) < 1e-7);
+      assert.ok(distance(at('stand_up_from_desk').root.position, [0, 0, -2.594705891609192]) < 1e-7);
+      assert.ok(distance(at('walk_left').root.position, [10, 0, -2.594705891609192]) < 1e-7);
+      assert.ok(distance(finalRoot.position, [10, 0, -20.594705891609192]) < 1e-7);
       assert.ok(Math.abs(finalRoot.yaw - Math.PI) < 1e-7); assert.ok(exitSamples > 300, 'exit path was not actually sampled');
     }
     if (id === 'quiet_afternoon') {
@@ -145,8 +146,8 @@ for (const [id, sequence] of Object.entries(ACTIVITY_SEQUENCES)) {
     if (id === 'desk_session') {
       assert.equal(ids.at(-1), 'stand_up_from_desk', 'desk exit must retreat the chair before standing');
       assert.equal(body.pose.support, 'standing');
-      assert.ok(finalRoot.position[2] > .8 && finalRoot.position[2] < 1.1, 'desk exit lost the 3.5-unit chair retreat');
-      assert.ok(body.pose.props.chair.position[2] < -4.6, 'desk chair did not remain behind the table');
+      assert.ok(Math.abs(finalRoot.position[2] + 2.594705891609192) < 1e-7, 'desk exit lost the measured 7-unit chair retreat');
+      assert.ok(Math.abs(run.props.snapshot().props.chair.position[2] + 8.2) < 1e-7, 'desk chair did not remain at its attained pull-out location');
       assert.equal(Object.hasOwn(body.pose.props, 'table'), false, 'desk exit must not relocate the persistent table');
     }
     console.log(JSON.stringify({ acceptance: 'whole-real-sequence', id, steps: completed,
@@ -186,18 +187,23 @@ test('director interruption during a real sequence jump retires all remaining st
 });
 
 test('the exit clearance probe detects an unsafe straight walk through the retained tabletop', () => {
-  const run = makeRun(), { body, director } = run; director.playSequence('reading_break');
+  const run = makeRun(), { body, director } = run; initializeEmptyActivityScene(body, run.props, ACTIVITY_SEQUENCES.reading_break);
+  assert.equal(director.playSequence('reading_break'), true, JSON.stringify(director.lastRejection));
   for (let frame = 0; frame < 9000; frame++) {
     run.tick();
     if (director.sequence?.index === 8 && body.activeId === 'stand_up_from_desk' && body.done) break;
   }
   assert.equal(director.sequence.index, 8); assert.equal(body.done, true);
   const colliders = exitColliders(run.props).filter(part => part.id === 'table');
-  assert.equal(body.play('walk_forward'), true);
+  const before = body.snapshot(), admission = body.routeAdmission('walk_forward');
+  assert.equal(admission.accepted, false); assert.equal(admission.obstacle, 'table');
+  assert.equal(body.play('walk_forward'), false); assert.deepEqual(body.snapshot(), before);
+  // The negative control uses a detached source-only probe, never bypasses the live guard.
+  const probe = body.preparationProbe(); probe.start({ id: 'walk_forward', options: { speed: 1, loop: false, context: {} } });
   let detected = null;
-  for (let frame = 0; frame < 1000 && !body.done; frame++) {
-    run.tick(); const hits = legExitHits(body, colliders);
-    if (hits.length) { detected = { frame, hits, root: structuredClone(body.root) }; break; }
+  for (let frame = 0; frame < 1000 && !probe.done; frame++) {
+    probe.update(probe.now + 1 / 30, 1 / 30); const hits = legExitHits(probe, colliders);
+    if (hits.length) { detected = { frame, hits, root: structuredClone(probe.root) }; break; }
   }
   assert.ok(detected, 'collision regression would fail to detect the former straight exit');
   console.log(JSON.stringify({ acceptance: 'unsafe-exit-negative-control', ...detected }));

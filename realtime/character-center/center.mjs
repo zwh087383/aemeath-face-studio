@@ -5,6 +5,7 @@ export class CharacterCenter {
     this.versions=new Map();this.sequence=0;this.connectionId=null;this.turnId=null;this.voiceOwner=null;
     this.activity=null;this.paused=false;this.played=new Set();this.lastMath=null;
     this.retiredTurns=new Set();
+    this.seenAttention=new Set();
   }
   record(type,fields={}){const event={type,at:this.clock(),...fields};this.events.push(event);if(this.events.length>3000)this.events.shift();this.onEvent(event);return event;}
   setConnection(id){this.connectionId=id;}
@@ -20,9 +21,9 @@ export class CharacterCenter {
     if(!state||state.semanticRevision<=(this.revoked.get(key)??-1)){
       state={version,index:++this.sequence};this.versions.set(key,state);
     }else state.version=version;
-    state.semanticRevision=e.semanticRevision;state.turnId=e.turnId;state.activityId=e.activityId;
+    state.semanticRevision=e.semanticRevision;state.turnId=e.turnId;state.activityId=e.activityId;state.sourceScope=e.sourceScope;
     return {sourceKey:key,sourceScope:e.sourceScope,sourceVersion:state.index,sourceRevision:version,
-      semanticRevision:e.semanticRevision,turnId:e.turnId,activityId:e.activityId,requestId:e.commandId??e.requestId};
+      semanticRevision:e.semanticRevision,turnId:e.turnId,activityId:e.activityId,requestId:e.commandId??e.requestId,catalogHash:e.catalogHash};
   }
   current(owner){return owner.semanticRevision>(this.revoked.get(owner.sourceKey)??-1)&&this.versions.get(owner.sourceKey)?.index===owner.sourceVersion
     &&(!owner.turnId||owner.turnId===this.turnId&&!this.retiredTurns.has(owner.turnId));}
@@ -33,6 +34,7 @@ export class CharacterCenter {
       this.record('math_target',{revision:e.mathRevision,accepted});return accepted;
     }
     if(e.type==='activity_state'){this.activity=e;this.record('activity_state',{activity:e});return true;}
+    if(e.type==='character_attention')return this.attention(e);
     if(e.type==='character_execution_feedback'){this.record('execution_feedback',{result:e.result});return true;}
     if(e.type==='character_receipt_result'){this.record('decision_followup',{replanned:e.replanned,reason:e.reason});return true;}
     if(e.type==='character_revoke'){
@@ -64,7 +66,7 @@ export class CharacterCenter {
     else{
       const cmd=e.command,source=e.sourceKey;
       const command={id:`${source}:${cmd.kind}`,kind:cmd.kind,strength:cmd.strength,source,
-        revision:++this.faceRevision,evidenceId:cmd.evidenceRef,renew:true};
+        revision:++this.faceRevision,evidenceId:cmd.evidenceRef,renew:e.semanticRenew!==false,...(cmd.secondary?{secondary:structuredClone(cmd.secondary)}:{})};
       if(cmd.mode==='attitude')accepted=this.face.setAttitude(command);
       else if(cmd.mode==='reaction')accepted=this.face.react({...command,id:e.requestId+':'+e.semanticRevision});
       else{const current=this.face.attitude;accepted=current?this.face.clearAttitude({id:current.id,source:current.source,revision:command.revision}):true;}
@@ -72,6 +74,26 @@ export class CharacterCenter {
     this.record(e.type==='character_actions'?'body_target':'face_target',{
       requestId:e.requestId,turnId:e.turnId,sourceKey:e.sourceKey,semanticRevision:e.semanticRevision,
       command:e.command,received,accepted,owner});return accepted;
+  }
+  attention(event){
+    // Audio provisional pause must not freeze the body's safe settling clock.
+    // This input is a real attention event, never a fabricated model decision.
+    const key=typeof event.itemId==='string'&&event.itemId?`${this.connectionId??''}:${event.itemId}`:null;
+    if(key&&this.seenAttention.has(key))return true;
+    if(key){this.seenAttention.add(key);if(this.seenAttention.size>256)this.seenAttention.delete(this.seenAttention.values().next().value);}
+    this.pause(false);
+    const result=this.body.pauseForAttention?.({turnId:this.turnId,reason:event.reason??'user_speech_started'})
+      ??{accepted:false,reason:'attention_pause_unavailable'};
+    // Fence already issued background packets as well as their queue entries.
+    // A later genuinely new decision must carry a newer semantic revision.
+    for(const [sourceKey,state] of this.versions)if(state.sourceScope==='activity'){
+      this.revoked.set(sourceKey,Math.max(this.revoked.get(sourceKey)??-1,state.semanticRevision));
+      this.pending=this.pending.filter(row=>row.owner.sourceKey!==sourceKey);
+      this.body.cancel({sourceKey,sourceVersion:state.index},'user_attention',{preserveAttention:true});
+    }
+    if(this.turnId)this.cancel({turnId:this.turnId,reason:'user_attention'});
+    this.record('user_attention',{itemId:event.itemId??null,result,modelChosen:false,semanticUnderstanding:false});
+    return result.accepted===true;
   }
   advance(audio,trial){
     if(!trial||trial.revoked)return;
@@ -107,12 +129,20 @@ export class CharacterCenter {
       // remains visible until a new decision or its documented fade policy.
       this.face.cancel({source:key,revision:this.faceRevision});
     }
-    // Body cancellation never snaps posture, support or held props to neutral.
-    if(sourceKey){const version=this.versions.get(sourceKey);if(version)this.body.cancel({sourceKey,sourceVersion:version.index},reason);}
+    // Voice clients may call this twice (turn cancellation and driver release).
+    // A turn-scoped release must not erase another background task. The one
+    // activity already protected by actual attention may settle into its pause;
+    // explicit source/global revocation keeps its original broad authority.
+    const preserveAttention=!sourceKey&&!!turnId&&['user_attention','new_turn','confirmed_voice_barge_in','voice_owner_revoked'].includes(reason);
+    if(sourceKey){
+      if(this.body.cancelSourceKey)this.body.cancelSourceKey(sourceKey,reason);
+      else{const version=this.versions.get(sourceKey);if(version)this.body.cancel({sourceKey,sourceVersion:version.index},reason);}
+    }
+    else if(turnId){for(const [key,state] of matches)this.body.cancel({sourceKey:key,sourceVersion:state.index},reason,{preserveAttention});}
     else this.body.cancel(null,reason);
     this.record('cancel',{turnId,sourceKey,reason});
   }
-  hasWork(){return !!this.body.snapshot().active||!!this.body.snapshot().pending?.length;}
+  hasWork(){const state=this.body.snapshot();return !!state.active||!!state.controlActive||!!state.pending?.length;}
   pause(value){this.paused=value;this.body.pause(value);}
   snapshot(){return {math:this.lastMath,face:this.face.snapshot(),body:this.body.snapshot(),pending:this.pending,activity:this.activity,events:this.events.slice(-100)};}
 }

@@ -25,28 +25,83 @@ EFFECTS = {
 
 
 def compact_catalog(rows):
-    conditions, codes, actions = {}, {}, []
+    conditions, permissions, durations, variant_sets, effects, actions = {}, {}, {}, {}, {}, []
+    codes = {"p": {}, "m": {}, "d": {}, "v": {}, "e": {}}
+
+    def intern(prefix, table, value):
+        signature = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        if signature not in codes[prefix]:
+            key = prefix + str(len(codes[prefix]) + 1)
+            codes[prefix][signature], table[key] = key, deepcopy(value)
+        return codes[prefix][signature]
+
     for row in rows:
         need = row.get("requires", {})
-        signature = encoded(need)
-        if signature not in codes:
-            key = "p" + str(len(codes) + 1)
-            codes[signature], conditions[key] = key, deepcopy(need)
-        actions.append([row["id"], row.get("label", row["id"]), codes[signature],
-                        row.get("duration"), EFFECTS.get(row.get("name"), "unchanged")])
-    return {"columns": ["id", "meaning", "requires", "seconds", "expected_result"],
-            "conditions": conditions, "actions": actions, "unchanged": "保持原支撑与持物；实际结果以回执为准",
-            "policy": "全部合法能力可见。条件不满足可由模型规划前置动作；执行前仍核验。原速单次，不自动循环。"}
+        condition = intern("p", conditions, need)
+        duration = {key: deepcopy(value) for key, value in row.get("durationContract", {}).items()
+                    if key in {"mode", "sourceSeconds", "minimumSeconds", "entrySeconds", "startSeconds", "endSeconds",
+                               "loopSeconds", "returnSeconds", "settleSeconds", "continuation", "conditionalPreparation"}}
+        # Exact defaults are stated once. No geometric or timing precision is
+        # reduced; source/minimum seconds remain in-row when not equal to seconds.
+        for key in ("sourceSeconds", "minimumSeconds"):
+            if duration.get(key) == row.get("duration"):
+                duration.pop(key, None)
+        if duration.get("returnSeconds") == 0:
+            duration.pop("returnSeconds")
+        variants = {}
+        for name, variant in row.get("variants", {}).items():
+            # Describe the permission without duplicating source geometry or
+            # private asset provenance in each planner request.
+            item = {key: deepcopy(value) for key, value in variant.items()
+                    if key in {"meaning", "kind", "heldPreserved", "freeHands", "effects"}}
+            if "requires" in variant:
+                item["requires"] = intern("p", conditions, variant["requires"])
+            if variant.get("phaseIds"):
+                item["loop_seconds"] = sum(part["duration"] for part in row.get("phaseData", [])
+                                           if part["id"] in variant["phaseIds"])
+            variants[name] = item
+        permission = deepcopy(row.get("performanceContract", {}))
+        if set(permission.get("variant_set", [])) == set(variants):
+            permission["variant_set"] = "listed_variants"
+        actions.append([row["id"], row.get("label", row["id"]), condition,
+                        row.get("duration"), intern("e", effects, row.get("effects", EFFECTS.get(row.get("name"), "unchanged"))),
+                        intern("m", permissions, permission),
+                        intern("d", durations, duration), intern("v", variant_sets, variants)])
+    return {"columns": ["id", "meaning", "requires", "seconds", "expected_result", "performance_permission",
+                        "duration_contract", "variants"],
+            "conditions": conditions, "performance_permissions": permissions, "duration_contracts": durations,
+            "variant_sets": variant_sets, "effects": effects, "actions": actions,
+            "unchanged": "保持原支撑与持物；实际结果以回执为准",
+            "semantics": {
+                "references": "p/m/d/v/e分别引用conditions/performance_permissions/duration_contracts/variant_sets/effects；都是输入目录引用，输出仍使用原工具和完整动作ID。listed_variants表示该行v引用中列出的变体，不额外开放变体。",
+                "duration": "total_seconds是整个动作的目标时长或允许区间，包含实际进入、原速起势、原速中段、原速收势、returnSeconds及最终收稳settleSeconds。whole-source-cycles只用完整源循环，数字目标按可达圈数实现，区间必须容纳完整路线，不能把额外衔接排除在区间外。省略sourceSeconds/minimumSeconds时使用本行seconds，省略returnSeconds为0；全部保留原速起收，现场衔接与可达时长由执行器校验并回执。",
+                "effects": "expected_result引用的是预期状态，不是完成事实。attachment.onlyAfter=measured-grip表示成功握取后才能更新为手持；measured-surface-contact表示实际放置成立后才能更新为桌面。held/support/root=preserve保持当前事实。",
+                "permission": "performance_permissions是该项可开放的上限，不是已授权执行；只有本次动作显式performance字段才授权相应时长、变体或微动作。省略保持原动作单次，不补动作、不加速起收、不修改身体幅度。",
+                "variants": "variant_set只允许所列的同义实现；默认exact。support-preserving保持实测站/坐支撑、持物和根位置，只动获准交流部位，按该变体requires检查，不会先站起或放下物品。近脸/近物接触仍须实际校验。",
+                "control": "control:pause_activity/resume_activity/finish_activity必须operation=append。activity_token从character_state.actor原样读取：暂停/结束用activityToken，恢复用resumeToken。unknown/null/旧令牌不可用；等待实际状态，不能自造令牌。暂停稳定后可交流，交流结束不自动恢复；恢复接续原进度，结束走实际收势，均不代表后台业务完成。",
+            },
+            "policy": "全部合法能力可见。条件暂不满足时模型可规划前置动作；执行前仍核验。动作数量、顺序、重复及不做均由模型决定，没有次数或冷却限制。"}
 
 
 def actor_view(actor):
     result = {key: deepcopy(actor.get(key, "unknown")) for key in
-              ("support", "hands", "seatSupported", "contacts", "phase", "executor", "canYield")}
+              ("support", "hands", "seatSupported", "contacts", "phase", "executor", "canYield", "root", "freeHands",
+               "capabilities", "activityToken", "resumeToken")}
     objects = {}
     for name, prop in actor.get("props", {}).items():
         if not isinstance(prop, dict) or prop.get("visible") is not True:
             continue
         objects[name] = {"attachment": prop.get("attachment", "unknown")}
+        # Small measured facts let the model distinguish an open book/laptop
+        # and plan around furniture. No bone palette or private source data.
+        for key in ("openness", "pageTurn", "scale"):
+            if key in prop:
+                objects[name][key] = deepcopy(prop[key])
+        frame = prop.get("worldTransform") or {}
+        for key in ("position", "quaternion"):
+            value = frame.get(key, prop.get(key))
+            if value is not None:
+                objects[name][key] = deepcopy(value)
         contact = prop.get("contact")
         if isinstance(contact, dict):
             objects[name]["contact"] = {k: contact[k] for k in ("valid", "confirmed", "attached") if k in contact}

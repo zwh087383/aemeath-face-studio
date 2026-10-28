@@ -55,7 +55,7 @@ def test_face_only_does_not_change_body_and_clear_body_does_not_change_face():
 
 
 @pytest.mark.parametrize("raw", [
-    '{"a":[[-1]]}', '{"a":[[83]]}', '{"a":[[true]]}', '{"a":[[1,2]]}',
+    '{"a":[[-1]]}', json.dumps({"a": [[len(m.Codec().ids)]]}), '{"a":[[true]]}', '{"a":[[1,2]]}',
     '{"a":[[1,0,3]]}', '{"f":[0,0,0.5,2]}', '{"f":[1,0,0.5]}',
     '{"f":[0,0,NaN]}', '{"f":[0,0,true]}', '{"f":[0,0,1.1]}',
     '{"o":0,"a":[[1]]}', '{"a":[[1]],"g":12}', '{"o":0,"o":1}', '{}',
@@ -82,6 +82,46 @@ def test_codebook_version_and_order_are_bound_to_request():
     payload["available_actions"]["actions"].reverse()
     with pytest.raises(ValueError, match="order"):
         codec.payload(payload)
+
+
+def test_extended_options_preserve_duration_variants_tokens_and_secondary_stance():
+    codec = m.Codec()
+    nod = codec.ids.index("action:nod")
+    pause = codec.ids.index("control:pause_activity")
+    read = codec.ids.index("activity:read_seated")
+    raw = {"f": [0, m.KINDS.index("concern"), .7, 1, m.KINDS.index("serious"), .35],
+           "a": [[read, 0, 0, {"p": {"total_seconds": [25, 35], "micro_set": ["gaze_shift"]}}],
+                 [pause, 0, 0, {"t": "activity:5:read_seated"}],
+                 [nod, 0, 0, {"p": {"variant_set": ["support-preserving"]}}]]}
+    face, body = codec.decode(json.dumps(raw), context(codec))
+    assert face[1]["secondary"] == {"kind": "serious", "strength": .35}
+    assert face[1]["evidenceRef"] == "execution:two"
+    assert body[1]["operation"] == "append"
+    assert body[1]["actions"][0]["performance"] == raw["a"][0][3]["p"]
+    assert body[1]["actions"][1]["activity_token"] == "activity:5:read_seated"
+    assert body[1]["actions"][2]["performance"] == {"variant_set": ["support-preserving"]}
+    assert codec.tools()[0]["function"]["parameters"]["properties"]["a"]["items"]["maxItems"] == 4
+
+
+@pytest.mark.parametrize("change", ["noncontrol_token", "missing_control_token", "replace_control", "unknown_micro", "bad_secondary", "extra_options"])
+def test_extended_options_still_use_original_strict_validators_atomically(change):
+    codec = m.Codec()
+    raw = {"f": [0, m.KINDS.index("concern"), .7], "a": [[codec.ids.index("action:nod"), 0, 0, {}]]}
+    if change == "noncontrol_token":
+        raw["a"][0][3] = {"t": "invented"}
+    elif change in {"missing_control_token", "replace_control"}:
+        raw["a"][0][0] = codec.ids.index("control:pause_activity")
+        if change == "replace_control":
+            raw["o"] = 2
+            raw["a"][0][3] = {"t": "activity:5:read_seated"}
+    elif change == "unknown_micro":
+        raw["a"][0][3] = {"p": {"micro_set": ["teleport"]}}
+    elif change == "bad_secondary":
+        raw["f"] = [1, m.KINDS.index("concern"), .7, 0, m.KINDS.index("serious"), .2]
+    else:
+        raw["a"][0][3] = {"p": {}, "invented": True}
+    with pytest.raises(ValueError):
+        codec.decode(json.dumps(raw), context(codec))
 
 
 def test_format_budget_is_independent_and_unknown_stops_both_arms(tmp_path):

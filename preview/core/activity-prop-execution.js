@@ -87,6 +87,17 @@ export function applyHeldPropBridge(rig, pose, frames, elapsed, duration) {
       ...(singleGrip ? { grip: copy(singleGrip) } : {}) };
     pose.propContactPlans[id] = { frame, openness, attachment,
       hands: attachment === 'both' ? ['L', 'R'] : [attachment === 'left' ? 'L' : 'R'], ...(singleGrip ? { grip: copy(singleGrip) } : {}) };
+    if (id === 'book' && attachment === 'both' && Math.abs(bridge.opennessEnd - bridge.opennessStart) > .05) {
+      // Opening a closed book changes the two rigid cover contacts. Guide the
+      // elbows inward through the same verified closing posture, with
+      // zero adjustment and zero velocity at both bridge boundaries.
+      const u = Math.max(0, Math.min(1, elapsed / duration));
+      const envelope = 64 * u ** 3 * (1 - u) ** 3;
+      for (const [side, inward] of [['L', .3], ['R', .5]]) {
+        const pole = pose.hands[side].pole ?? [0, -.3, 1];
+        pose.hands[side].pole = [pole[0] - inward * envelope, pole[1], pole[2]];
+      }
+    }
   }
   return enforceActivityPropContacts(rig, pose);
 }
@@ -257,6 +268,10 @@ function activityFrame(c, frame) {
 
 export const PROP_TRANSFER_TIMING = Object.freeze({ approachEnd: 2.35, releaseAt: 2.85, withdrawAt: 3.35, duration: 4.8 });
 export const PROP_TAKE_TIMING = Object.freeze({ approachEnd: 1.15, requestAt: 1.45, liftSeconds: 2.35, duration: 4.8 });
+export function propPlacementPreparationSeconds(definition, context = {}) {
+  return definition?.kind === 'put_prop' && definition.propId === 'book' && deskLayout(context)
+    && (context.initialProps?.book?.openness ?? 0) > .05 && !context.bookClosedForPlacement ? 1.4 : 0;
+}
 
 const propEuler = rotation => qmul(qmul(qaxis([1, 0, 0], rotation[0]), qaxis([0, 1, 0], rotation[1])), qaxis([0, 0, 1], rotation[2]));
 function sourceTableFrame(state, id, actual = null) {
@@ -267,7 +282,11 @@ function sourceTableFrame(state, id, actual = null) {
 }
 
 export function samplePropPickup(pose, t, definition, context = {}) {
-  const desk = deskLayout(context);
+  const arrangedDesk = deskLayout(context);
+  // The longer lid/desk routes belong to the seated 6.6-second take tracks.
+  // A scene can use that furniture layout while executing a standing take;
+  // adopting its 2.1-second gate would deadlock the standing 1.45-second clock.
+  const desk = definition.initialSupport === 'seated' ? arrangedDesk : null;
   const id = definition.propId, previous = { ...context.sceneProps, ...context.initialProps }, raw = previous[id];
   const source = normalizePropState(raw, id), table = previous.table;
   const sourceExists = source.visible && source.attachment === 'table', tableExists = visible(table);
@@ -276,7 +295,7 @@ export function samplePropPickup(pose, t, definition, context = {}) {
     pose.phase = !sourceExists ? 'take-blocked-missing-table-object' : 'take-blocked-missing-table';
     pose.preparationBlocker = !sourceExists ? 'missing-table-object' : 'missing-table'; return pose;
   }
-  if (desk && id === 'book' && (previous.laptop?.openness ?? 0) > .05) {
+  if (arrangedDesk && id === 'book' && (previous.laptop?.openness ?? 0) > .05) {
     pose.phase = 'take-blocked-open-laptop'; pose.preparationBlocker = 'close-laptop-before-reaching-behind-screen'; return pose;
   }
   const attachment = ['book', 'box'].includes(id) ? 'both' : 'right', receipt = context.propTransferReceipts?.[id];
@@ -285,12 +304,20 @@ export function samplePropPickup(pose, t, definition, context = {}) {
     pose.phase = 'take-blocked-unmeasured-start-hands'; pose.preparationBlocker = 'unmeasured-start-hands'; return pose;
   }
   const acquired = receipt?.released === true && receipt.operation === 'take';
+  const sourceFrame = acquired ? { ...copy(receipt.transform), space: 'world' } : sourceTableFrame(source, id, context.sceneProps?.[id]);
+  const sourceInActivity = sourceFrame.space === 'world' ? toModel(context.activityAnchor ?? pose.root, sourceFrame.position) : sourceFrame.position;
+  // A standing reach to the back of an already arranged desk needs the body's
+  // verified lean and pelvis range, not longer arms or a moved object. Near-edge
+  // sources preserve the original trajectory exactly. The later contact solver
+  // still rejects targets beyond this bounded supported reach.
+  const standingReach = definition.initialSupport !== 'seated' && ['book', 'mug'].includes(id)
+    ? smoother((sourceInActivity[2] - 3.3) / 2) : 0;
   const approachEnd = desk ? 1.8 : PROP_TAKE_TIMING.approachEnd, requestAt = desk ? 2.1 : PROP_TAKE_TIMING.requestAt;
   const approach = smoother(t / approachEnd), liftAge = acquired ? Math.max(0, t - (receipt.activityElapsed ?? requestAt)) : 0;
   const liftSeconds = desk && ['book', 'mug'].includes(id) ? 3.9 : PROP_TAKE_TIMING.liftSeconds;
   const lift = acquired ? Math.max(0, Math.min(1, liftAge / liftSeconds)) : 0, smoothLift = smoother(lift);
   const initialBody = context.initialPose?.body ?? {};
-  const reachLean = id === 'box' ? .19 : id === 'pencil' && desk ? .5 : id === 'pencil' || desk ? .48 : definition.initialSupport === 'seated' ? .24 : .19;
+  const reachLean = id === 'box' ? .19 : id === 'pencil' && desk ? .5 : id === 'pencil' || desk ? .48 : definition.initialSupport === 'seated' ? .24 : .19 + .41 * standingReach;
   const endLean = id === 'pencil' ? .12 : 0;
   const recoverBody = desk && ['book', 'mug'].includes(id) ? smoother((lift - .3) / .4) : smoothLift;
   pose.body.lean = acquired ? reachLean + (endLean - reachLean) * recoverBody : (initialBody.lean ?? 0) + (reachLean - (initialBody.lean ?? 0)) * approach;
@@ -298,15 +325,17 @@ export function samplePropPickup(pose, t, definition, context = {}) {
   if (desk && definition.initialSupport === 'seated') {
     const seat = context.initialPose?.pelvis?.offset ?? pose.pelvis.offset;
     const reachForward = id === 'book' ? 1.5 : id === 'mug' ? 1.2 : .2;
-    pose.pelvis.offset[2] = seat[2] + reachForward * (acquired ? 1 - recoverBody : approach);
+    const restingZ = ACTIVITY_PROP_LAYOUT.chair.position[2], reachingZ = restingZ + reachForward;
+    pose.pelvis.offset[2] = acquired ? reachingZ + (restingZ - reachingZ) * recoverBody
+      : seat[2] + (reachingZ - seat[2]) * approach;
   }
   if (definition.initialSupport !== 'seated') {
     const drop = id === 'box' ? 2.609 : 3.4;
     const initialPelvis = context.initialPose?.pelvis?.offset ?? [0, 0, 0];
     pose.pelvis.offset[1] = acquired ? -drop * (1 - smoothLift) : initialPelvis[1] + (-drop - initialPelvis[1]) * approach;
-    pose.pelvis.offset[2] = acquired ? -.3 * (1 - smoothLift) : initialPelvis[2] + (-.3 - initialPelvis[2]) * approach;
+    const reachForward = -.3 + .9 * standingReach;
+    pose.pelvis.offset[2] = acquired ? reachForward * (1 - smoothLift) : initialPelvis[2] + (reachForward - initialPelvis[2]) * approach;
   }
-  const sourceFrame = acquired ? { ...copy(receipt.transform), space: 'world' } : sourceTableFrame(source, id, context.sceneProps?.[id]);
   let destination;
   if (id === 'book') {
     destination = readingBookPlan(source.openness).frame;
@@ -392,6 +421,29 @@ export function applyHeldPropTableClearance(rig, pose, tableState) {
  * A missing source object/surface leaves the existing hold intact and reports a
  * blocked operation. Completion is a request, not a successful handoff receipt. */
 export function samplePropPlacement(pose, t, definition, context = {}) {
+  const closingSeconds = propPlacementPreparationSeconds(definition, context);
+  if (closingSeconds) {
+    const source = context.initialProps.book, actual = source.worldTransform;
+    if (finiteTransform(actual)) {
+      const openness = source.openness * (1 - smoother(t / closingSeconds));
+      const turn = value => smoother(((1 - value) * 1.5 - .9) / .6) * Math.PI / 2;
+      const frame = { position: copy(actual.position), quaternion: qmul(actual.quaternion,
+        qeuler(0, turn(openness) - turn(source.openness), 0)), space: 'world' };
+      const initial = context.initialPose;
+      pose.body = copy(initial.body); pose.pelvis = copy(initial.pelvis); pose.hands = copy(initial.hands);
+      // The inward elbow path was validated against the actual moving cover
+      // grips. Opening angle changes physically before any release is requested.
+      pose.hands.R.pole = [-.5, -.3, 1];
+      pose.props = { ...copy(context.initialProps), book: { ...copy(source), openness, transfer: undefined } };
+      pose.propContactPlans = { book: { frame, openness, attachment: 'both', hands: SIDES } };
+      pose.phase = 'placing-close-book';
+      if (t <= closingSeconds) return pose;
+      const closed = { ...pose.props.book, worldTransform: frame };
+      return samplePropPlacement(pose, t - closingSeconds, definition, { ...context, bookClosedForPlacement: true,
+        initialProps: { ...context.initialProps, book: closed },
+        initialPose: { ...initial, hands: pose.hands, props: { ...initial.props, book: closed } } });
+    }
+  }
   const desk = deskLayout(context);
   const id = definition.propId, previous = context.initialProps ?? {}, state = previous[id];
   const attachment = id === 'book' ? 'both' : 'right';
@@ -412,6 +464,8 @@ export function samplePropPlacement(pose, t, definition, context = {}) {
     position: id === 'book' ? [0, ACTIVITY_PROP_LAYOUT.table.top - bookMinimumY(openness, bookQuaternion), 3.7]
       : id === 'mug' ? [-2.55, ACTIVITY_PROP_LAYOUT.table.top, 3.55] : [-2.6, ACTIVITY_PROP_LAYOUT.table.top + .061, 3.55],
     quaternion: id === 'pencil' ? qeuler(0, 0, -Math.PI / 2) : id === 'book' ? bookQuaternion : [0, 0, 0, 1], space: 'activity' };
+  const alreadyAtTarget = initial.space === target.space && len(sub(initial.position, target.position)) < .09
+    && Math.abs(initial.quaternion.reduce((sum, value, i) => sum + value * target.quaternion[i], 0)) > .999;
   // When held in a chest frame, keep the frame until the controller can provide
   // an initial worldTransform. A missing transform cannot silently claim success.
   const readyFrame = initial.space !== 'chest' && target.space === initial.space;
@@ -419,28 +473,38 @@ export function samplePropPlacement(pose, t, definition, context = {}) {
   const approachEnd = desk && ['book', 'mug'].includes(id) ? 4 : PROP_TRANSFER_TIMING.approachEnd;
   const releaseAt = desk && ['book', 'mug'].includes(id) ? 4.5 : PROP_TRANSFER_TIMING.releaseAt;
   const progress = active ? Math.max(0, Math.min(1, t / approachEnd)) : 0, u = smoother(progress);
+  const targetInActivity = target.space === 'world' ? toModel(context.activityAnchor ?? pose.root, target.position) : target.position;
+  const standingReach = definition.initialSupport !== 'seated' && desk && ['book', 'mug'].includes(id)
+    ? smoother((targetInActivity[2] - 3.3) / 2) : 0;
   const initialBody = context.initialPose?.body ?? {};
   pose.body = { ...pose.body, ...copy(initialBody),
-    lean: (initialBody.lean ?? 0) + ((desk ? .48 : definition.initialSupport === 'seated' ? .24 : .19) - (initialBody.lean ?? 0)) * (desk && ['book', 'mug'].includes(id) ? smoother((progress - .3) / .4) : u),
+    lean: (initialBody.lean ?? 0) + ((desk ? .48 + .12 * standingReach : definition.initialSupport === 'seated' ? .24 : .19) - (initialBody.lean ?? 0)) * (desk && ['book', 'mug'].includes(id) ? smoother((progress - .3) / .4) : u),
     headPitch: (initialBody.headPitch ?? 0) + (.12 - (initialBody.headPitch ?? 0)) * u };
   for (const key of ['side', 'twist', 'headYaw', 'headRoll']) pose.body[key] = (initialBody[key] ?? 0) * (1 - u);
   pose.pelvis.offset[0] = (context.initialPose?.pelvis?.offset?.[0] ?? 0) * (1 - u);
   if (desk && definition.initialSupport === 'seated') {
     const seat = context.initialPose?.pelvis?.offset ?? pose.pelvis.offset, reach = id === 'book' ? 1.5 : id === 'mug' ? 1.2 : .2;
-    pose.pelvis.offset[2] = seat[2] + reach * smoother((progress - .3) / .4);
+    const finalReach = ACTIVITY_PROP_LAYOUT.chair.position[2] + reach;
+    pose.pelvis.offset[2] = seat[2] + (finalReach - seat[2]) * smoother((progress - .3) / .4);
+  } else if (definition.initialSupport === 'seated') {
+    // A replacement can arrive in the exact acquisition frame, before the
+    // previous take has withdrawn its supported forward reach. Start from
+    // that attained pelvis instead of resetting to the nominal seated pose.
+    const seat = context.initialPose?.pelvis?.offset ?? pose.pelvis.offset;
+    pose.pelvis.offset = lerp3(seat, pose.pelvis.offset, u);
   }
   if (definition.initialSupport !== 'seated') {
     const initialPelvis = context.initialPose?.pelvis?.offset ?? [0, 0, 0];
     pose.pelvis.offset[1] = initialPelvis[1] + (-3.4 - initialPelvis[1]) * u;
-    pose.pelvis.offset[2] = initialPelvis[2] + (-.3 - initialPelvis[2]) * u;
+    pose.pelvis.offset[2] = initialPelvis[2] + (-.3 + .9 * standingReach - initialPelvis[2]) * u;
   }
   let frame = { position: lerp3(initial.position, target.position, u), quaternion: qslerp(initial.quaternion, target.quaternion, u), space: initial.space };
   // Clear the desk edge with a shallow lift; no size or amplitude reduction.
   frame.position[1] += active ? .25 * Math.sin(Math.PI * u) ** 2 : 0;
-  if (desk && id === 'book') frame = { space: 'route', progress, nodes: [{ at: 0, frame: initial },
+  if (desk && id === 'book' && !alreadyAtTarget) frame = { space: 'route', progress, nodes: [{ at: 0, frame: initial },
     { at: .3, frame: deskWorldFrame(context, [0, 10.4, 1.3], configuredTarget.quaternion) },
     { at: .7, frame: deskWorldFrame(context, [0, 10.4, 6.6], configuredTarget.quaternion) }, { at: 1, frame: target }] };
-  if (desk && id === 'mug') frame = { space: 'route', progress, nodes: [{ at: 0, frame: initial },
+  if (desk && id === 'mug' && !alreadyAtTarget) frame = { space: 'route', progress, nodes: [{ at: 0, frame: initial },
     { at: .2, frame: deskWorldFrame(context, [-1.15, 10.5, .9], qeuler(0, Math.PI, 0)) },
     { at: .45, frame: deskWorldFrame(context, [-3.5, 10.5, .9]) },
     { at: .75, frame: deskWorldFrame(context, [-3.5, 10.5, 5.3]) }, { at: 1, frame: target }] };

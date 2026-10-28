@@ -50,7 +50,7 @@ function metrics(t){return {lastSpeechToVoiceMs:t.voiceAt-t.input?.lastSpeechAt,
   commandLeadMs:t.voiceAt-t.firstActionAt,bodyStartLeadMs:t.voiceAt-t.bodyStartedAt,
   faceTargetLeadMs:t.voiceAt-t.faceAppliedAt,visibleFaceLeadMs:t.voiceAt-t.faceVisibleAt,visibleBodyLeadMs:t.voiceAt-t.bodyVisibleAt};}
 function frame(time){
-  const elapsed=time-last,dt=Math.min(.05,Math.max(0,elapsed/1000));last=time;frameTimes.push({at:time,dt:elapsed,hidden:document.hidden});if(frameTimes.length>20000)frameTimes.shift();
+  const elapsed=time-last,dt=Math.min(.1,Math.max(0,elapsed/1000));last=time;frameTimes.push({at:time,dt:elapsed,hidden:document.hidden});if(frameTimes.length>20000)frameTimes.shift();
   try{
     client.sync();const a=session.audio.snapshot(),m=marker(),t=client.current;
     captureOwnedVoice(client,time);
@@ -60,14 +60,18 @@ function frame(time){
     const blinkAge=(time/1000)%4.7,blink=blinkAge<.18?Math.sin(Math.PI*blinkAge/.18):0;
     const layer=scene.actionLayer?.()??scene.bodyDirector.actionLayer?.()??{};
     actionFace.update({active:scene.bodyDirector.active,gestures:scene.motion.snapshot().gestures,
-      activityFace:scene.body.pose.face,executor:scene.bodyDirector.executor,paused:center.paused});
+      activityFace:scene.body.pose.face,executor:scene.bodyDirector.executor,paused:center.paused,snapshot:scene.snapshot()});
     let weights=face.update(time/1000,{speaking,lipWeights,closure:lip.closure??0,blink,actionBlink:layer.blink??0,paused:center.paused});
     if(component){const oldWeights=oldFace.update(time/1000,{speaking,lipWeights,closure:lip.closure??0,blink,actionBlink:layer.blink??0,paused:center.paused});if(comparison)weights=oldWeights;}
-    lastRendered=scene.step(time/1000,dt,{faceWeights:weights,paused:center.paused,audioTime:a.time,audioStatus:a.status,mediaOwner:t?{turnId:t.id}:null,segmentEnded:a.status==='ended'});
+    // The accepted mathematical state is shared by live WAI, replay and local
+    // samples. It adjusts only a model-authorized duration range; face/math
+    // rejection cannot overwrite the body's state through an older event.
+    lastRendered=scene.step(time/1000,dt,{faceWeights:weights,paused:center.paused,audioTime:a.time,audioStatus:a.status,mediaOwner:t?{turnId:t.id}:null,segmentEnded:a.status==='ended',mathematicalState:face.math});
     const actualActor={...lastRendered.actorState,communication:{turnId:t?.id??null,audioStatus:a.status,paused:center.paused}};
     if(client.ready&&!replaying&&!component){
       for(const event of scene.bodyDirector.events){
         if(!['action_completed','action_rejected','action_failed','action_expired','action_cancelled'].includes(event.type))continue;
+        if(event.owner?.sourceScope==='mechanical')continue;
         const key=event.id;if(bodyReceipts.has(key)||!Number.isInteger(event.index))continue;
         if(client.send({type:'action_receipt',commandId:event.owner.requestId,index:event.index,action:event.action,
           status:event.type.slice(7),reason:event.reason??null,actorState:actualActor})){

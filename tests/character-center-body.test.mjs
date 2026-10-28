@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { CharacterBodyDirector, bodyAdmission, withAuthoredSkeleton, syncIdleMotionClock } from '../realtime/character-center/body-director.mjs';
 import { MotionController } from '../preview/core/motion-controller.js';
 import { skeletonFromInspection } from '../preview/core/motion-skeleton.js';
-import { CHARACTER_ACTIONS, CHARACTER_CATALOG, validateCharacterCommands } from '../realtime/character-center/catalog.mjs';
+import { CHARACTER_ACTIONS, CHARACTER_CATALOG, READING_ACTIONS, validateCharacterCommands } from '../realtime/character-center/catalog.mjs';
 import { MODEL_ACTIONS } from '../realtime/model-director/catalog.mjs';
 
 const owner = (version = 1, scope = 'interaction') => ({ sourceKey: `${scope}:test`, sourceScope: scope,
@@ -77,9 +77,10 @@ test('model keep preserves the moving executor and does not fabricate a completi
  assert.equal(d.active.id,id);assert.equal(calls.length,1);assert.equal(d.events.some(e=>e.type==='action_completed'),false);
 });
 
-test('the wire catalogue contains existing 73 choices unchanged plus the exact two native and eight activity entries', () => {
+test('expanded wire catalogue preserves every original choice and exact source exclusions', () => {
   assert.equal(Object.keys(MODEL_ACTIONS).length, 73);
-  assert.equal(Object.keys(CHARACTER_ACTIONS).length, 83);
+  assert.ok(Object.keys(CHARACTER_ACTIONS).length > 83);
+  for(const id of ['native:stand01','native:thinking01',...READING_ACTIONS.map(id=>'activity:'+id)])assert.ok(CHARACTER_ACTIONS[id],id);
   for (const [id, old] of Object.entries(MODEL_ACTIONS)) {
     assert.equal(CHARACTER_ACTIONS[id].duration, old.duration);
     assert.equal(CHARACTER_ACTIONS[id].name, old.name);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ActivityDirector } from '../realtime/activities/director.mjs';
 
 const fixture = () => {
-  const calls = [], body = { done:false, play(id){calls.push(id);this.done=false;return true;},
+  const calls = [], body = { sceneProps:{ table:{ visible:true, worldTransform:{position:[0,0,4.3],quaternion:[0,0,0,1]} }, chair:{visible:true,worldTransform:{position:[0,0,-8.2],quaternion:[0,0,0,1]}} }, done:false, play(id){calls.push(id);this.done=false;return true;},
     snapshot(){return {done:this.done};}, pause(value){this.paused=value;}, stop(){calls.push('STOP');this.done=true;},
     reset(){calls.push('RESET');this.done=true;this.paused=false;} };
   return {body,calls,director:new ActivityDirector(body)};
@@ -16,7 +16,7 @@ test('sequence pause freezes its rest deadline and resuming starts only the next
 });
 test('stop retires all future sequence steps even after the body reports finished landing',()=>{
   const {body,calls,director:d}=fixture();d.playSequence('reading_break');d.tick(0);d.stop();body.done=true;advance(d,10);
-  assert.deepEqual(calls,['walk_stop','STOP']);assert.equal(d.snapshot().sequence,null);
+  assert.deepEqual(calls,['sit_down','STOP']);assert.equal(d.snapshot().sequence,null);
 });
 test('manual replacement retires sequence and invalid replacement does not cancel a valid owner',()=>{
   const {body,calls,director:d}=fixture();d.playSequence('carry_delivery');assert.equal(d.play('constructor'),false);
@@ -25,7 +25,7 @@ test('manual replacement retires sequence and invalid replacement does not cance
 });
 test('reset retires the sequence and resets the clock without an old step reviving',()=>{
   const {body,calls,director:d}=fixture();d.playSequence('reading_break');d.tick(1);d.pause();d.reset();advance(d,3);
-  assert.deepEqual(calls,['walk_stop','RESET']);assert.equal(body.paused,false);assert.equal(d.paused,false);assert.equal(d.snapshot().sequence,null);
+  assert.deepEqual(calls,['sit_down','RESET']);assert.equal(body.paused,false);assert.equal(d.paused,false);assert.equal(d.snapshot().sequence,null);
 });
 
 test('an incompatible held object rejects a whole recipe before changing the current owner',()=>{
@@ -66,6 +66,6 @@ test('a recipe forwards the desk context per step along with its explicit initia
   body.play=(id,options)=>{calls.push(id);body.done=false;body.lastContext=options.context;return true;};
   assert.equal(d.playSequence('desk_session'),true);assert.equal(body.lastContext.deskLayout,'partitioned');
   assert.ok(body.lastContext.sceneSetupProps.paper);d.tick(0);body.done=true;d.tick(.1);advance(d,.5);
-  assert.equal(calls.at(-1),'take_pencil_seated');assert.equal(body.lastContext.deskLayout,'partitioned');
+  assert.equal(calls.at(-1),'approach_desk_seated');assert.equal(body.lastContext.deskLayout,'partitioned');
   assert.equal(body.lastContext.sceneSetupProps,undefined,'a later step repeated the initial scene setup');
 });

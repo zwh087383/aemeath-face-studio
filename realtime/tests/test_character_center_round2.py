@@ -13,16 +13,27 @@ def test_full_catalog_is_small_and_temporarily_unavailable_actions_remain_visibl
     assert len(m.input_view.encoded(view)) < len(json.dumps(rows,ensure_ascii=False))*.25
     assert 'activity:read_seated' in m.input_view.encoded(view)
     assert '成功握取' in m.input_view.encoded(view)
-    assert len(view['conditions'])==7
+    # Expansion adds real support/prop contracts. Preserve every condition and
+    # deduplicate equal contracts instead of fixing the old pilot's count at 7.
+    for original, compact in zip(rows, view['actions']):
+        assert view['conditions'][compact[2]] == original.get('requires', {})
+        assert view['effects'][compact[4]] == original['effects']
+        variants = view['variant_sets'][compact[7]]
+        for name, variant in original.get('variants', {}).items():
+            if 'requires' in variant:
+                assert view['conditions'][variants[name]['requires']] == variant['requires']
+    assert len({json.dumps(value,sort_keys=True) for value in view['conditions'].values()}) == len(view['conditions'])
 
 
-def test_actor_view_keeps_unknown_and_contacts_without_leaking_geometry():
+def test_actor_view_keeps_measured_object_positions_but_not_bone_geometry():
     view=m.input_view.actor_view({'support':'unknown','contacts':{'L':False,'R':False},
-        'bones':{'leftWrist':[123,456,789]},'props':{'book':{'visible':True,'attachment':'table','position':[1,2,3]},
+        'bones':{'leftWrist':[123,456,789]},'props':{'book':{'visible':True,'attachment':'table','position':[1,2,3],
+            'bonePalette':[123,456,789]},
                                               'cup':{'visible':False}}})
     assert view['support']=='unknown' and view['hands']=='unknown'
-    assert view['objects']=={'book':{'attachment':'table'}}
-    assert 'bones' not in view and 'position' not in m.input_view.encoded(view)
+    assert view['objects']=={'book':{'attachment':'table','position':[1,2,3]}}
+    assert 'bones' not in view and 'bonePalette' not in m.input_view.encoded(view)
+    assert 'leftWrist' not in m.input_view.encoded(view)
 
 
 def test_context_keeps_negation_and_deduplicates_current_user_without_system_prefix():

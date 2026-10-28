@@ -1,5 +1,6 @@
 import { NativeExpression } from './native-expression.js';
-import { ATTITUDE_KINDS, REACTION_KINDS, FACE_PROFILES, FACE_TIMING, actionFaceCompatible } from '../../realtime/character-center/face-profiles.mjs';
+import { ATTITUDE_KINDS, REACTION_KINDS, FACE_PROFILES, FACE_TIMING, SECONDARY_STANCE_BLEND,
+  SECONDARY_STANCE_REGIONS, actionFaceCompatible } from '../../realtime/character-center/face-profiles.mjs';
 
 const clone = value => structuredClone(value);
 const finite = value => typeof value === 'number' && Number.isFinite(value);
@@ -22,6 +23,7 @@ export class ContinuousFaceController {
     this.recipes = new Map(); this.mouth = new Set(mouthIndices); this.corners = new Set(); this.smiles = new Set(); this.closures = new Set();
     this.expressionIndices = new Set(); this.blinkIndices = new Set(); this.openEyes = new Set();
     this.nonMouth = new Set(); this.unilateralClosures = new Set(); this.happyBrows = new Set();
+    this.regions = { brows: new Set(), eyes: new Set(), corners: this.corners };
     for (const recipe of recipes) {
       if (!recipe.id || this.recipes.has(recipe.id) || !Array.isArray(recipe.mapping)) throw Error('Invalid or duplicate face recipe');
       for (const channel of recipe.mapping) for (const leaf of channel.leaves) {
@@ -35,6 +37,8 @@ export class ContinuousFaceController {
         if (/^(B_|E_|Pupil_|P_Nose_|C_.*Face|S_20$)/.test(channel.source) || channel.source === '真面目') this.nonMouth.add(leaf.index);
         if (/^E_Smile_[RL]$/.test(channel.source) || /^(ウィンク|ウィンク右)$/.test(channel.source)) this.unilateralClosures.add(leaf.index);
         if (channel.source === 'B_Happy' || channel.source === 'にこり') this.happyBrows.add(leaf.index);
+        if (/^(B_|S_20$)/.test(channel.source) || /真面目|にこり|怒り|困る|平行/.test(channel.source)) this.regions.brows.add(leaf.index);
+        if (/^(E_|Pupil_)/.test(channel.source) || /まばたき|ウィンク|笑い目|びっくり|垂れ目/.test(channel.source)) this.regions.eyes.add(leaf.index);
       }
       this.recipes.set(recipe.id, { ...recipe, sampler: recipe.nativeData ? new NativeExpression(recipe.nativeData) : null });
     }
@@ -45,6 +49,7 @@ export class ContinuousFaceController {
     this.attitude = null; this.reactions = new Map(); this.completedReactions = new Set(); this.overlays = new Map(); this.latest = new Map(); this.cancelled = new Map();
     this.now = 0; this.wall = null; this.blinkSince = null; this.last = null; this.rejected = []; this.lastTarget = new Float64Array(morphCount); this.attitudeRevision = -1;
     this.speechActive = false; this.articulationReleaseUntil = 0;
+    this.semanticEvidence = new Map();
   }
   reject(reason) { this.rejected.push({ reason, at: this.now }); if (this.rejected.length > 64) this.rejected.shift(); return false; }
   vector(values = {}) {
@@ -119,13 +124,26 @@ export class ContinuousFaceController {
     if (!this.accepts(command, 'attitude')) return false;
     if (command.revision <= this.attitudeRevision) return this.reject('stale-attitude-revision');
     if (!ATTITUDE_KINDS.includes(command.kind) || !this.profile(command.kind, command.recipeId)) return this.reject('unsupported-attitude');
+    const secondary = command.secondary;
+    if (secondary !== undefined && (!secondary || typeof secondary !== 'object' || Array.isArray(secondary)
+        || Object.keys(secondary).some(key => !['kind', 'strength', 'recipeId'].includes(key))
+        || !ATTITUDE_KINDS.includes(secondary.kind) || secondary.kind === command.kind
+        || !finite(secondary.strength) || secondary.strength < 0 || secondary.strength > 1
+        || !this.profile(secondary.kind, secondary.recipeId))) return this.reject('unsupported-secondary-attitude');
     const previous = this.attitude, same = previous && previous.id === command.id && previous.source === command.source;
     if (same && previous.kind !== command.kind) return this.reject('changed-intent-needs-new-id');
-    const newEvidence = typeof command.evidenceId === 'string' && command.evidenceId.length > 0 && command.evidenceId !== previous?.confirmedEvidenceId;
-    const renewed = !same || (command.renew === true && newEvidence);
+    const evidenceKey = typeof command.evidenceId === 'string' && command.evidenceId.length > 0
+      ? `${command.source}\u0000${command.evidenceId}` : null;
+    const confirmed = evidenceKey ? this.semanticEvidence.get(evidenceKey) : undefined;
+    const newEvidence = evidenceKey !== null && confirmed === undefined;
+    const renewed = newEvidence && command.renew !== false && (!same || command.renew === true);
+    if (renewed) this.semanticEvidence.set(evidenceKey, this.now);
+    // Changing IDs, secondary nuances, body phases or math versions does not
+    // make an already consumed semantic observation fresh again.
+    const confirmedAt = renewed ? this.now : confirmed ?? previous?.confirmedAt ?? this.now;
     this.attitude = { ...clone(command), strength: command.strength ?? .5, started: same ? previous.started : this.now,
-      confirmedAt: renewed ? this.now : previous.confirmedAt,
-      confirmedEvidenceId: renewed ? command.evidenceId ?? null : previous.confirmedEvidenceId,
+      confirmedAt,
+      confirmedEvidenceId: renewed || confirmed !== undefined ? command.evidenceId : previous?.confirmedEvidenceId ?? null,
       evidenceId: same && !newEvidence ? previous.evidenceId : command.evidenceId ?? null };
     this.latest.set(`attitude:${command.source}`, command.revision); this.attitudeRevision = command.revision; return true;
   }
@@ -142,7 +160,8 @@ export class ContinuousFaceController {
     const key = `${command.source}:${command.id}`, old = this.reactions.get(key);
     if (this.completedReactions.has(key)) return this.reject('completed-reaction-id');
     if (old && (old.kind !== command.kind || old.recipeId !== command.recipeId)) return this.reject('changed-reaction-needs-new-id');
-    this.reactions.set(key, { ...clone(command), strength: command.strength ?? .5, attack, hold, release, started: old?.started ?? this.now });
+    this.reactions.set(key, { ...clone(command), strength: command.strength ?? .5, attack, hold, release,
+      started: old?.started ?? this.now, positiveBlocked: old?.positiveBlocked === true });
     this.latest.set(`reaction:${command.source}`, command.revision); return true;
   }
   setActionOverlay(command) {
@@ -150,7 +169,8 @@ export class ContinuousFaceController {
     if (command.phase !== undefined && (!finite(command.phase) || command.phase < 0 || command.phase > 1)) return this.reject('invalid-action-face-phase');
     if (!this.profile(command.kind, command.recipeId)) return this.reject('unsupported-action-face');
     const key = `${command.source}:${command.id}`, old = this.overlays.get(key);
-    this.overlays.set(key, { ...clone(command), strength: command.strength ?? .5, started: old?.started ?? this.now });
+    this.overlays.set(key, { ...clone(command), strength: command.strength ?? .5, started: old?.started ?? this.now,
+      positiveBlocked: old?.positiveBlocked === true });
     this.latest.set(`overlay:${command.source}`, command.revision); return true;
   }
   clearActionOverlay({ id, source, revision } = {}) {
@@ -181,12 +201,28 @@ export class ContinuousFaceController {
       const p = this.profile(attitude.kind, attitude.recipeId);
       const values=this.sustained(p.values,attitude.kind);
       for (const i of this.expressionIndices) target[i] = values[i] * p.gain * attitude.strength * (1 - attitude.fade);
+      if (attitude.secondary) {
+        const secondary = this.profile(attitude.secondary.kind, attitude.secondary.recipeId);
+        const secondaryValues = this.sustained(secondary.values, attitude.secondary.kind);
+        const amount = SECONDARY_STANCE_BLEND * attitude.secondary.strength;
+        const indices = new Set((SECONDARY_STANCE_REGIONS[attitude.secondary.kind] ?? [])
+          .flatMap(region => [...this.regions[region]]));
+        for (const i of indices) target[i] = target[i] * (1 - amount)
+          + secondaryValues[i] * secondary.gain * amount * (1 - attitude.fade);
+      }
       for (const i of this.blinkIndices) target[i] = Math.max(target[i], this.fatigue[i]);
       // Expiry becomes noncommittal attention, not the formerly suppressed smile.
     }
     const apply = (cue, amount, sustained = false) => {
-      if (!actionFaceCompatible(attitude?.effectiveKind, cue.kind)) return;
       const p = this.profile(cue.kind, cue.recipeId); if (!p) return;
+      if (!actionFaceCompatible(attitude?.effectiveKind, cue.kind)) {
+        if (p.positive) cue.positiveBlocked = true;
+        return;
+      }
+      if ((p.positive && cue.positiveBlocked) || cue.strength <= 0) return;
+      // An unclassified body can carry attention metadata without bleaching the
+      // existing mathematical/semantic face towards a zero recipe every frame.
+      if (sustained && cue.kind === 'attention') return;
       const values=sustained?this.sustained(p.values,cue.kind):p.values;
       for (const i of this.expressionIndices) target[i] += (values[i] * p.gain * cue.strength - target[i]) * amount;
     };
@@ -197,6 +233,9 @@ export class ContinuousFaceController {
       const amount = age < cue.attack ? smooth(age / cue.attack) : age < cue.attack + cue.hold ? 1 : 1 - smooth((age - cue.attack - cue.hold) / cue.release);
       apply(cue, amount);
     }
+    // An action or reaction may adjust expression, but cannot erase the small
+    // mathematical fatigue floor. Mechanical blink still owns its transient.
+    for (const i of this.blinkIndices) target[i] = Math.max(target[i], this.fatigue[i]);
     return target;
   }
   update(wallSeconds, { paused = false, speaking = false, lipWeights = {}, blink = 0, actionBlink = 0, closure = 0 } = {}) {

@@ -268,7 +268,11 @@ export function solveArm(rig, side, pose, chestRot, chestPos, locals, diag = {})
     const shape = FINGER_SHAPE[finger];
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
-      const amount = finger === 'thumb' ? thumb : curl;
+      // Optional articulated contact poses may curl unused fingers while one
+      // fingertip touches a surface. Existing gestures retain their exact curl.
+      const authoredCurl = pose.fingerCurls?.[finger];
+      const amount = Number.isFinite(authoredCurl) ? clamp(authoredCurl, finger === 'thumb' ? -.2 : -.15, 1)
+        : finger === 'thumb' ? thumb : curl;
       let q = qaxis(seg.curlAxis, amount * shape.curl[i] * shape.gain);
       if (i === 0 && shape.spread) q = qmul(q, qaxis(seg.spreadAxis, spread * shape.spread));
       locals.set(seg.name, qnormalize(q));

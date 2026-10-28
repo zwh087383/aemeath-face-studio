@@ -18,8 +18,14 @@ export class CharacterClient extends ParallelDuplexClient {
     const audioView=admissible?{...message,budget:{...budget,unknown:0,unknownTerminalReserved:budget.unknown}}:message;
     super.message(audioView,generation);
     if(budget)this.budget=budget;
+    // Confirmed server speech is sufficient to shift physical attention now;
+    // do not wait for an additional backend sidecar event or semantic model.
+    // The backend's matching character_attention packet is deduplicated by item.
+    if(message.connectionId===this.connectionId&&message.type==='speech_started')
+      this._visual(()=>this.director.message({type:'character_attention',connectionId:message.connectionId,
+        itemId:message.itemId,reason:'user_speech_started',semanticUnderstanding:false}));
     if(message.connectionId===this.connectionId&&
-      (message.type.startsWith('character_')||message.type==='activity_state'))this.director.message(message);
+      (message.type.startsWith('character_')||message.type==='activity_state'))this._visual(()=>this.director.message(message));
     if(message.connectionId===this.connectionId&&this.listenerResume&&['listener_resumed','listener_resume_failed','blocked','closed'].includes(message.type)){
       const pending=this.listenerResume;this.listenerResume=null;clearTimeout(pending.timer);
       if(message.type==='listener_resumed'&&message.ready!==false)pending.resolve(message);
@@ -28,7 +34,9 @@ export class CharacterClient extends ParallelDuplexClient {
   }
   get canReconnect(){return this.blocked&&!this.hardBlocked&&this.blockReason==='session_input_limit'
     &&!this.budget?.blocked&&!this.budget?.channels?.listener?.frozen&&!this.budget?.channels?.voice?.frozen;}
-  provisionalPause(reason){const value=super.provisionalPause(reason);if(value)this.director.pause(true);return value;}
+  // Provisional VAD may be noise. Audio retains its original pause/resume guard;
+  // body exit and support clocks continue until a real attention event arrives.
+  provisionalPause(reason){return super.provisionalPause(reason);}
   async resumeInvalid(reason){await super.resumeInvalid(reason);this.director.pause(false);}
   cancel(reason='explicit_user_interrupt',remote=true){this.director.pause(false);return super.cancel(reason,remote);}
 }

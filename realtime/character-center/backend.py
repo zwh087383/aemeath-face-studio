@@ -68,6 +68,12 @@ class CharacterCenterSession(model.ModelDuplexSession):
         if planner_connection_class is not None:
             self.planner_connection_class = planner_connection_class
         self.catalog = protocol.load_catalog(catalog)
+        catalog_document = catalog
+        if catalog_document is None:
+            catalog_document = json.loads((HERE / "catalog.json").read_text(encoding="utf-8"))
+        elif isinstance(catalog_document, (str, Path)):
+            catalog_document = json.loads(Path(catalog_document).read_text(encoding="utf-8"))
+        self.catalog_hash = catalog_document.get("hash") if isinstance(catalog_document, dict) else None
         self.action_schema = tuple(row["id"] for row in self.catalog)
         self.actor = {"posture": "unknown", "hands": "unknown", "activity": "unknown"}
         self.math_interval = max(.1, float(math_interval))
@@ -945,7 +951,7 @@ class CharacterCenterSession(model.ModelDuplexSession):
                         if output_kind == "character_actions":
                             self._remember_actions(command_id, job, command)
                         await event(output_kind, command=command, callId=call_id,
-                            commandId=command_id, outputFinal=True, timings={**timings, **marks},
+                            commandId=command_id, catalogHash=self.catalog_hash, semanticRenew=job.payload.get("trigger") != "actual_body_result", outputFinal=True, timings={**timings, **marks},
                             evidenceRef=command.get("evidenceRef", job.payload["evidence_refs"][0]),
                             mediaAnchor=deepcopy(job.payload["media_anchor"]))
                     else:

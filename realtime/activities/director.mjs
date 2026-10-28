@@ -3,10 +3,31 @@ import { activityPropNeed, heldPropSides, propAdmissionConflict } from '../../pr
 import { partitionedDeskConflict } from '../../preview/core/activity-desk-layout.js';
 import { ACTIVITY_PROP_LAYOUT } from '../../preview/core/activity-prop-layout.js';
 import { qrotate, qconj, qeuler } from '../../preview/core/motion-math.js';
+import { pulledOutDeskEntryFixture } from '../../preview/core/activity-seat-access.js';
 
 const finite = (value, count) => Array.isArray(value) && value.length === count && value.every(Number.isFinite);
 const distance = (a, b) => Math.hypot(...a.map((value, index) => value - b[index]));
 const quaternionAngle = (a, b) => 2 * Math.acos(Math.min(1, Math.abs(a.reduce((sum, value, index) => sum + value * b[index], 0))));
+
+/** Explicit initial preview setup only. Existing physical objects and an active
+ * person are never rearranged to make a recipe pass its admission checks. */
+export function initializeEmptyActivityScene(body, props, definition) {
+  if (!definition?.initialScene) return { initialized: false, reason: 'no_initial_scene' };
+  if (Object.values(props.snapshot().props ?? {}).some(prop => prop.visible)
+    || Object.values(body.sceneProps ?? {}).some(prop => prop?.visible))
+    return { initialized: false, reason: 'existing_scene_preserved' };
+  if (!body.done || body.activeId || body.bridge || body.queued)
+    return { initialized: false, reason: 'existing_activity_preserved' };
+  if (definition.initialScene.kind !== 'pulled-out-desk-entry')
+    return { initialized: false, reason: 'unknown_initial_scene' };
+  const fixture = pulledOutDeskEntryFixture(body.context, { retreat: definition.initialScene.chairRetreat,
+    props: definition.steps[0].setupProps });
+  props.update(fixture.sceneProps, { anchor: { position: [0, 0, 0], yaw: 0 }, time: body.now });
+  body.setRenderedPropsSnapshot(props.snapshot());
+  if (!body.adoptSupportedState({ pose: body.standing(fixture.initialRoot), sceneProps: body.sceneProps }))
+    throw new Error('Initial standing fixture could not establish actual support');
+  return { initialized: true, fixture };
+}
 
 /** One cancellable owner for an activity sequence. No timers or hidden callbacks. */
 export class ActivityDirector {
@@ -60,14 +81,23 @@ export class ActivityDirector {
     }
     return null;
   }
+  physicalRejection(id,options={}){
+    const seat=this.body.seatAccess?.(id);if(seat&&!seat.accepted)return seat;
+    const route=this.body.routeAdmission?.(id,options);if(route&&!route.accepted)return route;
+    return {reason:'activity-not-admitted'};
+  }
   play(id,{context={}}={}){
     if(!Object.hasOwn(ACTIVITY_LIBRARY,id))return false;
+    // A replacement at an acquisition/placement receipt keeps the established
+    // physical desk layout unless explicitly changed. Omitting it must not
+    // reinterpret the same measured back-of-desk source as a near-edge one.
+    context={...(this.body.sampleContext?.deskLayout?{deskLayout:this.body.sampleContext.deskLayout}:{}),...context};
     const def=ACTIVITY_LIBRARY[id],props=this.body.snapshot().pose?.props??{},conflict=propAdmissionConflict(def,props);
     if(conflict){this.lastRejection={id,...conflict};return false;}
     if(def.kind==='take_prop'&&heldPropSides(props[def.propId]).length){this.lastRejection={id,reason:'already-held',requestedProp:def.propId};return false;}
     const ok=this.body.play(id,{speed:this.speed,context});
     if(ok){this.lastRejection=null;this.sequence=null;this.generation++;this.paused=false;this.body.pause(false);this.record('activity',{id,generation:this.generation});}
-    else this.lastRejection={id,reason:'activity-not-admitted'};
+    else this.lastRejection={id,...this.physicalRejection(id,{speed:this.speed,context})};
     return ok;
   }
   playSequence(id,{context={}}={}){
@@ -80,6 +110,9 @@ export class ActivityDirector {
     }
     const seatedEntry=this.seatedDeskEntry(steps);
     if(seatedEntry&&seatedEntry.reason!=='already-seated-at-same-desk'){this.lastRejection={id,...seatedEntry};return false;}
+    if(def.initialScene&&(!this.body.sceneProps?.chair?.worldTransform||!this.body.sceneProps?.table?.worldTransform)){
+      this.lastRejection={id,reason:'missing-measured-initial-scene',requiredScene:def.initialScene.kind};return false;
+    }
     let index=0;const satisfied=[];let entrySetup;
     while(index<steps.length&&seatedEntry&&steps[index].satisfiedWhen===seatedEntry.reason){
       if(steps[index].setupProps)entrySetup={...entrySetup,...steps[index].setupProps};
@@ -88,7 +121,10 @@ export class ActivityDirector {
     while(index<steps.length&&this.alreadyHeld(steps[index]))satisfied.push({index:index++,reason:'already-held'});
     if(index>=steps.length)return false;
     const sceneSetupProps=entrySetup?{...entrySetup,...steps[index].setupProps}:steps[index].setupProps;
-    if(!this.body.play(steps[index].activity,{speed:this.speed,context:{...context,...steps[index].context,sceneSetupProps}}))return false;
+    const options={speed:this.speed,context:{...context,...steps[index].context,sceneSetupProps}};
+    if(!this.body.play(steps[index].activity,options)){
+      this.lastRejection={id,activity:steps[index].activity,...this.physicalRejection(steps[index].activity,options)};return false;
+    }
     this.paused=false;this.body.pause(false);this.sequence={id,steps,index,generation:++this.generation,phase:'playing',due:0,context,
       bodyRevision:this.body.snapshot().revision};this.lastRejection=null;this.record('sequence',{id,generation:this.generation});
     for(const step of satisfied)this.record('step-satisfied',{id:steps[step.index].activity,index:step.index,generation:this.generation,reason:step.reason,...(step.evidence?{evidence:step.evidence}:{})});
@@ -117,7 +153,8 @@ export class ActivityDirector {
         }
         if(s.index>=s.steps.length){this.record('sequence-ended',{id:s.id});this.sequence=null;}
         else if(this.body.play(s.steps[s.index].activity,{speed:this.speed,context:{...s.context,...s.steps[s.index].context,sceneSetupProps:s.steps[s.index].setupProps}})){s.phase='playing';s.bodyRevision=this.body.snapshot().revision;this.record('step',{id:s.steps[s.index].activity,index:s.index,generation:s.generation});}
-        else{this.record('sequence-rejected',{id:s.steps[s.index].activity});this.stop();}
+        else{const id=s.steps[s.index].activity;this.lastRejection={id,...this.physicalRejection(id,{speed:this.speed,context:{...s.context,...s.steps[s.index].context}})};
+          this.record('sequence-rejected',this.lastRejection);this.stop();}
       }
     }
     return{now:this.time,dt:this.paused?0:dt,paused:this.paused};
