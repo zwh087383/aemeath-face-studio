@@ -110,7 +110,7 @@ def main():
                 time.sleep(.4)
             else: raise TimeoutError("server_health_deadline")
             browser('close',timeout=30)
-            nav=browser("open",url+"/character-center/?campaign="+identity,"--headed","--config="+str(HERE/"browser-config.json"))
+            nav=browser("open",url+"/character-center/?campaign="+identity,"--config="+str(HERE/"browser-config.json"))
             (caseout/"browser-navigation.txt").write_text(nav.stdout+nav.stderr,encoding="utf-8")
             if nav.returncode: raise RuntimeError("browser_navigation_failed")
             run=browser("run-code","--filename="+str(HERE/"run-browser.js"))
@@ -122,7 +122,10 @@ def main():
                 progress=read(caseout/"progress.json",{})
                 if progress.get("phase")!=last_phase:
                     last_phase=progress.get("phase");print(json.dumps({"case":identity,"phase":last_phase},ensure_ascii=False),flush=True)
-                if progress.get("phase")=="finished": break
+                if progress.get("phase")=="finished":
+                    if any('render_cadence_below_20fps_before_cloud' in str(e) for e in progress.get('errors',[])):
+                        raise RuntimeError('render_preflight_failed_before_cloud')
+                    break
                 if process.poll() is not None: raise RuntimeError("server_exited_during_case")
                 if progress and time.time()-progress.get("serverReceivedAt",0)>130: raise TimeoutError("browser_progress_stalled")
                 time.sleep(2)

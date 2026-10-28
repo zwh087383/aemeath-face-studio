@@ -3,6 +3,7 @@
     "browserName": "chromium",
     "launchOptions": {
       "channel": "chrome",
+      "headless": true,
       "args": [
         "--disable-background-timer-throttling",
         "--disable-backgrounding-occluded-windows",

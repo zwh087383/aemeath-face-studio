@@ -1,5 +1,4 @@
 async page => {
- await page.bringToFront();
  await page.waitForFunction(()=>window.characterCenter?.ready===true,null,{timeout:90000});
  await page.locator('[data-view="full"]').click();
  await page.evaluate(()=>{for(const el of document.querySelectorAll('button,input,select,textarea')){el.style.pointerEvents='none';el.tabIndex=-1;}const note=document.createElement('p');note.textContent='自动测试正在运行。此页只读观看；进度和回放请看汇总页。';note.style.cssText='padding:12px;background:#dce9df;font-weight:600';document.querySelector('main').prepend(note);});
