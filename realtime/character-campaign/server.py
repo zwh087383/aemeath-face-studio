@@ -22,10 +22,13 @@ def main():
     p.add_argument("--port",type=int,default=18818)
     p.add_argument("--asset-port",type=int,default=18809)
     p.add_argument("--local-proxy",action="store_true")
+    p.add_argument("--multi-listener-limit",type=int)
     a=p.parse_args()
     from manifest import validate
     manifest=json.loads(a.manifest.read_text(encoding="utf-8"));validate(manifest)
     case=next(s for s in manifest["scenarios"] if s["id"]==a.case)
+    from policy import effective_case
+    case=effective_case(case,a.multi_listener_limit)
     out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
     sys.path.insert(0,str(a.wai_root.resolve()))
     from tools.voice_avatar.bootstrap import configure,bootstrap_runtime

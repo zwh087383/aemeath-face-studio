@@ -9,7 +9,7 @@ async page => {
   const result=window.campaign={id:spec.id,phase:'starting',startedAt:new Date().toISOString(),turns:[],gaps:[],activities:[],samples:[],bodyEvents:[],interruptions:[],errors:[]};
   let timer, busy=false, lastTick=0;
   const compact=()=>{const {samples,bodyEvents,...rest}=result;return {...rest,sampleCount:samples.length,bodyEventCount:bodyEvents.length};};
-  const seenBody=new Set();let lastFrameAt=-1;result.renderPerformance={frames:0,elapsedMs:0,maxFrameMs:0,over50ms:0,hiddenFrames:0};
+  const seenBody=new Set();let lastFrameAt=now();result.renderPerformance={frames:0,elapsedMs:0,maxFrameMs:0,over50ms:0,hiddenFrames:0,excludesPreTestLoading:true};
   const observe=()=>{const s=api.state();for(const f of s.frames){if(f.at<=lastFrameAt)continue;lastFrameAt=f.at;const p=result.renderPerformance;p.frames++;p.elapsedMs+=f.dt;p.maxFrameMs=Math.max(p.maxFrameMs,f.dt);if(f.dt>50)p.over50ms++;if(f.hidden)p.hiddenFrames++;}
     for(const e of s.body.events){const key=`${e.id}:${e.type}:${e.at}`;if(!seenBody.has(key)){seenBody.add(key);result.bodyEvents.push(e);}}
     const actor=s.body.actorState;return {at:now(),ready:s.ready,blocked:s.blocked,audio:s.audio,activity:s.activity,
@@ -35,7 +35,10 @@ async page => {
    timer=setInterval(async()=>{if(busy)return;busy=true;try{result.samples.push(observe());if(now()-lastTick>3000){lastTick=now();await publish();}}catch(e){result.errors.push('sample:'+e.message);}finally{busy=false;}},1000);
    for(let i=0;i<spec.turns.length;i++){
     const clip=spec.turns[i];const startCount=api.state().trials.length;result.phase='feeding:'+clip.id;await publish();
-    await api.feed(clip.id);
+    result.inputAttempts??=[];
+    const attempted={fixture:clip.id,index:i,requestedAt:now()};result.inputAttempts.push(attempted);
+    try{await api.feed(clip.id);attempted.feedCompleted=true;}
+    finally{attempted.receipt={...api.state().inputs.find(x=>x.id===clip.id)};}
     const t=await wait(s=>s.trials[startCount],'turn_admitted:'+clip.id,30);
     const nextBarge=spec.interruptions.find(x=>x.beforeTurn===i+1), cancel=spec.interruptions.find(x=>x.cancelTurn===i);
     if(nextBarge||cancel){
@@ -79,6 +82,7 @@ async page => {
    try{result.runtimeEvidence=await(await fetch('/api/duplex/drain',{method:'POST'})).json();result.finalServer=await api.refresh();}catch(e){result.errors.push('drain:'+e.message);}
    // Refresh all turn records after late revocation/history receipts.
    result.finalTurns=api.state().trials.map((_,i)=>saveTurn(i));
+   result.finalInputs=api.state().inputs.map(x=>({...x}));
    result.endedAt=new Date().toISOString();result.phase='finished';
    await post('/api/campaign/observations',result);await publish();
   });

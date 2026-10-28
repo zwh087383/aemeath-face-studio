@@ -98,3 +98,18 @@ def test_simulated_clock_advances_only_authorized_gap_and_holds_real_work():
     assert stamp[0]<1030
     clock.begin(1)
     with pytest.raises(ValueError):clock.step(0)
+
+
+def test_transcription_capacity_does_not_change_stimuli_or_global_ceiling():
+    policy=module('campaign_policy',ROOT/'realtime/character-campaign/policy.py')
+    original=manifest.build()
+    case=next(c for c in original['scenarios'] if c['kind']=='long')
+    selected=policy.effective_case(case,20)
+    assert selected['limits']['listener']==20 and case['limits']['listener']==8
+    assert selected['turns']==case['turns'] and selected['gapsSeconds']==case['gapsSeconds']
+    assert selected['limits']['action']==case['limits']['action']
+    assert original['totals']['limits']['listener']==400
+    assert original['totals']['responses']==5660
+    single=next(c for c in original['scenarios'] if c['kind']=='single')
+    assert policy.effective_case(single,20)==single
+    with pytest.raises(ValueError):policy.effective_case(case,21)

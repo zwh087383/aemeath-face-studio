@@ -45,12 +45,23 @@ def main():
     p.add_argument("--local-proxy",action="store_true")
     p.add_argument("--only",default="")
     p.add_argument("--prior-output",type=Path)
+    p.add_argument("--multi-listener-limit",type=int)
     a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
     from manifest import write,validate
     digest=write(out/"manifest.json");data=read(out/"manifest.json");validate(data)
     path=out/"campaign-state.json"
     state=read(path,{"startedAt":time.time(),"manifestSha256":digest,"cases":{},"policy":data["policy"]})
     if state["manifestSha256"]!=digest: raise ValueError("changed_campaign_manifest")
+    from policy import effective_case
+    policy_path=out/"execution-policy.json"
+    policy=read(policy_path,{"version":1,"multiListenerLimit":a.multi_listener_limit,
+        "aggregateCeilingsUnchanged":True,"startedAfterCases":list(state["cases"])})
+    if a.multi_listener_limit is not None and policy["multiListenerLimit"]!=a.multi_listener_limit:
+        raise ValueError("execution_policy_changed")
+    # Validate before any server or paid call. Existing cases and their ledgers
+    # retain their original limits; this policy applies only to pending cases.
+    effective_case(data["scenarios"][0],policy["multiListenerLimit"])
+    if not policy_path.exists():save(policy_path,policy)
     cli=shutil.which("playwright-cli.cmd")
     if not cli: raise RuntimeError("playwright_cli_unavailable")
     def browser(*args,timeout=100):
@@ -61,7 +72,9 @@ def main():
     except Exception: pass
     else: raise RuntimeError("campaign_port_already_occupied")
     pending=[s for s in data["scenarios"] if s["id"] not in state["cases"] and (not a.only or s["id"] in a.only.split(','))]
-    for case in pending:
+    state.update(status="running",resumedAt=time.time())
+    for case_spec in pending:
+        case=effective_case(case_spec,policy["multiListenerLimit"])
         charged={key:0 for key in data['totals']['limits']};pcm_charged=0
         for evidence_root in (out,a.prior_output):
             if evidence_root is None:continue
@@ -78,6 +91,7 @@ def main():
         cmd=[sys.executable,"-u",str(HERE/"server.py"),"--manifest",str(out/"manifest.json"),"--case",identity,"--output",str(caseout),
              "--data-dir",str(a.data_root/identity),"--env-file",str(a.env_file),"--wai-root",str(a.wai_root),"--port",str(a.port),"--asset-port",str(a.asset_port)]
         if a.local_proxy: cmd.append("--local-proxy")
+        if policy["multiListenerLimit"] is not None:cmd.extend(["--multi-listener-limit",str(policy["multiListenerLimit"])])
         env={**os.environ,"PYTHONIOENCODING":"utf-8"}
         stdout=(caseout/"server-stdout.log").open("w",encoding="utf-8");stderr=(caseout/"server-stderr.log").open("w",encoding="utf-8")
         process=subprocess.Popen(cmd,cwd=ROOT,env=env,stdout=stdout,stderr=stderr,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
@@ -149,6 +163,6 @@ def main():
         print(json.dumps({"case":identity,"event":"finished","status":state["cases"][identity]["status"],"completed":len(state["cases"])},ensure_ascii=False),flush=True)
         if state['cases'][identity]['status']=='infrastructure_failed':
             state['stopped']='infrastructure_fault_requires_inspection';save(path,state);break
-    state["current"]=None;state["endedAt"]=time.time();save(path,state)
+    state["current"]=None;state["endedAt"]=time.time();state["status"]="all_scenarios_attempted" if len(state["cases"])==len(data["scenarios"]) else "stopped_with_evidence";save(path,state)
 
 if __name__=="__main__": main()
