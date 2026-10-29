@@ -175,6 +175,14 @@ def body_only_inputs(probe, records):
                          and e.get("type", "").removeprefix("action_") in TERMINAL
                          and e.get("wallMs", -1) >= onset["at"]), None)
         first_changed = next((f for f in frames if f[0] >= onset["at"] and f[3] != previous[3]), None)
+        paused = next((f for f in frames if f[0] >= onset["at"] and f[2]), None)
+        window = [f for f in frames if paused and paused[0] <= f[0] <= paused[0] + 120]
+        frozen = bool(previous and len(window) >= 2 and window[-1][0]-window[0][0] >= 80
+                      and all(f[2] and pose_equal(f[6], previous[6]) for f in window))
+        preframes = [f for f in frames if onset["at"]-150 <= f[0] < onset["at"] and f[3] == previous[3]]
+        moving = len(preframes) >= 2 and any(not pose_equal(a[6], b[6]) for a,b in zip(preframes, preframes[1:]))
+        pause_event = next((e for e in probe.get("clientEvents", []) if e.get("type") == "body_provisional_pause"
+                           and onset["at"] <= e.get("wallMs", -1) <= onset["at"]+100), None)
         old_starts = [compact_body(e) for e in probe.get("bodyEvents", [])
                       if e.get("type") == "action_started" and onset["at"] <= e.get("wallMs", -1) <= end
                       and e.get("owner", {}).get("turnId") == onset.get("previousTurnId")]
@@ -184,6 +192,11 @@ def body_only_inputs(probe, records):
                         "inputToOldActionTerminalMs": difference(terminal.get("wallMs"), onset["at"]) if terminal else None,
                         "inputToOldActionNoLongerActiveFrameMs": difference(first_changed[0], onset["at"]) if first_changed else None,
                         "terminalWasNaturalCompletion": bool(terminal and terminal.get("type") == "action_completed"),
+                        "localBodyPauseEventMs": difference(pause_event.get("wallMs"), onset["at"]) if pause_event else None,
+                        "firstPausedRenderFrameMs": difference(paused[0], onset["at"]) if paused else None,
+                        "activeActionPauseMs": difference(paused[0], onset["at"]) if paused and frozen and moving and paused[3] == previous[3] and pause_event else None,
+                        "sampledPoseUnchangedForAtLeast80ms": frozen,
+                        "sampledBonesMovingWithin150msBeforeInput": moving,
                         "priorTurnActionsStartedDuringInput": old_starts,
                         "limit": "Body-only input, not simultaneous audible speech interruption; terminal/active-slot timings do not prove all bones physically stopped."})
     return results

@@ -42,7 +42,8 @@ async function installLiveProbe() {
   };
   const originalEmit=DuplexClient.prototype.emit;
   DuplexClient.prototype.emit=function(type,fields){
-    if(['provisional_pause','cancel','unconfirmed_noise_resumed','invalid_turn_resumed'].includes(type))
+    if(['provisional_pause','cancel','unconfirmed_noise_resumed','invalid_turn_resumed',
+      'body_provisional_pause','body_pause_resumed','body_interruption_cancelled'].includes(type))
       probe.clientEvents.push({type,...structuredClone(fields),wallMs:performance.now(),contextTime:this.session.audio.context.currentTime});
     return originalEmit.call(this,type,fields);
   };

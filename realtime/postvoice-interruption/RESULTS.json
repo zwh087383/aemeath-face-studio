@@ -1,0 +1,461 @@
+{
+  "date": "2026-10-29",
+  "experimental": true,
+  "baselineCommit": "fde0192b79ea79bc57c45b33d7387a9a7cc1a8a8",
+  "headless": true,
+  "providers": {
+    "actions": "DeepSeek original function call format",
+    "voice": "Qwen Audio Realtime"
+  },
+  "fixedActionChoreography": false,
+  "futureReplyProvidedToActionModel": false,
+  "newBatch": {
+    "responseCeiling": 234,
+    "pcmCeilingSeconds": 360,
+    "channels": {
+      "listener": 14,
+      "background": 45,
+      "action": 42,
+      "voice": 10
+    },
+    "states": {
+      "reported": 110,
+      "unknown": 1,
+      "unused": 2
+    },
+    "reportedTokens": 377506,
+    "pcmSeconds": 67.41
+  },
+  "includingPreviousFailedAndSuccessfulRetests": {
+    "channels": {
+      "listener": 34,
+      "background": 103,
+      "action": 98,
+      "voice": 28
+    },
+    "reportedTokens": 875621,
+    "pcmSeconds": 184.32,
+    "unknownRecordsRetained": 5
+  },
+  "preservation": {
+    "frozen-source.json": {
+      "count": 28,
+      "changed": []
+    },
+    "trajectory-protected-before.json": {
+      "count": 187,
+      "changed": []
+    },
+    "protected-before.json": {
+      "count": 196,
+      "changed": []
+    }
+  },
+  "ownedCloudProcessesRemaining": [],
+  "checks": {
+    "backendRegressionTestsPassed": 182,
+    "independentFrontendRegressionTestsPassed": 47,
+    "analysisSelfChecksPassed": 4,
+    "audioMeterRegressionTestsPassed": 2
+  },
+  "cases": [
+    {
+      "case": "short-03",
+      "status": "finished",
+      "inputFixtures": 5,
+      "systemTurns": 6,
+      "voiceResponseAttempts": 5,
+      "responsesWithVoice": 5,
+      "latencyMs": {
+        "lastSpeechToVoiceMs": {
+          "n": 5,
+          "median": 2737.792,
+          "mean": 2752.065,
+          "min": 2565.579,
+          "max": 2874.542
+        },
+        "requestToVoiceMs": {
+          "n": 5,
+          "median": 897.325,
+          "mean": 983.485,
+          "min": 816.842,
+          "max": 1314.942
+        },
+        "commandLeadMs": {
+          "n": 5,
+          "median": -892.358,
+          "mean": -750.715,
+          "min": -1025.225,
+          "max": -386.258
+        },
+        "bodyStartLeadMs": {
+          "n": 5,
+          "median": -926.658,
+          "mean": -779.035,
+          "min": -1051.825,
+          "max": -418.758
+        },
+        "visibleBodyLeadMs": {
+          "n": 5,
+          "median": -1158.675,
+          "mean": -1025.095,
+          "min": -1335.225,
+          "max": -662.158
+        },
+        "visibleFaceLeadMs": {
+          "n": 5,
+          "median": -961.875,
+          "mean": -769.055,
+          "min": -1021.825,
+          "max": -385.458
+        }
+      },
+      "bodyEventCounts": {
+        "action_queued": 42,
+        "body_handover": 30,
+        "action_admitted": 30,
+        "action_started": 30,
+        "action_completed": 25,
+        "action_cancelled": 15,
+        "action_expired": 2
+      },
+      "cancellationReasons": {
+        "confirmed_voice_barge_in": 12,
+        "dependency_expired": 2,
+        "disconnect": 1
+      },
+      "continuationCount": 12,
+      "continuationDecisionsReceived": 12,
+      "continuationLatencyMs": {
+        "feedbackReceivedToRequest": {
+          "n": 12,
+          "median": 44.6,
+          "mean": 99.758,
+          "min": 12.3,
+          "max": 549.3
+        },
+        "requestToBodyDecision": {
+          "n": 12,
+          "median": 1877.65,
+          "mean": 2032.517,
+          "min": 1449.6,
+          "max": 3152.4
+        },
+        "feedbackReceivedToBodyDecision": {
+          "n": 12,
+          "median": 1921.4,
+          "mean": 2132.275,
+          "min": 1489.0,
+          "max": 3701.7
+        }
+      },
+      "allRequestsHadNoFutureReply": true,
+      "historySettled": 4,
+      "revokedAndHistorySettled": 0,
+      "browserErrors": [],
+      "observationErrors": [],
+      "renderPerformance": {
+        "frames": 9667,
+        "elapsedMs": 124756.40000000001,
+        "maxFrameMs": 316.6999999999971,
+        "over50ms": 8,
+        "hiddenFrames": 0,
+        "excludesPreTestLoading": true
+      },
+      "usage": {
+        "channels": {
+          "listener": 8,
+          "background": 16,
+          "action": 22,
+          "voice": 5
+        },
+        "states": {
+          "reported": 50,
+          "unknown": 1,
+          "unused": 1
+        },
+        "reportedTokens": 191108,
+        "unknown": [
+          {
+            "channel": "background",
+            "reason": "background_request_terminal_unknown",
+            "terminalObserved": false
+          }
+        ],
+        "frozenChannels": {
+          "background": "background_request_terminal_unknown"
+        },
+        "pcmSeconds": 34.405
+      },
+      "bodyOnly": [
+        {
+          "fixture": "short-03-t2",
+          "activeActionBefore": "gesture:listen",
+          "localBodyPauseEventMs": 0.2,
+          "activeActionPauseMs": 6.3,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "inputToOldActionTerminalMs": 2881.7,
+          "priorTurnActionsStartedDuringInput": []
+        },
+        {
+          "fixture": "short-03-t4",
+          "activeActionBefore": "action:thought_tilt",
+          "localBodyPauseEventMs": 0.2,
+          "activeActionPauseMs": 8.4,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "inputToOldActionTerminalMs": 4598.8,
+          "priorTurnActionsStartedDuringInput": []
+        },
+        {
+          "fixture": "short-03-t5",
+          "activeActionBefore": "gesture:outline_space",
+          "localBodyPauseEventMs": 0.0,
+          "activeActionPauseMs": 6.2,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "inputToOldActionTerminalMs": 4145.6,
+          "priorTurnActionsStartedDuringInput": []
+        }
+      ],
+      "spokenInterruptions": [
+        {
+          "action": "gesture:invite_continue",
+          "sourceClearMs": 1.2,
+          "digitalStopIntervalMs": [
+            0,
+            5.333
+          ],
+          "sampledBonePauseMs": 16.7,
+          "formalRevocationMs": 1566.1,
+          "sustainedPoseFreezeMs": 109.7
+        }
+      ],
+      "modelPlayback": {
+        "requests": 22,
+        "states": {
+          "awaiting_voice": 5,
+          "playing": 12,
+          "ended": 5
+        },
+        "requestsMissingEvidence": 0,
+        "commandsSelectingUnavailableVoice": 0,
+        "rejectedBrowserReports": {}
+      },
+      "modelToolRejections": {
+        "invalid_complete_tool": 1
+      }
+    },
+    {
+      "case": "short-08",
+      "status": "finished",
+      "inputFixtures": 5,
+      "systemTurns": 5,
+      "voiceResponseAttempts": 5,
+      "responsesWithVoice": 5,
+      "latencyMs": {
+        "lastSpeechToVoiceMs": {
+          "n": 5,
+          "median": 3102.375,
+          "mean": 3045.537,
+          "min": 2471.783,
+          "max": 3471.454
+        },
+        "requestToVoiceMs": {
+          "n": 5,
+          "median": 1197.458,
+          "mean": 1135.145,
+          "min": 778.758,
+          "max": 1322.675
+        },
+        "commandLeadMs": {
+          "n": 5,
+          "median": -405.542,
+          "mean": -495.015,
+          "min": -897.442,
+          "max": -154.358
+        },
+        "bodyStartLeadMs": {
+          "n": 5,
+          "median": -443.042,
+          "mean": -530.655,
+          "min": -926.142,
+          "max": -183.858
+        },
+        "visibleBodyLeadMs": {
+          "n": 5,
+          "median": -603.142,
+          "mean": -706.655,
+          "min": -1122.842,
+          "max": -400.925
+        },
+        "visibleFaceLeadMs": {
+          "n": 4,
+          "median": -617.775,
+          "mean": -918.433,
+          "min": -2037.258,
+          "max": -400.925
+        }
+      },
+      "bodyEventCounts": {
+        "action_queued": 37,
+        "body_handover": 23,
+        "action_admitted": 23,
+        "action_started": 23,
+        "action_completed": 18,
+        "action_cancelled": 17,
+        "action_expired": 2
+      },
+      "cancellationReasons": {
+        "confirmed_voice_barge_in": 12,
+        "dependency_expired": 2,
+        "disconnect": 3
+      },
+      "continuationCount": 10,
+      "continuationDecisionsReceived": 9,
+      "continuationLatencyMs": {
+        "feedbackReceivedToRequest": {
+          "n": 10,
+          "median": 52.15,
+          "mean": 168.09,
+          "min": 21.1,
+          "max": 926.8
+        },
+        "requestToBodyDecision": {
+          "n": 9,
+          "median": 1957.4,
+          "mean": 1944.056,
+          "min": 1365.6,
+          "max": 2853.9
+        },
+        "feedbackReceivedToBodyDecision": {
+          "n": 9,
+          "median": 2012.3,
+          "mean": 2097.133,
+          "min": 1470.3,
+          "max": 2909.9
+        }
+      },
+      "allRequestsHadNoFutureReply": true,
+      "historySettled": 4,
+      "revokedAndHistorySettled": 0,
+      "browserErrors": [],
+      "observationErrors": [],
+      "renderPerformance": {
+        "frames": 7936,
+        "elapsedMs": 108332.8,
+        "maxFrameMs": 230.10000000000582,
+        "over50ms": 9,
+        "hiddenFrames": 0,
+        "excludesPreTestLoading": true
+      },
+      "usage": {
+        "channels": {
+          "listener": 6,
+          "background": 29,
+          "action": 20,
+          "voice": 5
+        },
+        "states": {
+          "reported": 60,
+          "unused": 1
+        },
+        "reportedTokens": 186398,
+        "unknown": [],
+        "frozenChannels": {},
+        "pcmSeconds": 33.005
+      },
+      "bodyOnly": [
+        {
+          "fixture": "short-08-t2",
+          "activeActionBefore": "gesture:proud_soft",
+          "localBodyPauseEventMs": 0.1,
+          "activeActionPauseMs": 8.6,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "inputToOldActionTerminalMs": 4913.0,
+          "priorTurnActionsStartedDuringInput": []
+        },
+        {
+          "fixture": "short-08-t4",
+          "activeActionBefore": "gesture:offer_turn",
+          "localBodyPauseEventMs": 0.1,
+          "activeActionPauseMs": 9.5,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "inputToOldActionTerminalMs": 4514.8,
+          "priorTurnActionsStartedDuringInput": []
+        },
+        {
+          "fixture": "short-08-t5",
+          "activeActionBefore": "gesture:reassure",
+          "localBodyPauseEventMs": 0.0,
+          "activeActionPauseMs": 6.9,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "inputToOldActionTerminalMs": 3602.6,
+          "priorTurnActionsStartedDuringInput": []
+        }
+      ],
+      "spokenInterruptions": [
+        {
+          "action": "gesture:agree",
+          "sourceClearMs": 0.6,
+          "digitalStopIntervalMs": [
+            0,
+            10.667
+          ],
+          "sampledBonePauseMs": 9.9,
+          "formalRevocationMs": 2586.3,
+          "sustainedPoseFreezeMs": 119.2
+        }
+      ],
+      "modelPlayback": {
+        "requests": 20,
+        "states": {
+          "awaiting_voice": 5,
+          "playing": 9,
+          "ended": 6
+        },
+        "requestsMissingEvidence": 0,
+        "commandsSelectingUnavailableVoice": 0,
+        "rejectedBrowserReports": {}
+      },
+      "modelToolRejections": {
+        "invalid_complete_tool": 1
+      }
+    }
+  ],
+  "limits": [
+    "Digital PCM injection, WebAudio output, seven sampled world bones; not physical microphone/speaker latency.",
+    "Immediate pose freeze is not a verified natural recovery animation.",
+    "Free model outputs differ; before/after latency differences are observational.",
+    "Four voice-anchor expirations remain; one late=reconsider interpretation and three generation/queue-window misses.",
+    "Playback-ended model awareness does not guarantee restraint: it can continue choosing immediate gestures.",
+    "short-03 background unknown terminal froze that channel; evidence does not show full background availability."
+  ],
+  "continuationObservation": {
+    "case": "short-08",
+    "priorActions": [
+      "gesture:enumerate_two",
+      "gesture:emphasize_down"
+    ],
+    "priorActionsCompleted": true,
+    "modelInputPlayback": "ended",
+    "modelSelected": [
+      "gesture:agree",
+      "gesture:offer_turn"
+    ],
+    "selectedActionsCompleted": true,
+    "commandQueueWaitMs": 7085.7,
+    "limitation": "Autonomous continuation verified, but queued plans still delay actual starts."
+  },
+  "endOfObservationCancellation": {
+    "case": "short-08",
+    "kind": "last_execution_feedback_request_cancelled_on_test_disconnect",
+    "bodyDecisionDelivered": false,
+    "usageState": "reported",
+    "reportedTokens": 8275
+  }
+}

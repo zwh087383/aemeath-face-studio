@@ -202,7 +202,7 @@ async function boot(){
   for(const kind of ATTITUDE_KINDS){const button=document.createElement('button');button.textContent=labels[kind];button.onclick=()=>{const command={id:kind,kind,strength:.6,source:'local_component',revision:++manualRevision,evidenceId:'explicit_preview_'+manualRevision,renew:true};face.setAttitude(command);oldFace.setAttitude(command);};$('attitudes').append(button);}
   const action=fn=>()=>Promise.resolve().then(fn).catch(error);
   for(const [id,fn] of Object.entries({connect,disconnect:close,sound,feed,save,refresh,replay,'activity-start':activityStart,'activity-revoke':activityRevoke,mic:async()=>{await context.resume();await client.ensureListener();microphone=await captureMicrophone(context,pcm=>client.sendAudio(pcm));},'mic-stop':stopMic,record:recordStart,'record-stop':recordStop}))$(id).onclick=action(fn);
-  $('send').onclick=()=>client.sendText($('text').value);$('cancel').onclick=()=>{client.cancel();center.cancel();};$('pause').onclick=()=>{center.pause(!center.paused);if(center.paused)session.pause();else session.resume();};
+  $('send').onclick=()=>client.sendText($('text').value);$('cancel').onclick=()=>{client.cancel();center.cancel();};$('pause').onclick=()=>client.setManualPause(!client.manualPaused);
   $('recording-open').onclick=()=>{const video=$('recording-player');video.src='/duplex-data/'+encodeURIComponent($('recording-choice').value);video.hidden=false;video.play().catch(error);};
   $('sample').onchange=()=>sample();$('compare').textContent='查看上一版同一表情';$('compare').onclick=()=>{comparison=!comparison;$('compare').textContent=comparison?'查看本次修复':'查看上一版同一表情';};
   $('neutral').onclick=()=>{if(component){face=makeFace();oldFace=makeLegacyFace();center.face=face;bindActionFace();sample();}};

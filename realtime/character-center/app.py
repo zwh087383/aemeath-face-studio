@@ -109,6 +109,8 @@ def create_app(runtime, main, budget, output, *, cloud=False, asset_port=18809, 
                     await session.actor_state(command)
                 elif kind == "playback_receipt":
                     await session.playback_receipt(command)
+                elif kind == "character_playback_state":
+                    await session.playback_state(command)
                 elif kind == "action_receipt":
                     session.spawn(session.receive_action_receipt(command))
                 elif kind == "listener_resume":

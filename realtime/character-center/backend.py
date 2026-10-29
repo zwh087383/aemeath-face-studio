@@ -94,6 +94,9 @@ class CharacterCenterSession(model.ModelDuplexSession):
         self._execution_feedback_lock = asyncio.Lock()
         self._assistant_streams = {}
         self._playback = {}
+        self._voice_segments = {}
+        self._playback_states = {}
+        self._playback_state_sequence = -1
         self._audit_task = None
         self._audit_dirty = False
         self._audit_error = None
@@ -488,7 +491,8 @@ class CharacterCenterSession(model.ModelDuplexSession):
         if turn:
             value["current_user_text"] = turn["text"]
             value["dialogue_state"] = {"delivered": bool(turn.get("acknowledged")),
-                "cancelled": turn["cancel"].is_set(), "playback": deepcopy(self.actor.get("communication", {}))}
+                "cancelled": turn["cancel"].is_set()}
+        value["voice_playback"] = self._voice_playback_view(turn or self.current_turn)
         if turn and turn["id"] in self._activity_voice_snapshots:
             # The legacy planner truncates the system excerpt to 2400 chars;
             # preserve these separately guarded facts for dialogue motions too.
@@ -591,6 +595,18 @@ class CharacterCenterSession(model.ModelDuplexSession):
         self._submit(key, "assistant", len(transcript), payload, turn=turn, priority=1)
 
     async def emit(self, kind, **payload):
+        # Streaming segments do not enter turn.segments until provider completion.
+        # Register their real server identities/frontiers before exposing packets
+        # to the browser, so a fast playback receipt cannot race the send.
+        if hasattr(self, "_voice_segments") and payload.get("turnId"):
+            key = (payload["turnId"], payload.get("segmentIndex", 0))
+            if kind == "response_created":
+                self._voice_segments[key] = {"responseId": payload.get("responseId"),
+                    "connectionId": payload.get("providerConnectionId"),
+                    "startFrame": payload.get("startFrame", 0), "frames": 0}
+            elif kind == "audio" and not payload.get("revoked") and key in self._voice_segments:
+                import base64
+                self._voice_segments[key]["frames"] += len(base64.b64decode(payload["pcm"])) // 2
         if kind == "prewarm_ready":
             connection = self.warm_connection
             if connection and connection.id == payload.get("providerConnectionId"):
@@ -672,6 +688,95 @@ class CharacterCenterSession(model.ModelDuplexSession):
         if frame < self._playback.get(key, 0):
             raise base.ProtocolError("character_playback_regressed")
         self._playback[key] = frame
+        return {"accepted": True, "historyAcknowledged": False}
+
+    def _known_voice_segments(self, turn):
+        rows = {i: segment for i, segment in enumerate(turn.get("segments", []))}
+        rows.update({i: row for (identity, i), row in self._voice_segments.items() if identity == turn["id"]})
+        return rows
+
+    def _voice_playback_view(self, turn=None):
+        """Current browser evidence, distinct from provider generation/history."""
+        view = {"state": "none", "source": "validated_browser_playback",
+            "fresh": False, "can_anchor_voice": False, "expected_voice_pending": False,
+            "provider_generation_complete": False}
+        if not turn:
+            return view
+        view["turn_id"] = turn["id"]
+        result = turn.get("result") or {}
+        complete = result.get("status") == "completed" and bool(result.get("audioDone"))
+        view["provider_generation_complete"] = complete
+        if turn["cancel"].is_set():
+            return {**view, "state": "cancelled", "source": "server_revocation", "fresh": True}
+        if turn.get("acknowledged"):
+            return {**view, "state": "ended", "source": "verified_playback_complete", "fresh": True}
+        terminal_result = result.get("status") in {"completed", "failed", "cancelled", "incomplete"}
+        last = turn.get("lastTerminal") or {}
+        terminal_segment = (last.get("status") in {"failed", "cancelled", "incomplete"}
+                            or last.get("status") == "completed" and not last.get("handoff"))
+        pending = (bool(turn.get("inFlight") or turn["id"] in self._turn_contexts)
+                   and not terminal_result and not terminal_segment
+                   and turn["id"] not in self._terminal_notified and turn["id"] not in self._error_notified)
+        row = self._playback_states.get(turn["id"])
+        if not row:
+            return {**view, "state": "awaiting_voice" if pending else "unknown",
+                    "source": "server_pending_generation" if pending else "no_playback_receipt",
+                    "expected_voice_pending": pending, "can_anchor_voice": pending}
+        age = max(0, (time.monotonic() - row["receivedAt"]) * 1000)
+        terminal = row["status"] in {"ended", "cancelled"}
+        fresh = age <= 1500 or terminal
+        segments = self._known_voice_segments(turn)
+        total = max((s["startFrame"] + s["frames"] for s in segments.values()), default=0)
+        remaining = max(0, total - row["playedFrame"])
+        state = row["status"] if fresh else "unknown"
+        return {**view, "state": state, "fresh": fresh, "received_age_ms": round(age, 1),
+            "segment_index": row["segmentIndex"], "played_frame": row["playedFrame"],
+            "received_frames": total, "buffered_remaining_ms": round(remaining / 24, 1),
+            "source_active": row["sourceActive"] if fresh else None,
+            "expected_voice_pending": pending and not terminal,
+            "can_anchor_voice": fresh and state in {"playing", "buffering"} and (remaining > 0 or pending)}
+
+    async def playback_state(self, command):
+        """Information only. Invalid/stale diagnostics must not stop voice input."""
+        reason = None
+        turn = self.turns.get(command.get("turnId"))
+        index, frame, sequence = (command.get(k) for k in ("segmentIndex", "playedFrame", "sequence"))
+        status, active = command.get("status"), command.get("sourceActive")
+        if (not turn or turn is not self.current_turn or type(index) is not int or type(frame) is not int
+                or type(sequence) is not int or frame < 0 or sequence < 0 or type(active) is not bool
+                or status not in {"buffering", "playing", "paused", "ended", "cancelled"}):
+            reason = "invalid_playback_state"
+        elif sequence <= self._playback_state_sequence:
+            reason = "stale_playback_state_sequence"
+        elif turn["cancel"].is_set() and status != "cancelled":
+            reason = "revoked_playback_owner"
+        else:
+            segments = self._known_voice_segments(turn)
+            segment = segments.get(index)
+            previous = self._playback_states.get(turn["id"])
+            if (not segment or command.get("responseId") != segment["responseId"]
+                    or command.get("providerConnectionId") != segment["connectionId"]):
+                reason = "playback_state_owner_conflict"
+            elif not segment["startFrame"] <= frame <= segment["startFrame"] + segment["frames"]:
+                reason = "playback_state_frame_out_of_range"
+            elif previous and (frame < previous["playedFrame"] or index < previous["segmentIndex"]):
+                reason = "playback_state_regressed"
+            elif previous and previous["status"] in {"ended", "cancelled"} and status != previous["status"]:
+                reason = "playback_state_terminal_resurrection"
+            elif status in {"paused", "ended", "cancelled"} and active:
+                reason = "playback_state_status_conflict"
+            elif status == "ended":
+                result = turn.get("result") or {}
+                total = max((s["startFrame"] + s["frames"] for s in segments.values()), default=0)
+                if result.get("status") != "completed" or not result.get("audioDone") or frame != total:
+                    reason = "playback_end_not_complete"
+        if reason:
+            await self._character_emit("character_playback_state_rejected", turnId=command.get("turnId"), reason=reason)
+            return {"accepted": False, "reason": reason, "historyAcknowledged": False}
+        self._playback_state_sequence = sequence
+        self._playback_states[turn["id"]] = {k: command[k] for k in
+            ("segmentIndex", "playedFrame", "status", "sourceActive", "sequence")}
+        self._playback_states[turn["id"]]["receivedAt"] = time.monotonic()
         return {"accepted": True, "historyAcknowledged": False}
 
     def _execution_state(self, turn=None):
@@ -901,9 +1006,6 @@ class CharacterCenterSession(model.ModelDuplexSession):
             if not await self._valid(job, check_memory=True):
                 return
             mark("guard_after_connection_done")
-            mark("context_send")
-            await connection.add_context([{"role": "user", "content": input_view.encoded(job.payload)}], batch=True)
-            mark("context_confirmed")
             mark("guard_before_budget_start")
             if not await self._valid(job, check_memory=True):
                 return
@@ -926,12 +1028,24 @@ class CharacterCenterSession(model.ModelDuplexSession):
                 terminal = True
                 return
             mark("final_guard_done")
+            # A semantic job may have waited in the queue or on a connection.
+            # Refresh immediately before transmitting; do not wait for audio.
+            turn = self._semantic_context.get(job.request_id, {}).get("turn")
+            job.payload["voice_playback"] = self._voice_playback_view(turn or self.current_turn)
+            mark("context_send")
+            await connection.add_context([{"role": "user", "content": input_view.encoded(job.payload)}], batch=True)
+            mark("context_confirmed")
+            if not await self._valid(job):
+                await self.budget.acall("unused", reservation)
+                terminal = True
+                return
             connection.claimed = True
             sent = True
             await connection.send({"type": "response.create", "response": {"modalities": ["text"]}})
             mark("request_sent")
             await event("character_semantic_request", contextHash=base.digest(job.payload),
                         evidenceRefs=job.payload["evidence_refs"], futureReplyAvailable=False,
+                        voicePlayback=deepcopy(job.payload["voice_playback"]),
                         inputMetrics=input_view.metrics(job.payload), timings={**timings, **marks})
             self.schedule_planner_warm()
             deadline, cancel_sent = time.monotonic()+20, False
