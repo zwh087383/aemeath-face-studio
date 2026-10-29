@@ -67,8 +67,8 @@ function frame(time){
     const actualActor={...lastRendered.actorState,communication:{turnId:t?.id??null,audioStatus:a.status,paused:center.paused}};
     if(client.ready&&!replaying&&!component){
       for(const event of scene.bodyDirector.events){
-        if(!['action_completed','action_rejected','action_failed','action_expired','action_cancelled'].includes(event.type))continue;
-        const key=event.id;if(bodyReceipts.has(key)||!Number.isInteger(event.index))continue;
+        if(!['action_admitted','action_started','action_completed','action_rejected','action_failed','action_expired','action_cancelled'].includes(event.type))continue;
+        const key=`${event.id}:${event.type}`;if(bodyReceipts.has(key)||!Number.isInteger(event.index))continue;
         if(client.send({type:'action_receipt',commandId:event.owner.requestId,index:event.index,action:event.action,
           status:event.type.slice(7),reason:event.reason??null,actorState:actualActor})){
           bodyReceipts.add(key);diagnostics.push({type:'body_feedback_sent',browserAt:time,action:event.action,status:event.type.slice(7),commandId:event.owner.requestId});

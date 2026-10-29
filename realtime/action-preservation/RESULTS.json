@@ -1,0 +1,89 @@
+{
+  "experimental": true,
+  "date": "2026-10-28",
+  "baseline": "21288ee870b178d80c5b38eb060625d9ae1e5589",
+  "method": "Same saved real model commands in old/new PMX executors; feedback scheduling checked with fake providers.",
+  "newCloudCalls": 0,
+  "pythonTestsPassed": 153,
+  "nodeTestsPassed": 54,
+  "protectedHashesUnchanged": 14,
+  "existingLedgerHashesUnchanged": 112,
+  "sourceAnimationSpeed": 1,
+  "bodyAmplitude": 1,
+  "cases": [
+    {
+      "case": "short-03",
+      "versions": [
+        {
+          "version": "old",
+          "action": "gesture:comfort",
+          "executedMs": 63.4,
+          "outcome": "cancelled",
+          "reason": "model_replace",
+          "movingOrdinaryReplacements": 1,
+          "offlineDecisionRequestVideoSeconds": [
+            21.4004
+          ]
+        },
+        {
+          "version": "new",
+          "action": "gesture:comfort",
+          "executedMs": 3595.7,
+          "outcome": "cancelled",
+          "reason": "confirmed_voice_barge_in",
+          "movingOrdinaryReplacements": 0,
+          "offlineDecisionRequestVideoSeconds": []
+        }
+      ]
+    },
+    {
+      "case": "short-08",
+      "versions": [
+        {
+          "version": "old",
+          "action": "gesture:delighted",
+          "executedMs": 0.0,
+          "outcome": "cancelled",
+          "reason": "model_replace",
+          "movingOrdinaryReplacements": 1,
+          "offlineDecisionRequestVideoSeconds": [
+            13.4934
+          ]
+        },
+        {
+          "version": "new",
+          "action": "gesture:delighted",
+          "executedMs": 3656.8,
+          "outcome": "completed",
+          "reason": null,
+          "movingOrdinaryReplacements": 0,
+          "offlineDecisionRequestVideoSeconds": [
+            18.3969
+          ]
+        }
+      ]
+    }
+  ],
+  "manualInterruption": {
+    "checks": {
+      "activeWasPreserved": true,
+      "interruptionCancelledImmediately": true,
+      "lateCommandRejected": true
+    },
+    "localCommandCancelMs": 0.2,
+    "scope": "Local cancel call only; not microphone, VAD, server confirmation or physical audio latency."
+  },
+  "httpChecks": {
+    "page": 200,
+    "localFixture": 200,
+    "privateLedger": 404,
+    "externalOrigin": 403,
+    "writeMethod": 405,
+    "videoRange": 206
+  },
+  "limitations": [
+    "No new free conversation or cloud latency measurement.",
+    "Face samples are contextual replay, not phoneme alignment acceptance.",
+    "First interrupt harness omitted the existing whole-turn fence; failure preserved and harness corrected before acceptance."
+  ]
+}

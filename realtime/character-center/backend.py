@@ -501,8 +501,9 @@ class CharacterCenterSession(model.ModelDuplexSession):
         context_at = time.monotonic()
         value.update(available_actions=input_view.compact_catalog(self.catalog),
             current_plan=deepcopy(goals),
+            execution_state=self._execution_state(turn),
             execution_feedback=deepcopy(self.action_history[-8:]),
-            execution_policy="model selects; actual body conditions checked locally; no per-turn action cap")
+            execution_policy="model selects; replace edits pending steps and preserves admitted/started steps; clear explicitly stops own source; user interruption revokes immediately; no per-turn action cap")
         await self._character_emit("character_input_ready", turnId=turn["id"] if turn else None,
             preparationMs=round((time.monotonic()-start)*1000, 3), inputMetrics=input_view.metrics(value),
             preparationSteps={"stateSnapshotMs":round((state_at-start)*1000,3),
@@ -673,14 +674,38 @@ class CharacterCenterSession(model.ModelDuplexSession):
         self._playback[key] = frame
         return {"accepted": True, "historyAcknowledged": False}
 
+    def _execution_state(self, turn=None):
+        """Small actual step states, never an invented action sequence."""
+        plans = []
+        for command_id, issued in self.issued_actions.items():
+            job = issued["job"]
+            relevant = (job.source_scope == "activity" and job.payload.get("activity_id") in self.activities
+                        or turn and issued["turn"] is turn)
+            if (not relevant or issued.get("retired")
+                    or len(issued["results"]) == len(issued["command"]["actions"])):
+                continue
+            plans.append({"commandId": command_id, "source": job.source_key,
+                "superseded_future": bool(issued.get("superseded")),
+                "steps": [{"index": index, "action": step["action"],
+                    "status": issued["results"].get(index, issued.get("progress", {}).get(index, {})).get("status", "issued"),
+                    "reason": issued["results"].get(index, {}).get("reason", "")}
+                    for index, step in enumerate(issued["command"]["actions"])]})
+        return plans
+
     def _remember_actions(self, command_id, job, command):
         context = self._semantic_context.get(job.request_id, {})
         if command["operation"] in {"replace", "clear"}:
             for issued in self.issued_actions.values():
                 if issued["job"].source_key == job.source_key:
-                    issued["retired"] = True
+                    # A queue revision does not revoke an already moving step.
+                    # Keep accepting its real receipts, but its old completion
+                    # must not launch a competing continuation of the old plan.
+                    if command["operation"] == "clear":
+                        issued["retired"] = True
+                    else:
+                        issued["superseded"] = True
         self.issued_actions[command_id] = {"job": job, "turn": context.get("turn"),
-            "command": deepcopy(command), "results": {}, "reviewed": False}
+            "command": deepcopy(command), "results": {}, "progress": {}, "reviewed": False}
         if command.get("goal"):
             self.body_goals[job.source_key] = {"goal": command["goal"], "source": job.source_key,
                 "actions": [a["action"] for a in command["actions"]], "status": "issued_not_completed"}
@@ -697,8 +722,10 @@ class CharacterCenterSession(model.ModelDuplexSession):
         issued = self.issued_actions.get(command_id) if isinstance(command_id, str) else None
         status = command.get("status")
         terminal = {"completed", "rejected", "failed", "expired", "cancelled"}
+        progress_rank = {"admitted": 1, "started": 2}
         if (not issued or type(index) is not int or not 0 <= index < len(issued["command"]["actions"])
-                or status not in terminal or command.get("action") != issued["command"]["actions"][index]["action"]):
+                or status not in terminal | progress_rank.keys()
+                or command.get("action") != issued["command"]["actions"][index]["action"]):
             return {"accepted": False, "reason": "unissued_execution_receipt"}
         key = (command_id, index)
         if key in self.feedback_seen:
@@ -708,36 +735,55 @@ class CharacterCenterSession(model.ModelDuplexSession):
         job, turn = issued["job"], issued["turn"]
         if (turn and (turn["cancel"].is_set() or self.current_turn is not turn)):
             return {"accepted": False, "reason": "retired_turn"}
+        if status in progress_rank:
+            previous = issued.get("progress", {}).get(index, {}).get("status")
+            if progress_rank.get(previous, 0) >= progress_rank[status]:
+                return {"accepted": False, "reason": "duplicate_or_regressed_execution_progress"}
         if isinstance(command.get("actorState"), dict):
             try:
                 await self.actor_state({"actorState": command["actorState"]})
             except (base.ProtocolError, ValueError, TypeError):
                 return {"accepted": False, "reason": "invalid_execution_state"}
-        self.feedback_seen.add(key)
         result = {"action": command["action"], "status": status,
                   "source": job.source_key, "commandId": command_id, "index": index,
                   "reason": str(command.get("reason") or "")[:180],
                   "actor": input_view.actor_view(self.actor)}
+        if status in progress_rank:
+            issued.setdefault("progress", {})[index] = result
+            await self._character_emit("character_execution_progress", commandId=command_id, index=index,
+                result=result, turnId=turn["id"] if turn else None, historyAcknowledged=False)
+            return {"accepted": True, "replanned": False, "reason": "execution_progress_only"}
+        self.feedback_seen.add(key)
         issued["results"][index] = result
         self.action_history.append(result)
         self.action_history = self.action_history[-16:]
         await self._character_emit("character_execution_feedback", commandId=command_id, index=index,
             result=result, turnId=turn["id"] if turn else None, historyAcknowledged=False)
-        if issued["reviewed"] or status == "cancelled":
+        if issued["reviewed"] or issued.get("superseded"):
             return {"accepted": True, "replanned": False}
-        failed = status in {"rejected", "failed", "expired"}
-        if status == "expired" and issued["command"]["actions"][index].get("late") == "skip":
-            return {"accepted": True, "replanned": False, "reason": "model_chose_skip_missed_anchor"}
         complete = len(issued["results"]) == len(issued["command"]["actions"])
+        if not complete:
+            # Collect a failed sibling without invalidating healthy work. Its
+            # completed/cancelled receipts will close this plan once, independent
+            # of receipt ordering. No timeout fabricates completion here.
+            return {"accepted": True, "replanned": False, "reason": "waiting_for_remaining_steps"}
+        failures = [row for step, row in sorted(issued["results"].items())
+                    if row["status"] in {"rejected", "failed", "expired"}
+                    and not (row["status"] == "expired"
+                             and issued["command"]["actions"][step].get("late") == "skip")]
+        failed = bool(failures)
+        if not failed and not any(row["status"] == "completed" for row in issued["results"].values()):
+            reason = "model_chose_skip_missed_anchor" if any(row["status"] == "expired" for row in issued["results"].values()) else "cancelled_plan_no_followup"
+            return {"accepted": True, "replanned": False, "reason": reason}
         review = issued["command"].get("review", "on_finish")
-        if not failed and (not complete or review != "on_finish"):
+        if not failed and review != "on_finish":
             return {"accepted": True, "replanned": False}
         issued["reviewed"] = True
         goal = self.body_goals.get(job.source_key)
         if goal:
             goal["status"] = "needs_decision_after_failure" if failed else "selected_steps_completed"
         if failed:
-            signature = base.digest([job.source_key, {k:result[k] for k in ("action","status","reason","actor")},
+            signature = base.digest([job.source_key, [{k:row[k] for k in ("action","status","reason","actor")} for row in failures],
                                      self.body_goals.get(job.source_key, {}).get("goal")])
             if signature in self.failed_decisions:
                 return {"accepted": True, "replanned": False, "reason": "unchanged_failure_waits_for_new_fact"}
@@ -766,8 +812,11 @@ class CharacterCenterSession(model.ModelDuplexSession):
             payload["turn_id"] = turn["id"]
         evidence = "execution:" + str(len(self.feedback_seen))
         payload.update(source_scope=job.source_scope, trigger="actual_body_result", evidence_refs=[evidence],
-                       latest_execution=result, media_anchor={"kind": "immediate"})
-        if issued.get("retired") or turn and (turn["cancel"].is_set() or self.current_turn is not turn):
+                       latest_execution=result,
+                       settled_plan={"commandId": command_id, "all_steps_terminal": True,
+                           "results": [deepcopy(row) for _, row in sorted(issued["results"].items())]},
+                       media_anchor={"kind": "immediate"})
+        if issued.get("retired") or issued.get("superseded") or turn and (turn["cancel"].is_set() or self.current_turn is not turn):
             return {"accepted": True, "replanned": False, "reason": "source_changed_during_feedback"}
         if job.source_scope == "activity" and self.activities.get(snapshot["id"]) != snapshot:
             return {"accepted": True, "replanned": False, "reason": "activity_changed_during_feedback"}

@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>动作保留 · 两场新旧对照</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js","three/addons/":"/node_modules/three/examples/jsm/","@takahirox/three-mmd":"/node_modules/@takahirox/three-mmd/dist/index.js","mmd-parser":"/node_modules/mmd-parser/build/mmdparser.module.mjs"}}</script>
+<main><p class="eyebrow">本地对照 · 不调用云模型</p><h1>让正在做的动作做完</h1>
+<p>两边重放同一批真实模型指令。左边沿用旧规则；右边保留正在执行的动作，只调整后续。身体轨迹、幅度、肘部与挥手速度相同。</p>
+<div class="controls"><select id="case"><option value="short-03">short-03 · 安慰刚开始便被替换</option><option value="short-08">short-08 · 欣喜刚起势便被取消</option></select>
+<button id="play" disabled>从问题前开始 · 原速</button><button id="pause" disabled>暂停 / 继续</button><button id="interrupt" disabled>现在插话</button>
+<select id="view"><option value="front">正面</option><option value="angle">斜侧</option><option value="side">侧面</option></select></div>
+<p id="status">正在准备原模型…</p><div class="columns"><section><h2>旧版：替换整个计划</h2><div id="old-stage" class="stage"></div><p id="old-state"></p></section>
+<section><h2>新版：保留当前，调整后续</h2><div id="new-stage" class="stage"></div><p id="new-state"></p></section></div>
+<div class="caption"><b id="clock">—</b><span id="utterance"></span></div><pre id="result"></pre>
+<details><summary>查看当时的原始录像与声音</summary><p>上面是无声动作对照；下面是当时保存的原速录像与声音，单独播放。两者按同一录像时间轴定位，重建的逐帧时点可能有少量偏差。不会请求模型。</p><video id="original" controls preload="metadata"></video></details>
+<p class="note">本页故意把旧记录中过多的替换指令也发给新版，以检查它是否能保住当前动作。正式链路另有反馈合并：单项过期先记录，等同计划剩余有效步骤收尾，再让模型决定。这里没有编写替代模型的动作剧本，也不代表重新测试了云端延迟。表情使用原采样重放，仅用于动作对照。</p>
+</main><script type="module" src="viewer.mjs"></script></html>

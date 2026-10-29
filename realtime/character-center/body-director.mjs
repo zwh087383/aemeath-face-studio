@@ -87,7 +87,17 @@ export class CharacterBodyDirector {
     if (requestKey && this.seen.has(requestKey)) return { accepted: false, reason: 'duplicate_request' };
     if (requestKey) this.seen.add(requestKey);
     if(parsed.operation==='keep')return {accepted:true,count:0,kept:true};
-    if (parsed.operation !== 'append') this.clearSource(owner, parsed.operation === 'clear' ? 'model_clear' : 'model_replace');
+    if (parsed.operation === 'clear') this.clearSource(owner, 'model_clear');
+    if (parsed.operation === 'replace') {
+      // A normal revision edits the future queue. An admitted executor already
+      // owns a physical transition, even before its first visible start event.
+      // Explicit clear, interruption and source retirement still cancel it.
+      this.clearSource(owner, 'model_replace_pending', { preserveActive: true });
+      for (const row of [this.active, ...this.faceActive].filter(Boolean)) {
+        if (sameSource(row.owner, owner)) this.record('action_retained', row,
+          { reason: 'replace_preserves_execution', replacementRequestId: owner.requestId ?? null });
+      }
+    }
     for (const [index,action] of parsed.actions.entries()) {
       const row = { ...action, id: `character-action-${++this.serial}`, owner: copy(owner),
         index, goal:parsed.goal, acceptedAt: this.now, due: this.now + action.delay_ms / 1000, status: 'queued',
@@ -97,12 +107,13 @@ export class CharacterBodyDirector {
     return { accepted: true, count: parsed.actions.length };
   }
 
-  clearSource(owner, reason) {
+  clearSource(owner, reason, { preserveActive = false } = {}) {
     const matches = row => sameSource(row.owner, owner);
     this.pending = this.pending.filter(row => {
       if (!matches(row)) return true;
       row.status = 'cancelled'; row.reason = reason; this.record('action_cancelled', row, { reason }); return false;
     });
+    if (preserveActive) return;
     if (this.active && matches(this.active)) {
       const row = this.active; row.status = 'cancelled'; row.reason = reason;
       this.executors[this.executor].cancel?.(row, reason); this.record('action_cancelled', row, { reason }); this.active = null;
@@ -191,7 +202,7 @@ export class CharacterBodyDirector {
     }
     this.faceActive = this.faceActive.filter(row => {
       const state = this.executors.face.status(row);
-      if (state.started && row.displayedAt == null) { row.displayedAt = now; this.record('action_started', row, { executor: 'face' }); }
+      if (state.started && row.displayedAt == null) { row.displayedAt = now; row.status = 'playing'; this.record('action_started', row, { executor: 'face' }); }
       if (!state.done) return true;
       row.status = state.failed ? 'failed' : 'completed';
       this.record(`action_${row.status}`, row, { executor: 'face', reason:state.reason??null });

@@ -90,7 +90,7 @@ def parse_expression(raw):
 def tools(catalog=None):
     keys = [row["id"] for row in load_catalog(catalog)]
     actions = {"type": "function", "function": {
-        "name": "perform_actions", "description": "选择已接通的身体行为；声音不等待执行回执。",
+        "name": "perform_actions", "description": "选择身体行为；replace只调整未开始部分，保留在做动作。明确要停止当前行为时用clear。声音不等回执。",
         "parameters": {"type": "object", "additionalProperties": False,
             "required": ["operation", "actions"], "properties": {
                 "operation": {"type": "string", "enum": ["keep", "append", "replace", "clear"]},
@@ -122,13 +122,13 @@ reaction：surprise,confused,smile,concern。evidenceRef必须原样选当前evi
 数学情绪、精力、关系数值只读；你决定面对话题的表达，不修改长期情绪、不直接控制骨骼与形变。
 用户最终话语与后台真实状态可以决定当前态度。助手字幕可能领先声音，关联表达按已接收音频位置放行，无词级精确对齐。
 动作只选available_actions表中ID。禁止攻击、Stand2及同源禁用动作。前置条件不满足可自行安排前置动作，不编造道具或完成状态。
-operation keep保持原计划（actions为空）、append追加、replace合理收势后换计划、clear清空后续并收势。脸工具不替换身体计划。
-goal是你自选的持续身体目标，current_plan和execution_feedback记载你先前选择及实际结果。不要把目标当成已完成事实。
+operation keep保持原计划（actions为空）、append追加、replace只改未开始的后续动作，已接纳/开始的有效动作继续完成。clear明确停止本来源当前动作并清空后续，走合理收势。脸工具不替换身体计划。
+goal是你自选的持续身体目标，current_plan、execution_state和execution_feedback记载先前选择及实际结果。issued只表示发出，admitted/started表示已进入执行，不是完成；不要重排正在执行的同一步。
 身体动作依次在前项真实完成后执行，纯眨眼可并行。anchor immediate现在允许开始；voice跟随实际声音。不得猜毫秒延迟或等待整条回复播完。
 late选择skip错过不补、start_if_speaking仍出声则开始、reconsider交回重新决定。已结束声音不会重新开始。
-review默认on_finish在本计划完成或失败后重新决定；on_failure/wait成功后等新外部事件，失败仍回报。保持/清空不会立即触发循环询问。
+review默认on_finish在本计划全部步骤有实际结果后重新决定；单项失败先记录，其他有效步骤继续。on_failure/wait成功后等新外部事件，失败在其余步骤收尾后回报。保持/清空不会立即触发循环询问。
 根据真实执行结果继续目标或选择保持；普通任务进度更新不要求重新开始。失败后不要在条件未变时原样反复重试。
-同一指令里前项失败或错过时，尚未开始的后项停止；根据真实回执重新选择，不能假定后项还会继续。
+同一指令里前项失败或错过时，尚未开始的后项停止；已执行的有效步骤保留。execution_feedback可能含多个步骤结果，单项过期不代表整套目标失效。优先调整后续，只有当前行为确实不再适合才明确clear。用户插话和来源撤销由系统立即处理，不等待你。
 用户已叫你时，背景工作动作不应抢占对方注意。业务开始/暂停/完成以事实为准，动画不代表任务完成。
 只有新依据才更新持续态度；同一含义无需反复重启。坏消息中的关切不因短反应结束就恢复笑意。
 只通知动作与表情，不等待工具回执来产生另一轮。输入不存在的未来答案与未完成工作不得当作事实。

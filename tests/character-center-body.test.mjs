@@ -205,10 +205,11 @@ test('pure blink proceeds beside native body while head-bone actions wait for th
   assert.equal(d.pending[0].action, 'action:nod'); assert.equal(d.executor, 'native');
 });
 
-test('replacement retires the old intent and waits for its real mechanical exit', () => {
+test('explicit clear retires the old intent and append waits for its real mechanical exit', () => {
   const { director: d, adapters, calls } = setup();
   d.submit(command(['native:thinking01', 'native:stand01']), owner()); d.update(0, 0);
-  d.submit(command(['gesture:wave'], 'replace'), owner()); d.update(.2, .2);
+  d.submit(command([], 'clear'), owner());
+  d.submit(command(['gesture:wave'], 'append'), owner()); d.update(.2, .2);
   assert.equal(d.active, null); assert.equal(d.pending.length, 1); assert.equal(d.executor, 'native');
   assert.equal(calls.filter(c => c.type === 'start').length, 1);
   adapters.native.busy = false; d.update(1, .8);
