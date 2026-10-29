@@ -1,0 +1,110 @@
+{
+  "experimental": true,
+  "date": "2026-10-28",
+  "status": "blocked_on_deepseek_authentication",
+  "baseline": "5bb2fa8c4f2a6d8175abe5d336c9f2e1c50c6b00",
+  "protectedFilesUnchanged": 192,
+  "providerPreflight": [
+    {
+      "route": "original_local_proxy",
+      "status": 401,
+      "ms": 109,
+      "models": [],
+      "errorCode": "invalid_request_error"
+    },
+    {
+      "route": "direct",
+      "status": 401,
+      "ms": 140,
+      "models": [],
+      "errorCode": "invalid_request_error"
+    }
+  ],
+  "cases": [
+    {
+      "case": "short-03",
+      "status": "action_provider_unavailable",
+      "inputFixtures": 5,
+      "responsesWithVoice": 5,
+      "lastSpeechToFirstVoiceMs": {
+        "n": 5,
+        "median": 3198.2,
+        "min": 2783.69,
+        "max": 3512.07
+      },
+      "requestToFirstVoiceMs": {
+        "n": 5,
+        "median": 1441.97,
+        "min": 1084.54,
+        "max": 1486.4
+      },
+      "actionCommands": 0,
+      "actionProviderRequests": 0,
+      "actionSkippedReasons": {
+        "planner_unavailable": 18
+      },
+      "autonomousContinuation": "not_tested_provider_authentication_failed",
+      "interruptions": [
+        {
+          "from": "first audible PCM packet admitted into original client",
+          "inputPacketMs": 100,
+          "localSourceClearMs": 0.8,
+          "firstPausedRenderFrameMs": 8.0,
+          "poseUnchangedDuringFirst100ms": true,
+          "formalRevocationMs": 3922.9,
+          "sourcesBefore": 16,
+          "sourcesAfter": 0,
+          "activeActionBefore": null,
+          "actionStopLatencyMs": null,
+          "audioSilenceMeasuredMs": null,
+          "limitations": [
+            "No active model-selected action: pose pause is not an action-stop measurement.",
+            "Initial output meter omitted disconnected-input silence blocks; no exact output-silence claim.",
+            "No physical microphone, device packet capture, or speaker loopback."
+          ]
+        }
+      ],
+      "historySettled": 4,
+      "revokedAndHistorySettled": 0,
+      "renderFrames": 7578,
+      "audioBlocks": 5647,
+      "observationErrors": [],
+      "browserErrors": [],
+      "usage": {
+        "channels": {
+          "listener": 6,
+          "background": 2,
+          "voice": 5
+        },
+        "states": {
+          "reported": 11,
+          "unknown": 2,
+          "unused": 1
+        },
+        "reportedTokens": 12456,
+        "unknown": [
+          {
+            "channel": "background",
+            "reason": "background_request_terminal_unknown",
+            "terminalObserved": false
+          },
+          {
+            "channel": "background",
+            "reason": "background_request_terminal_unknown",
+            "terminalObserved": false
+          }
+        ],
+        "frozenChannels": {
+          "background": "background_request_terminal_unknown"
+        },
+        "pcmSeconds": 34.405
+      }
+    },
+    {
+      "case": "short-08",
+      "status": "not_run"
+    }
+  ],
+  "manualActions": false,
+  "physicalAudioAcceptance": false
+}
