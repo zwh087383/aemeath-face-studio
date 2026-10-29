@@ -44,7 +44,8 @@ async def provider_preflight(config):
 def main():
     config = read(OUT / "launch.private.json")
     scope = read(OUT / "scope.json")
-    assert scope["cases"] == ["short-03", "short-08"]
+    assert scope["cases"] and len(scope["cases"]) == len(set(scope["cases"]))
+    assert set(scope["cases"]) <= {"short-03", "short-08"}
     asyncio.run(provider_preflight(config))
     state_path = OUT / "live-state.json"
     state = read(state_path, {"cases": {}, "startedAt": time.time(), "scope": scope["cases"]})
@@ -106,7 +107,10 @@ def main():
             (folder / "browser-navigation.txt").write_text(nav.stdout + nav.stderr, encoding="utf-8")
             if nav.returncode:
                 raise RuntimeError("browser_navigation_failed")
-            started = browser("run-code", "--filename=" + str(OUT / "run-browser.generated.js"))
+            # Preserve exactly which observation driver this case used.
+            shutil.copy2(OUT / "run-browser.generated.js", folder / "run-browser.generated.js")
+            shutil.copy2(OUT / "driver-source.json", folder / "driver-source.json")
+            started = browser("run-code", "--filename=" + str(folder / "run-browser.generated.js"))
             (folder / "browser-start.txt").write_text(started.stdout + started.stderr, encoding="utf-8")
             if started.returncode or "### Error" in started.stdout:
                 raise RuntimeError("browser_start_failed")
@@ -175,4 +179,8 @@ def main():
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, default=OUT)
+    OUT = parser.parse_args().output.resolve()
     main()

@@ -1,0 +1,604 @@
+{
+  "date": "2026-10-29",
+  "experimental": true,
+  "baseline": "db9807f58fbb544fd3d0e5f2acf3065a18cd3c51",
+  "realProviders": {
+    "actions": "DeepSeek original tool format",
+    "voice": "Qwen Audio Realtime"
+  },
+  "manualActionCommands": false,
+  "futureAnswerProvided": false,
+  "headless": true,
+  "physicalAudioAcceptance": false,
+  "newBatch": {
+    "channels": {
+      "listener": 14,
+      "background": 56,
+      "action": 56,
+      "voice": 13
+    },
+    "states": {
+      "reported": 137,
+      "unknown": 2,
+      "unused": 3
+    },
+    "reportedTokens": 485659,
+    "pcmSeconds": 82.505,
+    "responseCeiling": 234,
+    "pcmCeilingSeconds": 360
+  },
+  "includingPriorFailedAttempt": {
+    "channels": {
+      "listener": 20,
+      "background": 58,
+      "action": 56,
+      "voice": 18
+    },
+    "reportedTokens": 498115,
+    "pcmSeconds": 116.91,
+    "unknownRecordsRetained": 4
+  },
+  "protectedFilesUnchanged": 193,
+  "ownedCloudProcessesRemaining": [],
+  "cases": [
+    {
+      "case": "short-03",
+      "attempt": "full_five_input_case",
+      "inputFixtures": 5,
+      "systemTurns": 6,
+      "voiceResponseAttempts": 6,
+      "responsesWithVoice": 5,
+      "latencyMs": {
+        "lastSpeechToVoiceMs": {
+          "n": 5,
+          "median": 2802.638,
+          "mean": 3008.892,
+          "min": 2653.017,
+          "max": 3921.713
+        },
+        "requestToVoiceMs": {
+          "n": 5,
+          "median": 958.117,
+          "mean": 1121.172,
+          "min": 931.475,
+          "max": 1786.575
+        },
+        "commandLeadMs": {
+          "n": 5,
+          "median": -832.733,
+          "mean": -892.568,
+          "min": -2012.383,
+          "max": -130.325
+        },
+        "bodyStartLeadMs": {
+          "n": 5,
+          "median": -864.533,
+          "mean": -922.808,
+          "min": -2039.883,
+          "max": -162.525
+        },
+        "visibleBodyLeadMs": {
+          "n": 5,
+          "median": -1074.333,
+          "mean": -1165.468,
+          "min": -2276.583,
+          "max": -432.625
+        },
+        "visibleFaceLeadMs": {
+          "n": 5,
+          "median": -933.175,
+          "mean": -6098.288,
+          "min": -26076.625,
+          "max": -593.925
+        }
+      },
+      "actionRequests": 25,
+      "bodyEventCounts": {
+        "action_queued": 35,
+        "body_handover": 27,
+        "action_admitted": 27,
+        "action_started": 27,
+        "action_completed": 25,
+        "action_expired": 6,
+        "action_cancelled": 4
+      },
+      "cancellationReasons": {
+        "confirmed_voice_barge_in": 4
+      },
+      "actionsRetained": [],
+      "continuationCount": 13,
+      "continuationDecisionsReceived": 11,
+      "continuationLatencyMs": {
+        "feedbackReceivedToRequest": {
+          "n": 13,
+          "median": 44.2,
+          "mean": 464.738,
+          "min": 12.5,
+          "max": 4948.6
+        },
+        "requestToBodyDecision": {
+          "n": 11,
+          "median": 1504.9,
+          "mean": 1594.964,
+          "min": 1242.6,
+          "max": 2035.6
+        },
+        "feedbackReceivedToBodyDecision": {
+          "n": 11,
+          "median": 1807.0,
+          "mean": 2138.827,
+          "min": 1293.4,
+          "max": 6453.5
+        }
+      },
+      "allRequestsHadNoFutureReply": true,
+      "historySettled": 5,
+      "revokedAndHistorySettled": 0,
+      "browserErrors": [
+        "missed_interrupt:deadline:voice_for_interrupt:short-03-t2"
+      ],
+      "observationErrors": [],
+      "renderPerformance": {
+        "frames": 13237,
+        "elapsedMs": 178214.5,
+        "maxFrameMs": 359.8999999999942,
+        "over50ms": 9,
+        "hiddenFrames": 0,
+        "excludesPreTestLoading": true
+      },
+      "usage": {
+        "channels": {
+          "listener": 6,
+          "background": 16,
+          "action": 25,
+          "voice": 6
+        },
+        "states": {
+          "reported": 51,
+          "unknown": 2,
+          "unused": 1
+        },
+        "reportedTokens": 210700,
+        "unknown": [
+          {
+            "channel": "background",
+            "reason": "background_request_terminal_unknown",
+            "terminalObserved": false
+          },
+          {
+            "channel": "voice",
+            "reason": "terminal_usage_missing_or_invalid",
+            "terminalObserved": true
+          }
+        ],
+        "frozenChannels": {
+          "background": "background_request_terminal_unknown"
+        },
+        "pcmSeconds": 34.405
+      },
+      "interruptions": [],
+      "bodyOnlyInputResponses": [
+        {
+          "fixture": "short-03-t2",
+          "activeActionBefore": "gesture:comfort",
+          "inputAtMs": 44043.79999999702,
+          "sourcesBefore": 0,
+          "oldActionTerminal": {
+            "type": "action_completed",
+            "id": "character-action-6",
+            "action": "gesture:comfort",
+            "index": 0,
+            "reason": null,
+            "wallMs": 46606.599999997765,
+            "atMs": 39237.10000000048,
+            "executor": "conversation"
+          },
+          "inputToOldActionTerminalMs": 2562.8,
+          "inputToOldActionNoLongerActiveFrameMs": 2574.3,
+          "terminalWasNaturalCompletion": true,
+          "priorTurnActionsStartedDuringInput": [
+            {
+              "type": "action_started",
+              "id": "character-action-7",
+              "action": "gesture:offer_turn",
+              "index": 1,
+              "wallMs": 46629.699999999255,
+              "atMs": 39260.300000000476,
+              "executor": "conversation"
+            }
+          ],
+          "limit": "Body-only input, not simultaneous audible speech interruption; terminal/active-slot timings do not prove all bones physically stopped."
+        },
+        {
+          "fixture": "short-03-t4",
+          "activeActionBefore": "gesture:think",
+          "inputAtMs": 127817.39999999851,
+          "sourcesBefore": 0,
+          "oldActionTerminal": {
+            "type": "action_completed",
+            "id": "character-action-24",
+            "action": "gesture:think",
+            "index": 1,
+            "reason": null,
+            "wallMs": 129448.5,
+            "atMs": 121705.99999999888,
+            "executor": "conversation"
+          },
+          "inputToOldActionTerminalMs": 1631.1,
+          "inputToOldActionNoLongerActiveFrameMs": 1643.9,
+          "terminalWasNaturalCompletion": true,
+          "priorTurnActionsStartedDuringInput": [
+            {
+              "type": "action_started",
+              "id": "character-action-25",
+              "action": "gesture:micro_ack",
+              "index": 0,
+              "wallMs": 129477.09999999776,
+              "atMs": 121735.99999999888,
+              "executor": "conversation"
+            },
+            {
+              "type": "action_started",
+              "id": "character-action-26",
+              "action": "gesture:clarify",
+              "index": 1,
+              "wallMs": 131463.79999999702,
+              "atMs": 123722.79999999877,
+              "executor": "conversation"
+            }
+          ],
+          "limit": "Body-only input, not simultaneous audible speech interruption; terminal/active-slot timings do not prove all bones physically stopped."
+        }
+      ]
+    },
+    {
+      "case": "short-08",
+      "attempt": "full_five_input_case",
+      "inputFixtures": 5,
+      "systemTurns": 5,
+      "voiceResponseAttempts": 5,
+      "responsesWithVoice": 5,
+      "latencyMs": {
+        "lastSpeechToVoiceMs": {
+          "n": 5,
+          "median": 2757.75,
+          "mean": 2716.578,
+          "min": 2448.675,
+          "max": 2976.708
+        },
+        "requestToVoiceMs": {
+          "n": 5,
+          "median": 945.825,
+          "mean": 959.105,
+          "min": 714.542,
+          "max": 1285.208
+        },
+        "commandLeadMs": {
+          "n": 5,
+          "median": -675.9,
+          "mean": -890.275,
+          "min": -1411.75,
+          "max": -437.675
+        },
+        "bodyStartLeadMs": {
+          "n": 5,
+          "median": -712.0,
+          "mean": -921.975,
+          "min": -1444.35,
+          "max": -464.175
+        },
+        "visibleBodyLeadMs": {
+          "n": 5,
+          "median": -995.3,
+          "mean": -1132.655,
+          "min": -1687.75,
+          "max": -611.792
+        },
+        "visibleFaceLeadMs": {
+          "n": 4,
+          "median": -1061.529,
+          "mean": -1056.425,
+          "min": -1524.35,
+          "max": -578.292
+        }
+      },
+      "actionRequests": 20,
+      "bodyEventCounts": {
+        "action_queued": 31,
+        "action_expired": 10,
+        "body_handover": 17,
+        "action_admitted": 17,
+        "action_started": 17,
+        "action_completed": 14,
+        "action_cancelled": 7
+      },
+      "cancellationReasons": {
+        "confirmed_voice_barge_in": 6,
+        "dependency_expired": 1
+      },
+      "actionsRetained": [],
+      "continuationCount": 10,
+      "continuationDecisionsReceived": 8,
+      "continuationLatencyMs": {
+        "feedbackReceivedToRequest": {
+          "n": 10,
+          "median": 45.8,
+          "mean": 54.52,
+          "min": 30.5,
+          "max": 121.9
+        },
+        "requestToBodyDecision": {
+          "n": 8,
+          "median": 1988.2,
+          "mean": 2153.35,
+          "min": 1601.7,
+          "max": 3197.0
+        },
+        "feedbackReceivedToBodyDecision": {
+          "n": 8,
+          "median": 2042.35,
+          "mean": 2201.2,
+          "min": 1661.3,
+          "max": 3240.9
+        }
+      },
+      "allRequestsHadNoFutureReply": true,
+      "historySettled": 4,
+      "revokedAndHistorySettled": 0,
+      "browserErrors": [],
+      "observationErrors": [],
+      "renderPerformance": {
+        "frames": 7788,
+        "elapsedMs": 104389.4,
+        "maxFrameMs": 203.40000000000873,
+        "over50ms": 9,
+        "hiddenFrames": 0,
+        "excludesPreTestLoading": true
+      },
+      "usage": {
+        "channels": {
+          "listener": 5,
+          "background": 29,
+          "action": 20,
+          "voice": 5
+        },
+        "states": {
+          "reported": 59,
+          "unused": 1
+        },
+        "reportedTokens": 183389,
+        "unknown": [],
+        "frozenChannels": {},
+        "pcmSeconds": 33.005
+      },
+      "interruptions": [
+        {
+          "activeActionBefore": "gesture:delighted",
+          "localSourceClearMs": 0.9,
+          "activeActionPauseMs": 9.1,
+          "formalRevocationMs": 4634.2,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "audioOutput": {
+            "clock": "AudioContext seconds",
+            "physicalSpeakerMeasured": false,
+            "silenceThresholdPeak": 1e-07,
+            "sustainedSilenceRequiredMs": 80,
+            "firstFullSilentBlockMs": 8.0,
+            "digitalStopIntervalMs": [
+              0,
+              8.0
+            ],
+            "audibleOutputWithin50msBeforeInput": true,
+            "audioBlockDurationMs": {
+              "n": 100,
+              "median": 10.667,
+              "mean": 10.667,
+              "min": 10.667,
+              "max": 10.667
+            },
+            "firstFullSilentBlockContextSeconds": 53.32,
+            "sustainedSilenceObservedMs": 85.333,
+            "inputToFirstFullSilentBlockMs": 8.0,
+            "status": "measured_sustained_digital_silence"
+          }
+        }
+      ],
+      "bodyOnlyInputResponses": [
+        {
+          "fixture": "short-08-t2",
+          "activeActionBefore": "gesture:listening_pause",
+          "inputAtMs": 45785.39999999851,
+          "sourcesBefore": 0,
+          "oldActionTerminal": {
+            "type": "action_completed",
+            "id": "character-action-7",
+            "action": "gesture:listening_pause",
+            "index": 0,
+            "reason": null,
+            "wallMs": 47977.599999997765,
+            "atMs": 40172.700000000434,
+            "executor": "conversation"
+          },
+          "inputToOldActionTerminalMs": 2192.2,
+          "inputToOldActionNoLongerActiveFrameMs": 2203.4,
+          "terminalWasNaturalCompletion": true,
+          "priorTurnActionsStartedDuringInput": [
+            {
+              "type": "action_started",
+              "id": "character-action-8",
+              "action": "gesture:invite_continue",
+              "index": 0,
+              "wallMs": 48003.800000000745,
+              "atMs": 40199.30000000044,
+              "executor": "conversation"
+            }
+          ],
+          "limit": "Body-only input, not simultaneous audible speech interruption; terminal/active-slot timings do not prove all bones physically stopped."
+        }
+      ]
+    },
+    {
+      "case": "short-03",
+      "attempt": "two_input_interruption_supplement",
+      "inputFixtures": 2,
+      "systemTurns": 2,
+      "voiceResponseAttempts": 2,
+      "responsesWithVoice": 2,
+      "latencyMs": {
+        "lastSpeechToVoiceMs": {
+          "n": 2,
+          "median": 2395.158,
+          "mean": 2395.158,
+          "min": 2284.875,
+          "max": 2505.442
+        },
+        "requestToVoiceMs": {
+          "n": 2,
+          "median": 807.833,
+          "mean": 807.833,
+          "min": 746.975,
+          "max": 868.692
+        },
+        "commandLeadMs": {
+          "n": 2,
+          "median": -2050.317,
+          "mean": -2050.317,
+          "min": -2118.225,
+          "max": -1982.408
+        },
+        "bodyStartLeadMs": {
+          "n": 2,
+          "median": -2086.517,
+          "mean": -2086.517,
+          "min": -2148.025,
+          "max": -2025.008
+        },
+        "visibleBodyLeadMs": {
+          "n": 2,
+          "median": -2239.817,
+          "mean": -2239.817,
+          "min": -2394.625,
+          "max": -2085.008
+        },
+        "visibleFaceLeadMs": {
+          "n": 2,
+          "median": -2048.117,
+          "mean": -2048.117,
+          "min": -2114.625,
+          "max": -1981.608
+        }
+      },
+      "actionRequests": 11,
+      "bodyEventCounts": {
+        "action_queued": 21,
+        "action_expired": 7,
+        "body_handover": 13,
+        "action_admitted": 13,
+        "action_started": 13,
+        "action_cancelled": 3,
+        "action_completed": 11
+      },
+      "cancellationReasons": {
+        "confirmed_voice_barge_in": 1,
+        "browser_disconnected": 2
+      },
+      "actionsRetained": [],
+      "continuationCount": 7,
+      "continuationDecisionsReceived": 7,
+      "continuationLatencyMs": {
+        "feedbackReceivedToRequest": {
+          "n": 7,
+          "median": 41.3,
+          "mean": 501.4,
+          "min": 29.6,
+          "max": 1674.9
+        },
+        "requestToBodyDecision": {
+          "n": 7,
+          "median": 1848.8,
+          "mean": 1941.957,
+          "min": 1557.1,
+          "max": 2268.6
+        },
+        "feedbackReceivedToBodyDecision": {
+          "n": 7,
+          "median": 2101.6,
+          "mean": 2443.357,
+          "min": 1590.1,
+          "max": 3797.5
+        }
+      },
+      "allRequestsHadNoFutureReply": true,
+      "historySettled": 1,
+      "revokedAndHistorySettled": 0,
+      "browserErrors": [],
+      "observationErrors": [],
+      "renderPerformance": {
+        "frames": 3480,
+        "elapsedMs": 44904.6,
+        "maxFrameMs": 73.29999999999563,
+        "over50ms": 2,
+        "hiddenFrames": 0,
+        "excludesPreTestLoading": true
+      },
+      "usage": {
+        "channels": {
+          "listener": 3,
+          "background": 11,
+          "action": 11,
+          "voice": 2
+        },
+        "states": {
+          "reported": 27,
+          "unused": 1
+        },
+        "reportedTokens": 91570,
+        "unknown": [],
+        "frozenChannels": {},
+        "pcmSeconds": 15.095
+      },
+      "interruptions": [
+        {
+          "activeActionBefore": "gesture:listen",
+          "localSourceClearMs": 0.6,
+          "activeActionPauseMs": 8.0,
+          "formalRevocationMs": 1499.4,
+          "sampledPoseUnchangedForAtLeast80ms": true,
+          "sampledBonesMovingWithin150msBeforeInput": true,
+          "audioOutput": {
+            "clock": "AudioContext seconds",
+            "physicalSpeakerMeasured": false,
+            "silenceThresholdPeak": 1e-07,
+            "sustainedSilenceRequiredMs": 80,
+            "firstFullSilentBlockMs": 10.667,
+            "digitalStopIntervalMs": [
+              0,
+              10.667
+            ],
+            "audibleOutputWithin50msBeforeInput": true,
+            "audioBlockDurationMs": {
+              "n": 100,
+              "median": 10.667,
+              "mean": 10.667,
+              "min": 10.667,
+              "max": 10.667
+            },
+            "firstFullSilentBlockContextSeconds": 31.392,
+            "sustainedSilenceObservedMs": 85.333,
+            "inputToFirstFullSilentBlockMs": 10.667,
+            "status": "measured_sustained_digital_silence"
+          }
+        }
+      ],
+      "bodyOnlyInputResponses": []
+    }
+  ],
+  "limitations": [
+    "Two distinct conversational scenarios; supplementary test selects only original inputs 1 and 3, not another five-turn rerun.",
+    "Original short-03 interruption probe failed by following a revoked transcription fragment; its failure remains.",
+    "No action_retained event was emitted in these free model outputs, so same-source replace-versus-active branch still relies on prior controlled regression.",
+    "Digital playback and seven sampled bones only; not physical acoustic latency or complete cloth/hair freeze.",
+    "Current body-only input interruption and voice-anchored action expiry remain unresolved."
+  ]
+}

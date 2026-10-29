@@ -64,4 +64,8 @@ def main():
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, default=OUT)
+    OUT = parser.parse_args().output.resolve()
     main()
