@@ -18,6 +18,8 @@ def summarize(folder):
         return result
     client = live.read(max(files, key=lambda p: p.stat().st_mtime_ns))
     events = client["events"]
+    result["modelToolRejections"] = dict(Counter(e.get("reason") for e in events
+        if e["type"] == "character_command_rejected"))
     requests = {e["requestId"]: e for e in events if e["type"] == "character_semantic_request"}
     decisions = []
     for event in events:
