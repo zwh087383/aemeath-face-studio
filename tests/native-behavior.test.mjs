@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {motionExclusionFor} from '../preview/core/character-motion-policy.js';
 import assert from 'node:assert/strict';
 import * as THREE from '../preview/node_modules/three/build/three.module.js';
 import {NativeBehaviorPlayer,NativePoseBridge,NativePoseStop,nativePoseVelocity} from '../preview/core/native-behavior.js';
@@ -61,8 +62,9 @@ test('numbered loop phases stay before End and retain their explicit variant',()
   const group={kind:'native-body-family',sourceFamily:'A/Thinking',memberIds:clips.map(c=>c.id),sources:clips.map((c,i)=>({id:c.id,sourceRef:c.sourceAsset,phase:phases[i]}))};
   const plan=buildNativeBehaviorPlan(group,{clips});assert.deepEqual(plan.map(p=>p.sourcePhase),['start','loop1','loop2','end']);assert.deepEqual(plan.map(p=>p.phase),['start','loop','loop','end']);
 });
-test('current private catalog yields all319 clips in149 plans with no End before any Loop',{skip:!fs.existsSync(new URL('../outputs/action-preparation-20261023/review-queue.json',import.meta.url))},()=>{
+test('current private catalog preserves all source records while only reviewed groups become plans',{skip:!fs.existsSync(new URL('../outputs/action-preparation-20261023/review-queue.json',import.meta.url))},()=>{
   const queue=JSON.parse(fs.readFileSync(new URL('../outputs/action-preparation-20261023/review-queue.json',import.meta.url))),manifest=JSON.parse(fs.readFileSync(new URL('../outputs/native-complete-20261022/manifest.json',import.meta.url))),groups=queue.groups.filter(g=>g.kind==='native-body-family');let count=0;
-  for(const group of groups){const plan=buildNativeBehaviorPlan(group,manifest);count+=plan.length;const end=plan.findIndex(p=>p.phase==='end');assert.ok(end<0||plan.slice(end).every(p=>p.phase==='end'));assert.deepEqual([...plan.map(p=>p.id)].sort(),[...group.memberIds].sort());}
-  assert.equal(groups.length,149);assert.equal(count,319);
+  let excluded=0,archivedClips=0;
+  for(const group of groups){if(motionExclusionFor(group)){excluded++;archivedClips+=group.memberIds.length;assert.throws(()=>buildNativeBehaviorPlan(group,manifest),/User-excluded motion/);continue;}const plan=buildNativeBehaviorPlan(group,manifest);count+=plan.length;const end=plan.findIndex(p=>p.phase==='end');assert.ok(end<0||plan.slice(end).every(p=>p.phase==='end'));assert.deepEqual([...plan.map(p=>p.id)].sort(),[...group.memberIds].sort());}
+  assert.equal(groups.length,149);assert.equal(excluded,20);assert.equal(archivedClips,30);assert.equal(count,289);assert.equal(count+archivedClips,319);
 });

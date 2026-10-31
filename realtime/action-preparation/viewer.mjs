@@ -1,3 +1,4 @@
+import {reviewedNativeGroups} from '/preview/core/native-motion-review.js';
 const $ = id => document.getElementById(id);
 const names = { 'native-body': '原生身体', 'native-ribbon': '原生衣发', 'native-look': '原生注视', 'native-prop-animation': '道具动画',
   'expression': '表情（原生与原创）', 'default-face': '默认脸资料', 'gesture': '已有原创手势', 'activity': '已有全身活动',
@@ -45,14 +46,14 @@ function stats() {
 function filter(reset = true) {
   const search = $('search').value.trim().toLowerCase(), kind = $('kind').value, status = $('status-filter').value;
   filtered = catalog.items.filter(row => (!kind || row.kind === kind) && (!status || row.preparationStatus === status)
-    && (!search || [row.name, row.id, row.sourceRef, row.usage, row.blockers].map(printable).join(' ').toLowerCase().includes(search)));
+    && (!search || [row.displayName ?? row.name, row.id, row.sourceRef, row.usage, row.blockers].map(printable).join(' ').toLowerCase().includes(search)));
   if (reset) page = 0;
   page = Math.max(0, Math.min(page, Math.ceil(filtered.length / pageSize) - 1));
   $('list-status').textContent = `${filtered.length} 条 · 同一动作的不同阶段和资源类型分别登记`;
   $('records').replaceChildren(...filtered.slice(page * pageSize, (page + 1) * pageSize).map(row => {
     const button = node('button', undefined, 'record'); button.type = 'button'; button.setAttribute('aria-pressed', String(selected?.id === row.id));
     const origin = row.sourceCatalog === 'authored' ? '原创' : '原生';
-    button.append(node('b', row.name), node('small', `${origin} / ${label(row.kind)} / ${stateLabel(row.preparationStatus)}`));
+    button.append(node('b', row.displayName ?? row.name), node('small', `${origin} / ${label(row.kind)} / ${stateLabel(row.preparationStatus)}`));
     button.onclick = () => select(row.id); return button;
   }));
   $('page').textContent = `${filtered.length ? page + 1 : 0} / ${Math.ceil(filtered.length / pageSize)}`;
@@ -69,7 +70,7 @@ function select(id) {
   selected = catalog.items.find(row => row.id === id); if (!selected) return;
   const row = selected, article = $('detail'), usage = row.usage;
   const origin = row.sourceCatalog === 'authored' ? '现有原创控制器' : '原生资源';
-  article.replaceChildren(node('p', `${origin} / ${label(row.kind)} / ${row.category ?? '当前资源'}`, 'eyebrow'), node('h2', row.name));
+  article.replaceChildren(node('p', `${origin} / ${label(row.kind)} / ${row.category ?? '当前资源'}`, 'eyebrow'), node('h2', row.displayName ?? row.name));
   article.append(node('span', stateLabel(row.preparationStatus), 'badge'), node('span', '自动调用关闭', 'badge'));
   article.append(node('h3', '想表达什么，为什么考虑它'), node('p', printable(usage.purpose)),
     fieldList([['触发依据', usage.trigger], ['开始前', usage.preconditions], ['不适合', usage.prohibited], ['怎样进入', usage.entry], ['怎样退出', usage.exit], ['中途取消', usage.cancel]]));
@@ -166,6 +167,10 @@ async function preview(id) {
 try {
   const response = await fetch('/action-preparation-data/catalog.json'); if (!response.ok) throw Error(`准备目录未生成（HTTP ${response.status}）`);
   catalog = await response.json(); if (catalog.schema !== 'aemeath-preparation/v1' || !Array.isArray(catalog.items)) throw Error('不支持的资料格式');
+  const items = reviewedNativeGroups(catalog.items);
+  const tally = field => items.reduce((counts, row) => { const key = row[field]; counts[key] = (counts[key] ?? 0) + 1; return counts; }, {});
+  catalog = { ...catalog, items, families: reviewedNativeGroups(catalog.families ?? []),
+    summary: { ...catalog.summary, records: items.length, byKind: tally('kind'), byStatus: tally('preparationStatus') } };
   for (const kind of Object.keys(catalog.summary.byKind).sort()) { const option = node('option', `${label(kind)} · ${catalog.summary.byKind[kind]}`); option.value = kind; $('kind').append(option); }
   for (const status of Object.keys(catalog.summary.byStatus).sort()) { const option = node('option', stateLabel(status)); option.value = status; $('status-filter').append(option); }
   $('search').oninput = () => filter(); $('kind').onchange = () => filter(); $('status-filter').onchange = () => filter();
