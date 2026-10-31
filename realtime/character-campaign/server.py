@@ -59,6 +59,15 @@ def main():
     from backend import CharacterCenterSession
     from deepseek_planner import DeepSeekConfig,DeepSeekPlannerConnection
     provider=DeepSeekConfig.from_file(a.env_file,proxy="http://127.0.0.1:7890" if a.local_proxy else None)
+    class RecordedPlannerConnection(DeepSeekPlannerConnection):
+        async def add_context(self,messages,*,batch=False):
+            value=await super().add_context(messages,batch=batch)
+            # Retain actual model input, including the tools and refreshed playback
+            # state, locally. Never save headers, credentials or transport settings.
+            await asyncio.to_thread(save_json,out/("planner-request-"+self.id+".json"),
+                {"connectionId":self.id,"preparedAt":time.time(),"request":self.body,
+                 "generationNotGuaranteed":True,"generationEvidence":"duplex events and ledger"})
+            return value
     factory=load("campaign_proxy_transport",ROOT/"realtime/parallel-duplex/app.py").existing_local_proxy_socket if a.local_proxy else None
     fixture_log=[]
     from simclock import IdleClock
@@ -73,7 +82,7 @@ def main():
                     'gapIndex':tick.get('gap'),'logicalSeconds':min(tick.get('logicalElapsedSeconds',0),tick.get('targetSeconds',0)),
                     'nativeAnimationAndSpeech':'real_time','doesNotSpecifyActions':True}
             return payload
-    session_class=partial(CampaignSession,planner_connection_class=partial(DeepSeekPlannerConnection,config=provider))
+    session_class=partial(CampaignSession,planner_connection_class=partial(RecordedPlannerConnection,config=provider))
 
     def initialise(_main,_output,fixture_id):
         if fixture_id!=case["id"]: raise ValueError("wrong_scenario_initial_condition")

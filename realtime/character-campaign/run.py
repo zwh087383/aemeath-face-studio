@@ -46,6 +46,9 @@ def main():
     p.add_argument("--only",default="")
     p.add_argument("--prior-output",type=Path)
     p.add_argument("--multi-listener-limit",type=int)
+    p.add_argument("--browser-driver",type=Path,default=HERE/"run-browser.js")
+    p.add_argument("--browser-session",default="character-campaign")
+    p.add_argument("--frozen-source",type=Path)
     a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
     from manifest import write,validate
     digest=write(out/"manifest.json");data=read(out/"manifest.json");validate(data)
@@ -66,7 +69,8 @@ def main():
     if not cli: raise RuntimeError("playwright_cli_unavailable")
     def browser(*args,timeout=100):
         # cmd shim contains no user text or secrets; paths are separately quoted by subprocess.
-        return subprocess.run([cli,"-s=character-campaign",*args],cwd=ROOT,capture_output=True,text=True,encoding="utf-8",errors="replace",timeout=timeout)
+        return subprocess.run([cli,"-s="+a.browser_session,*args],cwd=ROOT,capture_output=True,text=True,encoding="utf-8",errors="replace",timeout=timeout,
+            creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
     url=f"http://127.0.0.1:{a.port}"
     try: http(url+"/api/duplex/status")
     except Exception: pass
@@ -74,6 +78,14 @@ def main():
     pending=[s for s in data["scenarios"] if s["id"] not in state["cases"] and (not a.only or s["id"] in a.only.split(','))]
     state.update(status="running",resumedAt=time.time())
     for case_spec in pending:
+        if (out/"STOP").exists():
+            state['stopped']='explicit_stop_file';save(path,state);break
+        if a.frozen_source:
+            hashes=read(a.frozen_source,{})
+            if not hashes:raise RuntimeError('missing_frozen_source_manifest')
+            changed=[name for name,digest in hashes.items() if not (ROOT/name).is_file() or hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=digest]
+            if changed:
+                state.update(stopped='frozen_source_changed',changedSources=changed);save(path,state);break
         case=effective_case(case_spec,policy["multiListenerLimit"])
         charged={key:0 for key in data['totals']['limits']};pcm_charged=0
         for evidence_root in (out,a.prior_output):
@@ -113,12 +125,15 @@ def main():
             nav=browser("open",url+"/character-center/?campaign="+identity,"--config="+str(HERE/"browser-config.json"))
             (caseout/"browser-navigation.txt").write_text(nav.stdout+nav.stderr,encoding="utf-8")
             if nav.returncode: raise RuntimeError("browser_navigation_failed")
-            run=browser("run-code","--filename="+str(HERE/"run-browser.js"))
+            shutil.copy2(a.browser_driver,caseout/"run-browser.executed.js")
+            save(caseout/"driver-source.json",{"sha256":hashlib.sha256(a.browser_driver.read_bytes()).hexdigest(),"headlessConfigSha256":hashlib.sha256((HERE/"browser-config.json").read_bytes()).hexdigest()})
+            run=browser("run-code","--filename="+str(caseout/"run-browser.executed.js"))
             (caseout/"browser-start.txt").write_text(run.stdout+run.stderr,encoding="utf-8")
             if run.returncode or "### Error" in run.stdout: raise RuntimeError("browser_runner_start_failed")
             deadline=time.monotonic()+sum(case["gapsSeconds"])+130*len(case["turns"])+180
             last_phase=None
             while time.monotonic()<deadline:
+                if (out/"STOP").exists(): raise RuntimeError('explicit_stop_file')
                 progress=read(caseout/"progress.json",{})
                 if progress.get("phase")!=last_phase:
                     last_phase=progress.get("phase");print(json.dumps({"case":identity,"phase":last_phase},ensure_ascii=False),flush=True)
@@ -146,6 +161,8 @@ def main():
                 if not any(r.get("state") in {"reserved","active"} for r in ledger.get("responses",[])): break
                 time.sleep(1)
             try: save(caseout/"final-server-status.json",http(url+"/api/duplex/status"))
+            except Exception: pass
+            try: browser("close",timeout=30)
             except Exception: pass
             if process.poll() is None:
                 # Windows venv launchers may own a second Python process. Stop

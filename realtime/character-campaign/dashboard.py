@@ -26,12 +26,12 @@ def main():
         return web.json_response(value,headers={"Cache-Control":"no-store"})
     async def final_audit(request):
         check(request)
-        path = HERE / "final-summary.json"
+        path = output / "final-summary.json"
         if not path.is_file(): raise web.HTTPNotFound()
         return web.FileResponse(path, headers={"Cache-Control": "no-store"})
     async def report(request):
         check(request)
-        path = HERE / "RESULTS.md"
+        path = output / "RESULTS.md"
         if not path.is_file(): raise web.HTTPNotFound()
         return web.Response(text=await asyncio.to_thread(path.read_text, encoding="utf-8"), content_type="text/plain", charset="utf-8")
     async def evidence(request):

@@ -21,14 +21,11 @@ function renderRows(){if(!data)return;$('rows').replaceChildren(...data.cases.fi
 async function refresh(){try{data=await(await fetch('/api/summary',{cache:'no-store'})).json();$('bar').style.width=data.finished+'%';$('cards').replaceChildren(...[[data.finished+'/100','场景执行完'],[data.voicedFixtures+'/180','有声音回答的输入轮数'],[data.activityMatched+'/20','后台业务符合预期 · 非完整动作'],[fmt(data.firstVoice.median),'说完到首声 · 中位'],[data.usage.unknown,'用量未知，保留预留']].map(([a,b])=>{const d=document.createElement('div');d.className='card';const n=document.createElement('b'),s=document.createElement('span');n.textContent=a;s.textContent=b;d.append(n,s);return d}));$('current').textContent=data.current?'当前：'+data.current+'。结果每15秒更新。':'当前没有正在运行的场景。';renderRows();if(!selected){const wanted=new URLSearchParams(location.search).get('case');const c=data.cases.find(c=>c.id===wanted&&c.video)||data.cases.find(c=>c.video);if(c)choose(c)}}catch(e){$('current').textContent='读取结果失败：'+e.message}}
 async function finalAudit(){
 try{const response=await fetch('/api/final-audit',{cache:'no-store'});if(!response.ok)return;const a=await response.json(),p=$('audit');p.hidden=false;
-const title=document.createElement('strong');title.textContent='本批已结束：100 场尝试完，96 场达到计划问答数量；不是 100 场全部通过。';
+const title=document.createElement('strong');title.textContent='本批已归档：以实际覆盖、失败记录和原速录像为准。';
 const paragraphs=[
-`180 轮计划中，实际发送 ${a.submittedInputs} 轮，${a.voicedInputs} 轮有声。短间隔 10/10 场完成五轮，长间隔 7/10 场完成五轮。`,
-`正常渲染组：说完到首声中位 ${fmt(a.latencyMs['ordinaryRender:lastSpeechToVoiceMs'].median)}，P95 ${fmt(a.latencyMs['ordinaryRender:lastSpeechToVoiceMs'].p95)}；身体可见起势中位比声音晚 ${fmt(a.lateRelativeToVoiceMs.visibleBodyLeadMs.median)}。只有 102/169 次在声音前后半秒内。`,
-'后台业务：正常完成 9/10，打断后恢复完成 4/5，预期故障 5/5。模型主要选择视线和小动作，未选择坐下、取书、阅读的完整过程，身体与业务配合未通过。',
-'5 次真正出声中的语音插话都先清掉音频播放源，但身体暂停到确认取消约 3.88～6.22 秒，仍有僵住的问题。2 个声音已开始的采样出现缓冲耗尽，不能宣称全程无停顿。',
-`全证据合计：${Object.values(a.usage.channels).reduce((x,y)=>x+y,0)} 次响应预留/调用，已报告 ${a.usage.reportedTokens.toLocaleString()} tokens；保留 ${a.usage.states.unknown} 条未知用量和 ${a.usage.states.reserved} 条旧未结预留，不按零费用计算。`,
-'这是原 83 项目录的实验。独立扩展的 262 项动作库没有混入本批。下面是原速录像；只观看不会触发云端调用。'];
+`实际发送 ${a.submittedInputs??'—'} 轮，有声 ${a.voicedInputs??'—'} 轮。完整结论见本批报告。`,
+'业务任务完成不等于人物完成了完整活动动作；动作、语音和后台活动分别验收。',
+'仅闲置排期按最多10倍模拟时间推进。语音、口型、动作和模型响应时间保持真实速度。'];
 p.replaceChildren(title,...paragraphs.map(text=>{const el=document.createElement('p');el.textContent=text;return el}));
 }catch(e){console.warn('Final audit unavailable:',e.message)}}
 finalAudit();

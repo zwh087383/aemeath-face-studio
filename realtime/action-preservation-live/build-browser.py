@@ -49,7 +49,7 @@ if args.postvoice_barge:
     assert not args.interrupt_supplement, "postvoice_gate_uses_full_five_input_case"
     old = "    if(!nextBarge){\n     result.phase='idle_gap:'+i;"
     assert driver.count(old) == 1, "postvoice_gap_contract_changed"
-    driver = driver.replace(old, """    if(!nextBarge&&i===0){
+    driver = driver.replace(old, """    if(spec.kind==='short'&&!nextBarge&&i===0){
      try{
       await wait(s=>s.audio.status==='ended'&&s.audio.sourceCount===0&&s.body.active?.status==='playing','body_only_input_window',12);
       gap.bodyOnlyTarget=true;

@@ -97,7 +97,11 @@ function updateUI(){
   $('phase').textContent=replaying?'真实记录回放 · 不调用云端':component?`本地对照 · ${comparison?'上一版：整张游戏表情常驻':'本次：持续表情与嘴形分离'}`:a.status==='playing'?'正在回复 · 保持双工倾听':client.ready?'在线倾听 · 表情持续运行':'已断开 · 保留最后状态';
   $('budget').textContent=`${b.turns??0}/${b.turnLimit??0} 轮 · ${b.responses??0}/${b.responseLimit??0} 请求 · 未知用量 ${b.unknown??0}（保留最大预留） · PCM ${Number(b.pcmSeconds??0).toFixed(1)}/${b.pcmLimitSeconds??0} 秒`;
   $('connect').disabled=!ready||client.ready||!service.cloudEnabled||b.blocked||!!replayPage;
+  $('connect').textContent=service.cloudEnabled?'连接已授权批次':'本地预览：实时对话未启用';
+  $('connection-mode').textContent=!service.cloudEnabled?'当前服务只提供本地人物预览和历史录像，因此不能发送语音或文字。可使用左侧表情、挥手与下方原速回放。':client.ready?'已连接本批真实模型；输入与动作记录会保存在当前批次。':'本批允许真实对话，先连接后再发送输入。';
+  $('disconnect').disabled=!client.ready;
   for(const id of ['feed','send','mic','activity-start','activity-revoke'])$(id).disabled=!client.ready||client.blocked||feeding||replaying;
+  for(const id of ['connect','feed','send','mic','activity-start'])$(id).title=!service.cloudEnabled?'此服务为本地预览模式，未开启云端对话。':!client.ready?'请先连接当前授权批次。':'';
   $('sample').disabled=!component;$('compare').disabled=!component;for(const button of $('attitudes').children)button.disabled=!component;
   $('local-wave').disabled=!component;
   $('caption').textContent=t?.revoked?'好，我先听你说。':t?.transcript??'';$('answer').textContent=t?.transcript??'';
