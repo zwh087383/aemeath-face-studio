@@ -8486,219 +8486,6 @@
       "name": "7436ad5898f0b9d7"
     },
     {
-      "id": "native:9387f2034f744008",
-      "groupId": "native:9387f2034f744008",
-      "label": "Complain04_Loop（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain04",
-      "source": {
-        "kind": "native",
-        "groupId": "native:9387f2034f744008",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain04",
-        "clipSha256": {
-          "body-complain04-start-67014e5444": "223b384a6eb398140776e316b3e9218b298548a7d27dfde019870650a3f83ce3",
-          "body-complain04-loop-827f77d3e6": "b0c87d342f50878e0b512aeaf3483f4b906886e8b1d3bc25e0a5d4d0e54c0cb7",
-          "body-complain04-end-9c05f67b43": "f83cc277fb2efcd06c023ecfe11d7bc10add592496a7ac2362cdbe7030c9beee"
-        }
-      },
-      "phases": [
-        "body-complain04-start-67014e5444",
-        "body-complain04-loop-827f77d3e6",
-        "body-complain04-end-9c05f67b43"
-      ],
-      "phaseData": [
-        {
-          "id": "body-complain04-start-67014e5444",
-          "phase": "start",
-          "sourcePhase": "start",
-          "duration": 2.5333333,
-          "name": "Complain04_Start",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain04_Start.uasset",
-          "sha256": "223b384a6eb398140776e316b3e9218b298548a7d27dfde019870650a3f83ce3",
-          "jsonSha256": "19d329c3c50e878899bb97baf02c70ae5ad898dac6d657ff8a460e14d05be81c",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.9796,
-              "footDifference": 0.00356,
-              "headHeight": 1.63269,
-              "handHeadDistance": 0.50825
-            },
-            "end": {
-              "time": 2.53333,
-              "pelvisHeight": 0.97309,
-              "footDifference": 0.00829,
-              "headHeight": 1.63751,
-              "handHeadDistance": 0.33345
-            },
-            "pelvisHeightRange": [
-              0.9692,
-              0.97996
-            ],
-            "maximumFootDifference": 0.03479,
-            "minimumHandHeadDistance": 0.28338
-          },
-          "companion": null
-        },
-        {
-          "id": "body-complain04-loop-827f77d3e6",
-          "phase": "loop",
-          "sourcePhase": "loop",
-          "duration": 2.6666667,
-          "name": "Complain04_Loop",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain04_Loop.uasset",
-          "sha256": "b0c87d342f50878e0b512aeaf3483f4b906886e8b1d3bc25e0a5d4d0e54c0cb7",
-          "jsonSha256": "9ae95140f31ea10100109af85da78a4187e765c60017fff9dfaa11be58f703b2",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.97309,
-              "footDifference": 0.00829,
-              "headHeight": 1.63752,
-              "handHeadDistance": 0.33344
-            },
-            "end": {
-              "time": 2.66667,
-              "pelvisHeight": 0.97309,
-              "footDifference": 0.0083,
-              "headHeight": 1.63751,
-              "handHeadDistance": 0.33344
-            },
-            "pelvisHeightRange": [
-              0.97117,
-              0.97309
-            ],
-            "maximumFootDifference": 0.0083,
-            "minimumHandHeadDistance": 0.32776
-          },
-          "companion": null
-        },
-        {
-          "id": "body-complain04-end-9c05f67b43",
-          "phase": "end",
-          "sourcePhase": "end",
-          "duration": 3.1,
-          "name": "Complain04_End",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain04_End.uasset",
-          "sha256": "f83cc277fb2efcd06c023ecfe11d7bc10add592496a7ac2362cdbe7030c9beee",
-          "jsonSha256": "bd9634099313d2f17cc2cd559a2b682deb32a2e261861ecf300b60c61cd5fd53",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.97309,
-              "footDifference": 0.0083,
-              "headHeight": 1.63751,
-              "handHeadDistance": 0.33344
-            },
-            "end": {
-              "time": 3.1,
-              "pelvisHeight": 0.97959,
-              "footDifference": 0.00357,
-              "headHeight": 1.63269,
-              "handHeadDistance": 0.50823
-            },
-            "pelvisHeightRange": [
-              0.97199,
-              0.97967
-            ],
-            "maximumFootDifference": 0.01211,
-            "minimumHandHeadDistance": 0.31715
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 8.7,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [],
-        "nativeSceneContract": "standing",
-        "capabilities": [],
-        "nearFaceOwnership": "source-exclusive"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-end",
-        "cancel": "phase-boundary-end",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "whole-source-cycles",
-        "sourceSeconds": 8.299999999999999,
-        "minimumSeconds": 8.7,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 2.5333333,
-        "endSeconds": 3.1,
-        "loopSeconds": 2.6666667,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        },
-        "phase:body-complain04-loop-827f77d3e6": {
-          "meaning": "同一来源的循环阶段",
-          "phaseIds": [
-            "body-complain04-loop-827f77d3e6"
-          ]
-        }
-      },
-      "performanceContract": {
-        "total_seconds": true,
-        "variant_set": [
-          "exact",
-          "phase:body-complain04-loop-827f77d3e6"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "9387f2034f744008"
-    },
-    {
       "id": "native:b301d59356a01ccb",
       "groupId": "native:b301d59356a01ccb",
       "label": "抱怨姿态（原生）",
@@ -8914,7 +8701,7 @@
     {
       "id": "native:c2e6400f4b7a11bc",
       "groupId": "native:c2e6400f4b7a11bc",
-      "label": "Shy02_Loop（原生）",
+      "label": "身体前倾说话（原生）",
       "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Shy02",
       "source": {
         "kind": "native",
@@ -10880,432 +10667,6 @@
       "name": "e8dcf6069e0a8190"
     },
     {
-      "id": "native:9c4593a540925363",
-      "groupId": "native:9c4593a540925363",
-      "label": "Wuzui01_Loop（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui01",
-      "source": {
-        "kind": "native",
-        "groupId": "native:9c4593a540925363",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui01",
-        "clipSha256": {
-          "body-wuzui01-start-7ea76d5513": "ea786719ec631c3e8b18d6ec4ab13b5b1689b77369e185a127291122c4b42509",
-          "body-wuzui01-loop-8a924ef196": "448bd2f94bf38de3b5fd4c93d6518fbe211b8f5a03034d530d9504de432a7689",
-          "body-wuzui01-end-8b7eb54cbc": "097e585629888e04dbe0ca0aec0981a9f968615d5b02581de4763d83daa6a5cb"
-        }
-      },
-      "phases": [
-        "body-wuzui01-start-7ea76d5513",
-        "body-wuzui01-loop-8a924ef196",
-        "body-wuzui01-end-8b7eb54cbc"
-      ],
-      "phaseData": [
-        {
-          "id": "body-wuzui01-start-7ea76d5513",
-          "phase": "start",
-          "sourcePhase": "start",
-          "duration": 3.6,
-          "name": "Wuzui01_Start",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui01_Start.uasset",
-          "sha256": "ea786719ec631c3e8b18d6ec4ab13b5b1689b77369e185a127291122c4b42509",
-          "jsonSha256": "4041824180edad641ff4ea9a204a91b3ae114448223f722ffef72b421858bcc3",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00355,
-              "headHeight": 1.64785,
-              "handHeadDistance": 0.72152
-            },
-            "end": {
-              "time": 3.6,
-              "pelvisHeight": 0.98005,
-              "footDifference": 0.03385,
-              "headHeight": 1.64144,
-              "handHeadDistance": 0.2572
-            },
-            "pelvisHeightRange": [
-              0.94573,
-              0.98768
-            ],
-            "maximumFootDifference": 0.0623,
-            "minimumHandHeadDistance": 0.25302
-          },
-          "companion": null
-        },
-        {
-          "id": "body-wuzui01-loop-8a924ef196",
-          "phase": "loop",
-          "sourcePhase": "loop",
-          "duration": 2.6666667,
-          "name": "Wuzui01_Loop",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui01_Loop.uasset",
-          "sha256": "448bd2f94bf38de3b5fd4c93d6518fbe211b8f5a03034d530d9504de432a7689",
-          "jsonSha256": "c12841fb86d6a1360cf940dc16271cd57b15e42d567919d93d906d28c761e63d",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98005,
-              "footDifference": 0.03387,
-              "headHeight": 1.64144,
-              "handHeadDistance": 0.25721
-            },
-            "end": {
-              "time": 2.66667,
-              "pelvisHeight": 0.98005,
-              "footDifference": 0.03385,
-              "headHeight": 1.64145,
-              "handHeadDistance": 0.25721
-            },
-            "pelvisHeightRange": [
-              0.97978,
-              0.98035
-            ],
-            "maximumFootDifference": 0.0339,
-            "minimumHandHeadDistance": 0.2534
-          },
-          "companion": null
-        },
-        {
-          "id": "body-wuzui01-end-8b7eb54cbc",
-          "phase": "end",
-          "sourcePhase": "end",
-          "duration": 5.2,
-          "name": "Wuzui01_End",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui01_End.uasset",
-          "sha256": "097e585629888e04dbe0ca0aec0981a9f968615d5b02581de4763d83daa6a5cb",
-          "jsonSha256": "b54c78cb6f81769a2cb9c68e91130f5d9520a1e9ad7b09df9027998e81a10413",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98006,
-              "footDifference": 0.03384,
-              "headHeight": 1.64145,
-              "handHeadDistance": 0.25721
-            },
-            "end": {
-              "time": 5.2,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00357,
-              "headHeight": 1.64785,
-              "handHeadDistance": 0.7215
-            },
-            "pelvisHeightRange": [
-              0.94116,
-              0.98768
-            ],
-            "maximumFootDifference": 0.06376,
-            "minimumHandHeadDistance": 0.24432
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 11.866666700000001,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [],
-        "nativeSceneContract": "standing",
-        "capabilities": [],
-        "nearFaceOwnership": "source-exclusive"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-end",
-        "cancel": "phase-boundary-end",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "whole-source-cycles",
-        "sourceSeconds": 11.466666700000001,
-        "minimumSeconds": 11.866666700000001,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 3.6,
-        "endSeconds": 5.2,
-        "loopSeconds": 2.6666667,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        },
-        "phase:body-wuzui01-loop-8a924ef196": {
-          "meaning": "同一来源的循环阶段",
-          "phaseIds": [
-            "body-wuzui01-loop-8a924ef196"
-          ]
-        }
-      },
-      "performanceContract": {
-        "total_seconds": true,
-        "variant_set": [
-          "exact",
-          "phase:body-wuzui01-loop-8a924ef196"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "9c4593a540925363"
-    },
-    {
-      "id": "native:f028ae3669e3164b",
-      "groupId": "native:f028ae3669e3164b",
-      "label": "Wuzui02_Loop（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui02",
-      "source": {
-        "kind": "native",
-        "groupId": "native:f028ae3669e3164b",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui02",
-        "clipSha256": {
-          "body-wuzui02-start-ea77396c2f": "34fc30ae5dde2b5d2faf50ed774b1dc130410df660aea97df4f846a8d61af1f8",
-          "body-wuzui02-loop-ac931c9867": "185e363ba537ab68dcb779e7716d0799d971cc17011586576380cd06ec92daae",
-          "body-wuzui02-end-126f9e6a29": "318f37f8d8d8e27fee7f33d46a7e1b6e0ae1a4665a6b8e477704207ee8fd1b65"
-        }
-      },
-      "phases": [
-        "body-wuzui02-start-ea77396c2f",
-        "body-wuzui02-loop-ac931c9867",
-        "body-wuzui02-end-126f9e6a29"
-      ],
-      "phaseData": [
-        {
-          "id": "body-wuzui02-start-ea77396c2f",
-          "phase": "start",
-          "sourcePhase": "start",
-          "duration": 2.9,
-          "name": "Wuzui02_Start",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui02_Start.uasset",
-          "sha256": "34fc30ae5dde2b5d2faf50ed774b1dc130410df660aea97df4f846a8d61af1f8",
-          "jsonSha256": "961597c611e0290c38533ea42ede9a8fc5fdfe6f79e98fb1b15d796f42e73a9b",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00356,
-              "headHeight": 1.64784,
-              "handHeadDistance": 0.72151
-            },
-            "end": {
-              "time": 2.9,
-              "pelvisHeight": 0.97033,
-              "footDifference": 0.03971,
-              "headHeight": 1.6226,
-              "handHeadDistance": 0.26131
-            },
-            "pelvisHeightRange": [
-              0.96909,
-              0.98768
-            ],
-            "maximumFootDifference": 0.04803,
-            "minimumHandHeadDistance": 0.24394
-          },
-          "companion": null
-        },
-        {
-          "id": "body-wuzui02-loop-ac931c9867",
-          "phase": "loop",
-          "sourcePhase": "loop",
-          "duration": 2.6666667,
-          "name": "Wuzui02_Loop",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui02_Loop.uasset",
-          "sha256": "185e363ba537ab68dcb779e7716d0799d971cc17011586576380cd06ec92daae",
-          "jsonSha256": "dfb8f0bbde9b908aca960b367a85a372f6e4c3025173f04edef04d2f43757265",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.97033,
-              "footDifference": 0.0397,
-              "headHeight": 1.6226,
-              "handHeadDistance": 0.26131
-            },
-            "end": {
-              "time": 2.66667,
-              "pelvisHeight": 0.97034,
-              "footDifference": 0.03969,
-              "headHeight": 1.62261,
-              "handHeadDistance": 0.26131
-            },
-            "pelvisHeightRange": [
-              0.96997,
-              0.97034
-            ],
-            "maximumFootDifference": 0.03974,
-            "minimumHandHeadDistance": 0.25831
-          },
-          "companion": null
-        },
-        {
-          "id": "body-wuzui02-end-126f9e6a29",
-          "phase": "end",
-          "sourcePhase": "end",
-          "duration": 4.6,
-          "name": "Wuzui02_End",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui02_End.uasset",
-          "sha256": "318f37f8d8d8e27fee7f33d46a7e1b6e0ae1a4665a6b8e477704207ee8fd1b65",
-          "jsonSha256": "4547aa56b6893638ac8f884718660f22d530265c7bc414b23445fbaa8f6d5670",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.97033,
-              "footDifference": 0.03968,
-              "headHeight": 1.6226,
-              "handHeadDistance": 0.26131
-            },
-            "end": {
-              "time": 4.6,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00354,
-              "headHeight": 1.64784,
-              "handHeadDistance": 0.72153
-            },
-            "pelvisHeightRange": [
-              0.9439,
-              0.98768
-            ],
-            "maximumFootDifference": 0.05747,
-            "minimumHandHeadDistance": 0.25011
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 10.5666667,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [],
-        "nativeSceneContract": "standing",
-        "capabilities": [],
-        "nearFaceOwnership": "source-exclusive"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-end",
-        "cancel": "phase-boundary-end",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "whole-source-cycles",
-        "sourceSeconds": 10.1666667,
-        "minimumSeconds": 10.5666667,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 2.9,
-        "endSeconds": 4.6,
-        "loopSeconds": 2.6666667,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        },
-        "phase:body-wuzui02-loop-ac931c9867": {
-          "meaning": "同一来源的循环阶段",
-          "phaseIds": [
-            "body-wuzui02-loop-ac931c9867"
-          ]
-        }
-      },
-      "performanceContract": {
-        "total_seconds": true,
-        "variant_set": [
-          "exact",
-          "phase:body-wuzui02-loop-ac931c9867"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "f028ae3669e3164b"
-    },
-    {
       "id": "native:a0f0a1e857d9492a",
       "groupId": "native:a0f0a1e857d9492a",
       "label": "Cazui01（原生）",
@@ -11440,7 +10801,7 @@
     {
       "id": "native:371b5ec2ffb45558",
       "groupId": "native:371b5ec2ffb45558",
-      "label": "DZ_Tanqi01_Loop（原生）",
+      "label": "哭泣（原生）",
       "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Tanqi01",
       "source": {
         "kind": "native",
@@ -15070,221 +14431,6 @@
       "name": "18101c2d7c1499f1"
     },
     {
-      "id": "native:d387689ca7480266",
-      "groupId": "native:d387689ca7480266",
-      "label": "DZ_Sit_Baoyuan01_Loop（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Sit_Baoyuan01",
-      "source": {
-        "kind": "native",
-        "groupId": "native:d387689ca7480266",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Sit_Baoyuan01",
-        "clipSha256": {
-          "body-dz-sit-baoyuan01-start-974e682fc2": "bf26fe54dd83754952103c562180e96745145e9601b7b203c03762487c6dcf8c",
-          "body-dz-sit-baoyuan01-loop-ded61639ea": "38e54464402e606b880740a1db3de1571822c7289425205b8016a3a91d9208b4",
-          "body-dz-sit-baoyuan01-end-10041149e2": "1e04084c39efc6e939f666783056b459e97c8ba49f50cd387488518cb3409fce"
-        }
-      },
-      "phases": [
-        "body-dz-sit-baoyuan01-start-974e682fc2",
-        "body-dz-sit-baoyuan01-loop-ded61639ea",
-        "body-dz-sit-baoyuan01-end-10041149e2"
-      ],
-      "phaseData": [
-        {
-          "id": "body-dz-sit-baoyuan01-start-974e682fc2",
-          "phase": "start",
-          "sourcePhase": "start",
-          "duration": 15.833333,
-          "name": "DZ_Sit_Baoyuan01_Start",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Sit_Baoyuan01_Start.uasset",
-          "sha256": "bf26fe54dd83754952103c562180e96745145e9601b7b203c03762487c6dcf8c",
-          "jsonSha256": "1e41a0df6f7b78b8e15803b488fba0e80092dcb16a4ce29c5974b007da0df000",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00356,
-              "headHeight": 1.64785,
-              "handHeadDistance": 0.72152
-            },
-            "end": {
-              "time": 15.83333,
-              "pelvisHeight": 0.58736,
-              "footDifference": 0.00559,
-              "headHeight": 1.23572,
-              "handHeadDistance": 0.27702
-            },
-            "pelvisHeightRange": [
-              0.46266,
-              0.98768
-            ],
-            "maximumFootDifference": 0.21528,
-            "minimumHandHeadDistance": 0.21873
-          },
-          "companion": null
-        },
-        {
-          "id": "body-dz-sit-baoyuan01-loop-ded61639ea",
-          "phase": "loop",
-          "sourcePhase": "loop",
-          "duration": 2.6666667,
-          "name": "DZ_Sit_Baoyuan01_Loop",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Sit_Baoyuan01_Loop.uasset",
-          "sha256": "38e54464402e606b880740a1db3de1571822c7289425205b8016a3a91d9208b4",
-          "jsonSha256": "6457cfce28c8c0599bf1b0215421ec4b7efd57797539745566471a6f6f6e9e07",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.58735,
-              "footDifference": 0.00559,
-              "headHeight": 1.23575,
-              "handHeadDistance": 0.27701
-            },
-            "end": {
-              "time": 2.66667,
-              "pelvisHeight": 0.58733,
-              "footDifference": 0.00559,
-              "headHeight": 1.23573,
-              "handHeadDistance": 0.27701
-            },
-            "pelvisHeightRange": [
-              0.58733,
-              0.58737
-            ],
-            "maximumFootDifference": 0.00567,
-            "minimumHandHeadDistance": 0.27582
-          },
-          "companion": null
-        },
-        {
-          "id": "body-dz-sit-baoyuan01-end-10041149e2",
-          "phase": "end",
-          "sourcePhase": "end",
-          "duration": 5.0333333,
-          "name": "DZ_Sit_Baoyuan01_End",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Sit_Baoyuan01_End.uasset",
-          "sha256": "1e04084c39efc6e939f666783056b459e97c8ba49f50cd387488518cb3409fce",
-          "jsonSha256": "0007efde4778085380f123dba25daa1caf35ab109266d1b45722c1389334e8f9",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.58734,
-              "footDifference": 0.00554,
-              "headHeight": 1.23573,
-              "handHeadDistance": 0.27701
-            },
-            "end": {
-              "time": 5.03333,
-              "pelvisHeight": 0.585,
-              "footDifference": 0.00659,
-              "headHeight": 1.25058,
-              "handHeadDistance": 0.57935
-            },
-            "pelvisHeightRange": [
-              0.55033,
-              0.58953
-            ],
-            "maximumFootDifference": 0.01404,
-            "minimumHandHeadDistance": 0.27031
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 23.933332999999998,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [
-          "chair"
-        ],
-        "nativeSceneContract": "sit-transfer",
-        "capabilities": [],
-        "nearFaceOwnership": "source-exclusive"
-      },
-      "effects": {
-        "support": "seated",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-end",
-        "cancel": "phase-boundary-end",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "seated",
-        "contactMode": "sit-transfer",
-        "middleSupport": "seated"
-      },
-      "durationContract": {
-        "mode": "whole-source-cycles",
-        "sourceSeconds": 23.533333,
-        "minimumSeconds": 23.933332999999998,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 15.833333,
-        "endSeconds": 5.0333333,
-        "loopSeconds": 2.6666667,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        },
-        "phase:body-dz-sit-baoyuan01-loop-ded61639ea": {
-          "meaning": "同一来源的循环阶段",
-          "phaseIds": [
-            "body-dz-sit-baoyuan01-loop-ded61639ea"
-          ]
-        }
-      },
-      "performanceContract": {
-        "total_seconds": true,
-        "variant_set": [
-          "exact",
-          "phase:body-dz-sit-baoyuan01-loop-ded61639ea"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "d387689ca7480266"
-    },
-    {
       "id": "native:d1e93a95857c2d8e",
       "groupId": "native:d1e93a95857c2d8e",
       "label": "Sit05_ShakeLegs_Loop（原生）",
@@ -18421,141 +17567,6 @@
       "name": "942a1d1065b1a92a"
     },
     {
-      "id": "native:fdc84d12a3151b50",
-      "groupId": "native:fdc84d12a3151b50",
-      "label": "keboard01_Start（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/keboard01",
-      "source": {
-        "kind": "native",
-        "groupId": "native:fdc84d12a3151b50",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/keboard01",
-        "clipSha256": {
-          "body-keboard01-start-cc75486ba0": "7646f7974ed1fd9ab262a6541aef60341e1c8f5aecc475f09cb4d43473e8bc17"
-        }
-      },
-      "phases": [
-        "body-keboard01-start-cc75486ba0"
-      ],
-      "phaseData": [
-        {
-          "id": "body-keboard01-start-cc75486ba0",
-          "phase": "start",
-          "sourcePhase": "start",
-          "duration": 2.6666667,
-          "name": "keboard01_Start",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/keboard01_Start.uasset",
-          "sha256": "7646f7974ed1fd9ab262a6541aef60341e1c8f5aecc475f09cb4d43473e8bc17",
-          "jsonSha256": "201eb6539802197c5ae784dd10aa44477491b42611acd0dac9c07974c8da8c8b",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.9837,
-              "footDifference": 0.00359,
-              "headHeight": 1.64545,
-              "handHeadDistance": 0.51441
-            },
-            "end": {
-              "time": 2.66667,
-              "pelvisHeight": 0.98404,
-              "footDifference": 0.00288,
-              "headHeight": 1.6458,
-              "handHeadDistance": 0.51442
-            },
-            "pelvisHeightRange": [
-              0.98339,
-              0.98404
-            ],
-            "maximumFootDifference": 0.00359,
-            "minimumHandHeadDistance": 0.46339
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 4.1166667,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [
-          "table",
-          "laptop"
-        ],
-        "nativeSceneContract": "table-contact",
-        "capabilities": [],
-        "nearFaceOwnership": "none"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "return-entry",
-        "cancel": "return-entry",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0.8,
-        "settleSeconds": 0,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "table-contact",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "fixed",
-        "sourceSeconds": 2.6666667,
-        "minimumSeconds": 4.1166667,
-        "entrySeconds": 0.8,
-        "settleSeconds": 0,
-        "startSeconds": 2.6666667,
-        "endSeconds": 0,
-        "loopSeconds": 0,
-        "returnSeconds": 0.65,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        }
-      },
-      "performanceContract": {
-        "total_seconds": false,
-        "variant_set": [
-          "exact"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "fdc84d12a3151b50"
-    },
-    {
       "id": "native:76b3f218509705d3",
       "groupId": "native:76b3f218509705d3",
       "label": "双手靠近自身脸部与胸前后放下；不宣称触碰另一人物。",
@@ -18686,284 +17697,6 @@
       "channel": "body",
       "kind": "native",
       "name": "76b3f218509705d3"
-    },
-    {
-      "id": "native:0821a125b3bc93c6",
-      "groupId": "native:0821a125b3bc93c6",
-      "label": "Stand1_Action01（原生）",
-      "sourceFamily": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action01",
-      "source": {
-        "kind": "native",
-        "groupId": "native:0821a125b3bc93c6",
-        "family": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action01",
-        "clipSha256": {
-          "body-stand1-action01-39d6c0f416": "449553c34a158934ec0f75bd9f85d4176c9a53a92f3416aa97f709172dff6a70"
-        }
-      },
-      "phases": [
-        "body-stand1-action01-39d6c0f416"
-      ],
-      "phaseData": [
-        {
-          "id": "body-stand1-action01-39d6c0f416",
-          "phase": "single",
-          "sourcePhase": "single",
-          "duration": 63.1,
-          "name": "Stand1_Action01",
-          "sourceAsset": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action01.uasset",
-          "sha256": "449553c34a158934ec0f75bd9f85d4176c9a53a92f3416aa97f709172dff6a70",
-          "jsonSha256": "995febbd3228ba91688b3b448bc6ca69e0bee079523f55340c284021519f7ec6",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00357,
-              "headHeight": 1.64784,
-              "handHeadDistance": 0.72145
-            },
-            "end": {
-              "time": 63.1,
-              "pelvisHeight": 0.98767,
-              "footDifference": 0.00356,
-              "headHeight": 1.64784,
-              "handHeadDistance": 0.72147
-            },
-            "pelvisHeightRange": [
-              0.89791,
-              0.99093
-            ],
-            "maximumFootDifference": 0.03383,
-            "minimumHandHeadDistance": 0.17009
-          },
-          "companion": {
-            "id": "rib-rib-stand1-action01-da69d167d3",
-            "sha256": "73dfae2c718f59e66cad057e6bc3c8fda70ba80b61e56f1d41531c1eb41d0901",
-            "jsonSha256": "5c0135ea6ee801db59b01c0f5013a7299c4d37e08ac5e59f8c294918846244e2",
-            "sourceAsset": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/R2T1AimisiMd10011/RibbonAnim/Rib_Stand1_Action01.uasset",
-            "duration": 63.1,
-            "composition": "replace"
-          }
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 63.5,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [],
-        "nativeSceneContract": "standing",
-        "capabilities": [],
-        "nearFaceOwnership": "source-exclusive"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-complete",
-        "cancel": "return-entry",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "fixed",
-        "sourceSeconds": 63.1,
-        "minimumSeconds": 63.5,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 0,
-        "endSeconds": 0,
-        "loopSeconds": 0,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        }
-      },
-      "performanceContract": {
-        "total_seconds": false,
-        "variant_set": [
-          "exact"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "0821a125b3bc93c6"
-    },
-    {
-      "id": "native:7d7d364e5da57ae0",
-      "groupId": "native:7d7d364e5da57ae0",
-      "label": "Stand1_Action02（原生）",
-      "sourceFamily": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action02",
-      "source": {
-        "kind": "native",
-        "groupId": "native:7d7d364e5da57ae0",
-        "family": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action02",
-        "clipSha256": {
-          "body-stand1-action02-68a07af608": "5c516845de3dcf6b1aa8cd2ecc7d0addd9c209169389dcc0cf751092d128bdce"
-        }
-      },
-      "phases": [
-        "body-stand1-action02-68a07af608"
-      ],
-      "phaseData": [
-        {
-          "id": "body-stand1-action02-68a07af608",
-          "phase": "single",
-          "sourcePhase": "single",
-          "duration": 31.666666,
-          "name": "Stand1_Action02",
-          "sourceAsset": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action02.uasset",
-          "sha256": "5c516845de3dcf6b1aa8cd2ecc7d0addd9c209169389dcc0cf751092d128bdce",
-          "jsonSha256": "0c74ce9ffed2b0311e5e65b8facdcce9b93eb53fddcd38ad9f88d5e0da2c5d15",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.9878,
-              "footDifference": 0.0033,
-              "headHeight": 1.64797,
-              "handHeadDistance": 0.72147
-            },
-            "end": {
-              "time": 31.66667,
-              "pelvisHeight": 0.9878,
-              "footDifference": 0.00331,
-              "headHeight": 1.64796,
-              "handHeadDistance": 0.72148
-            },
-            "pelvisHeightRange": [
-              0.96862,
-              0.9878
-            ],
-            "maximumFootDifference": 0.0298,
-            "minimumHandHeadDistance": 0.3647
-          },
-          "companion": {
-            "id": "rib-rib-stand1-action02-e1462a1619",
-            "sha256": "1ea96ba0f5b1082f0962c0279b7cd242665b64a35f60fd5a6ae4eb7a28e8a2ce",
-            "jsonSha256": "c75f33cd8921783d1399e30a3da8d198460e1e841bfded681430ff14ccf048d6",
-            "sourceAsset": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/R2T1AimisiMd10011/RibbonAnim/Rib_Stand1_Action02.uasset",
-            "duration": 31.766666,
-            "composition": "replace"
-          }
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 32.066666,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [],
-        "nativeSceneContract": "standing",
-        "capabilities": [],
-        "nearFaceOwnership": "none"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-complete",
-        "cancel": "return-entry",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "fixed",
-        "sourceSeconds": 31.666666,
-        "minimumSeconds": 32.066666,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 0,
-        "endSeconds": 0,
-        "loopSeconds": 0,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        }
-      },
-      "performanceContract": {
-        "total_seconds": false,
-        "variant_set": [
-          "exact"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "7d7d364e5da57ae0"
     },
     {
       "id": "native:902af91933f3a798",
@@ -22202,354 +20935,6 @@
       "channel": "body",
       "kind": "native",
       "name": "a5508661ae29831d"
-    },
-    {
-      "id": "native:f8ad9f06284a95af",
-      "groupId": "native:f8ad9f06284a95af",
-      "label": "DZ_Tanzuo03（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Tanzuo03",
-      "source": {
-        "kind": "native",
-        "groupId": "native:f8ad9f06284a95af",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Tanzuo03",
-        "clipSha256": {
-          "body-dz-tanzuo03-3571127c36": "bdd5a653a71ca6cafbd624d18c17f5209f8d1c05f7158affe684c7a82c275807"
-        }
-      },
-      "phases": [
-        "body-dz-tanzuo03-3571127c36"
-      ],
-      "phaseData": [
-        {
-          "id": "body-dz-tanzuo03-3571127c36",
-          "phase": "single",
-          "sourcePhase": "single",
-          "duration": 10,
-          "name": "DZ_Tanzuo03",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Tanzuo03.uasset",
-          "sha256": "bdd5a653a71ca6cafbd624d18c17f5209f8d1c05f7158affe684c7a82c275807",
-          "jsonSha256": "0ed5bcc62bf3699540a8306a88d9c73837eea0ab8bf5bef0fbc934f1eb708253",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.46588,
-              "footDifference": 0.00154,
-              "headHeight": 1.09313,
-              "handHeadDistance": 0.56777
-            },
-            "end": {
-              "time": 10,
-              "pelvisHeight": 0.46589,
-              "footDifference": 0.00154,
-              "headHeight": 1.09314,
-              "handHeadDistance": 0.56776
-            },
-            "pelvisHeightRange": [
-              0.46588,
-              0.46753
-            ],
-            "maximumFootDifference": 0.00158,
-            "minimumHandHeadDistance": 0.51214
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 10.4,
-      "requires": {
-        "support": "seated",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [
-          "chair"
-        ],
-        "seatSupported": true,
-        "nativeSceneContract": "seated",
-        "capabilities": [],
-        "nearFaceOwnership": "none"
-      },
-      "effects": {
-        "support": "seated",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-complete",
-        "cancel": "return-entry",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "seated",
-        "entrySupport": "seated",
-        "exitSupport": "seated",
-        "contactMode": "seated",
-        "middleSupport": "seated"
-      },
-      "durationContract": {
-        "mode": "fixed",
-        "sourceSeconds": 10,
-        "minimumSeconds": 10.4,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 0,
-        "endSeconds": 0,
-        "loopSeconds": 0,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        }
-      },
-      "performanceContract": {
-        "total_seconds": false,
-        "variant_set": [
-          "exact"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "f8ad9f06284a95af"
-    },
-    {
-      "id": "native:0dfd916932ec9a86",
-      "groupId": "native:0dfd916932ec9a86",
-      "label": "DZ_Chiru01_Loop（原生）",
-      "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Chiru01",
-      "source": {
-        "kind": "native",
-        "groupId": "native:0dfd916932ec9a86",
-        "family": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Chiru01",
-        "clipSha256": {
-          "body-dz-chiru01-start-3fec81b4de": "36aaf24df500eba056631a632d44e2bcf54b4c8a3108803ca6fcd97ad781d70d",
-          "body-dz-chiru01-loop-5ccaefa2cb": "63825ce012d8149f1b4dc6880db6df10d506e8d1b95d7f191468d8c30b3f3156",
-          "body-dz-chiru01-end-31c0e7e4ff": "d599ed32c7b9a3bf7c95c366303ca81d259f5f10b89b01443a90f51e7737af3c"
-        }
-      },
-      "phases": [
-        "body-dz-chiru01-start-3fec81b4de",
-        "body-dz-chiru01-loop-5ccaefa2cb",
-        "body-dz-chiru01-end-31c0e7e4ff"
-      ],
-      "phaseData": [
-        {
-          "id": "body-dz-chiru01-start-3fec81b4de",
-          "phase": "start",
-          "sourcePhase": "start",
-          "duration": 3.3,
-          "name": "DZ_Chiru01_Start",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Chiru01_Start.uasset",
-          "sha256": "36aaf24df500eba056631a632d44e2bcf54b4c8a3108803ca6fcd97ad781d70d",
-          "jsonSha256": "5f716f54e413d8e000d36b46d3267c164391b898f2635d8e8bbbc0ad4031e125",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.98768,
-              "footDifference": 0.00356,
-              "headHeight": 1.64785,
-              "handHeadDistance": 0.72151
-            },
-            "end": {
-              "time": 3.3,
-              "pelvisHeight": 0.95644,
-              "footDifference": 0.04489,
-              "headHeight": 1.59458,
-              "handHeadDistance": 0.29487
-            },
-            "pelvisHeightRange": [
-              0.94974,
-              0.98768
-            ],
-            "maximumFootDifference": 0.04522,
-            "minimumHandHeadDistance": 0.29116
-          },
-          "companion": null
-        },
-        {
-          "id": "body-dz-chiru01-loop-5ccaefa2cb",
-          "phase": "loop",
-          "sourcePhase": "loop",
-          "duration": 4,
-          "name": "DZ_Chiru01_Loop",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Chiru01_Loop.uasset",
-          "sha256": "63825ce012d8149f1b4dc6880db6df10d506e8d1b95d7f191468d8c30b3f3156",
-          "jsonSha256": "46fe15b6fc2b161e31eb4e610f84ad2f999c0cd7885892a7335799ac85f33b63",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.95644,
-              "footDifference": 0.04487,
-              "headHeight": 1.59458,
-              "handHeadDistance": 0.29486
-            },
-            "end": {
-              "time": 4,
-              "pelvisHeight": 0.95647,
-              "footDifference": 0.04482,
-              "headHeight": 1.59461,
-              "handHeadDistance": 0.29487
-            },
-            "pelvisHeightRange": [
-              0.95412,
-              0.95651
-            ],
-            "maximumFootDifference": 0.04513,
-            "minimumHandHeadDistance": 0.29356
-          },
-          "companion": null
-        },
-        {
-          "id": "body-dz-chiru01-end-31c0e7e4ff",
-          "phase": "end",
-          "sourcePhase": "end",
-          "duration": 11.9,
-          "name": "DZ_Chiru01_End",
-          "sourceAsset": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Chiru01_End.uasset",
-          "sha256": "d599ed32c7b9a3bf7c95c366303ca81d259f5f10b89b01443a90f51e7737af3c",
-          "jsonSha256": "6bfe85597bee40e3af1736e7b3424ec9e36f7f7555ed429615a0dcb14a9b73a7",
-          "geometry": {
-            "sampleCount": 9,
-            "normalization": "source thigh-calf-foot chain; source units cancel",
-            "start": {
-              "time": 0,
-              "pelvisHeight": 0.95646,
-              "footDifference": 0.04482,
-              "headHeight": 1.5946,
-              "handHeadDistance": 0.29487
-            },
-            "end": {
-              "time": 11.9,
-              "pelvisHeight": 0.98769,
-              "footDifference": 0.00356,
-              "headHeight": 1.64786,
-              "handHeadDistance": 0.72152
-            },
-            "pelvisHeightRange": [
-              0.90231,
-              0.98769
-            ],
-            "maximumFootDifference": 0.06057,
-            "minimumHandHeadDistance": 0.29487
-          },
-          "companion": null
-        }
-      ],
-      "sourceRootMovement": {
-        "maximumTravelCm": 0,
-        "maximumEndRotationDeg": 0,
-        "measuredOnly": true
-      },
-      "repeat": 1,
-      "duration": 19.599999999999998,
-      "requires": {
-        "support": "standing",
-        "hands": "free",
-        "freeHands": [
-          "L",
-          "R"
-        ],
-        "props": [],
-        "nativeSceneContract": "standing",
-        "capabilities": [],
-        "nearFaceOwnership": "source-exclusive"
-      },
-      "effects": {
-        "support": "standing",
-        "held": "preserve",
-        "root": "preserve"
-      },
-      "lifecycle": {
-        "entry": "supported-bridge",
-        "exit": "source-end",
-        "cancel": "phase-boundary-end",
-        "returnSeconds": 0.65,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "sourceEntrySupport": "standing",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "middleSupport": "standing"
-      },
-      "durationContract": {
-        "mode": "whole-source-cycles",
-        "sourceSeconds": 19.2,
-        "minimumSeconds": 19.599999999999998,
-        "entrySeconds": 0,
-        "settleSeconds": 0.4,
-        "startSeconds": 3.3,
-        "endSeconds": 11.9,
-        "loopSeconds": 4,
-        "returnSeconds": 0,
-        "preserveSourceSpeed": true,
-        "includesHandoff": true
-      },
-      "variants": {
-        "exact": {
-          "meaning": "同源完整阶段顺序，保持原幅度与源速度。"
-        },
-        "phase:body-dz-chiru01-loop-5ccaefa2cb": {
-          "meaning": "同一来源的循环阶段",
-          "phaseIds": [
-            "body-dz-chiru01-loop-5ccaefa2cb"
-          ]
-        }
-      },
-      "performanceContract": {
-        "total_seconds": true,
-        "variant_set": [
-          "exact",
-          "phase:body-dz-chiru01-loop-5ccaefa2cb"
-        ],
-        "micro_set": []
-      },
-      "faceAssociation": {
-        "kind": "attention",
-        "strength": 0.15
-      },
-      "admission": {
-        "status": "candidate",
-        "requiresTargetValidation": true,
-        "sourceMatched": true,
-        "visualAccepted": false,
-        "contactAccepted": false
-      },
-      "note": "保留原生身体与配套衣发的同一采样钟。准入依据实际支撑/路径/接触回执；近脸手不授权额外接触微动作。",
-      "executor": "native",
-      "channel": "body",
-      "kind": "native",
-      "name": "0dfd916932ec9a86"
     },
     {
       "id": "native:cb7da0b5a6b1f70d",
@@ -28805,9 +27190,23 @@
       "missingEnd": false,
       "policy": {
         "scope": "prohibited",
-        "reason": "用户禁止的精确 Stand2 来源，不用于待机、倾听、恢复、兜底或改名变体。"
+        "reason": "用户点名或截图指定移除该动作。"
       },
       "status": "prohibited",
+      "userReview": {
+        "key": "user-review-stand2-20261030",
+        "groupId": "native:8b2e802a90db3da3",
+        "name": "Stand2",
+        "sourceFamily": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand2",
+        "clipIds": [
+          "body-stand2-84d0c0a158"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -31443,13 +29842,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "props": []
+        "scope": "semantic-review",
+        "reason": "用户撤回旧解读，动作含义待确认。"
       },
-      "status": "candidate",
+      "status": "semantic-review",
+      "userReview": {
+        "key": "user-review-complain04-20261030",
+        "groupId": "native:9387f2034f744008",
+        "name": "Complain04",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Complain04",
+        "clipIds": [
+          "body-complain04-end-9c05f67b43",
+          "body-complain04-loop-827f77d3e6",
+          "body-complain04-start-67014e5444"
+        ],
+        "status": "pending",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户撤回旧解读，动作含义待确认。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -31719,9 +30131,26 @@
         "entrySupport": "standing",
         "exitSupport": "standing",
         "contactMode": "standing",
-        "props": []
+        "props": [],
+        "meaning": "身体前倾说话（原生）"
       },
       "status": "candidate",
+      "userReview": {
+        "key": "user-review-shy02-20261030",
+        "groupId": "native:c2e6400f4b7a11bc",
+        "name": "Shy02",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Shy02",
+        "clipIds": [
+          "body-shy02-end-a11162eb98",
+          "body-shy02-loop-86612cdd8c",
+          "body-shy02-start-c87b778462"
+        ],
+        "status": "confirmed",
+        "meaning": "身体前倾说话",
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户观看后确认：身体前倾说话。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -32935,13 +31364,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "props": []
+        "scope": "semantic-review",
+        "reason": "用户撤回旧解读，动作含义待确认。"
       },
-      "status": "candidate",
+      "status": "semantic-review",
+      "userReview": {
+        "key": "user-review-wuzui01-20261030",
+        "groupId": "native:9c4593a540925363",
+        "name": "Wuzui01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui01",
+        "clipIds": [
+          "body-wuzui01-end-8b7eb54cbc",
+          "body-wuzui01-loop-8a924ef196",
+          "body-wuzui01-start-7ea76d5513"
+        ],
+        "status": "pending",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户撤回旧解读，动作含义待确认。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -33071,13 +31513,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "props": []
+        "scope": "semantic-review",
+        "reason": "用户撤回旧解读，动作含义待确认。"
       },
-      "status": "candidate",
+      "status": "semantic-review",
+      "userReview": {
+        "key": "user-review-wuzui02-20261030",
+        "groupId": "native:f028ae3669e3164b",
+        "name": "Wuzui02",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Wuzui02",
+        "clipIds": [
+          "body-wuzui02-end-126f9e6a29",
+          "body-wuzui02-loop-ac931c9867",
+          "body-wuzui02-start-ea77396c2f"
+        ],
+        "status": "pending",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户撤回旧解读，动作含义待确认。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -33277,9 +31732,26 @@
         "entrySupport": "standing",
         "exitSupport": "standing",
         "contactMode": "standing",
-        "props": []
+        "props": [],
+        "meaning": "哭泣（原生）"
       },
       "status": "candidate",
+      "userReview": {
+        "key": "user-review-dz_tanqi01-20261030",
+        "groupId": "native:371b5ec2ffb45558",
+        "name": "DZ_Tanqi01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Tanqi01",
+        "clipIds": [
+          "body-dz-tanqi01-end-05246cd8c6",
+          "body-dz-tanqi01-loop-20ae225956",
+          "body-dz-tanqi01-start-7dd74b2db7"
+        ],
+        "status": "confirmed",
+        "meaning": "哭泣",
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户观看后确认：哭泣。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -35720,16 +34192,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "seated",
-        "contactMode": "sit-transfer",
-        "props": [
-          "chair"
-        ],
-        "middleSupport": "seated"
+        "scope": "prohibited",
+        "reason": "用户确认该动作需要两个人，移出单角色动作库。"
       },
-      "status": "candidate",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_sit_baoyuan01-20261030",
+        "groupId": "native:d387689ca7480266",
+        "name": "DZ_Sit_Baoyuan01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Sit_Baoyuan01",
+        "clipIds": [
+          "body-dz-sit-baoyuan01-end-10041149e2",
+          "body-dz-sit-baoyuan01-loop-ded61639ea",
+          "body-dz-sit-baoyuan01-start-974e682fc2"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户确认该动作需要两个人，移出单角色动作库。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -37616,13 +36098,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "需要与源手位一致的磁带及握持回执。",
-        "objects": [
-          "cassette"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-stand_cidai01-20261030",
+        "groupId": "native:a7fae56b726017f3",
+        "name": "Stand_Cidai01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Stand_Cidai01",
+        "clipIds": [
+          "body-stand-cidai01-7695a086a0"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -37717,13 +36210,25 @@
       "missingStart": true,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "需要与源手位一致的磁带及握持回执。",
-        "objects": [
-          "cassette"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-run_cidai-20261030",
+        "groupId": "native:fabb7cc7975abc36",
+        "name": "Run_cidai",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Run_cidai",
+        "clipIds": [
+          "body-run-cidai-end-8b47110cc1",
+          "body-run-cidai-loop-f78ea513f9"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -37783,13 +36288,24 @@
       "missingStart": false,
       "missingEnd": true,
       "policy": {
-        "scope": "external-scene",
-        "reason": "需要真实话筒及交接对象。",
-        "objects": [
-          "microphone"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-take_mai01-20261030",
+        "groupId": "native:b3995daef6768540",
+        "name": "Take_Mai01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/Take_Mai01",
+        "clipIds": [
+          "body-take-mai01-start-ba81d303d8"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -37849,16 +36365,24 @@
       "missingStart": false,
       "missingEnd": true,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "table-contact",
-        "props": [
-          "table",
-          "laptop"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "candidate",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-keboard01-20261030",
+        "groupId": "native:fdc84d12a3151b50",
+        "name": "keboard01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/keboard01",
+        "clipIds": [
+          "body-keboard01-start-cc75486ba0"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -38118,13 +36642,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "原剧情应援路线与对象不在当前单角色桌椅场景。",
-        "objects": [
-          "fanclub-scene"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-aimisi_fanclub-20261030",
+        "groupId": "native:e3982a0f20f077d3",
+        "name": "Aimisi_Fanclub",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/ShengtaiAnim/3_1/Aimisi_Fanclub/RoleNPC/FemaleM/Aimisi/BaseAnim/Aimisi_Fanclub",
+        "clipIds": [
+          "body-aimisi-fanclub-6e686ba208"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -38191,13 +36726,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "源姿态以载具及其接触点为前提；当前没有载具。",
-        "objects": [
-          "vehicle"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-motorpassenger_stand-20261030",
+        "groupId": "native:2c08e1587c70338f",
+        "name": "MotorPassenger_Stand",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/fuyong/MotorPassenger_Stand",
+        "clipIds": [
+          "body-motorpassenger-stand-799e288751"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -38257,13 +36803,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "源姿态以载具及其接触点为前提；当前没有载具。",
-        "objects": [
-          "vehicle"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-mortor_zhixiang01-20261030",
+        "groupId": "native:e0f98b6937ae7581",
+        "name": "Mortor_Zhixiang01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Mortor_Zhixiang01",
+        "clipIds": [
+          "body-mortor-zhixiang01-303530d313"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -38358,13 +36915,25 @@
       "missingStart": true,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "源姿态以载具及其接触点为前提；当前没有载具。",
-        "objects": [
-          "vehicle"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_motor_shouji01-20261030",
+        "groupId": "native:672f2ae8da782c1e",
+        "name": "DZ_Motor_shouji01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Motor_shouji01",
+        "clipIds": [
+          "body-dz-motor-shouji01-end-af1a813cbf",
+          "body-dz-motor-shouji01-loop-c142d7daa6"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -38424,13 +36993,24 @@
       "missingStart": true,
       "missingEnd": true,
       "policy": {
-        "scope": "external-scene",
-        "reason": "源姿态以载具及其接触点为前提；当前没有载具。",
-        "objects": [
-          "vehicle"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-motor_dajian01-20261030",
+        "groupId": "native:7ace2eeca3df3164",
+        "name": "Motor_Dajian01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Motor_Dajian01",
+        "clipIds": [
+          "body-motor-dajian01-loop-dc02c03b56"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -38560,13 +37140,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "需要第二人物或被接触对象的真实锚点、让位和交接。",
-        "objects": [
-          "partner"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-touch01-20261030",
+        "groupId": "native:23f5575235298821",
+        "name": "Touch01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Touch01",
+        "clipIds": [
+          "body-touch01-end-1002ba605f",
+          "body-touch01-loop-4fb7e8a8fe",
+          "body-touch01-start-b7c7611287"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -40416,13 +39009,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "props": []
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "candidate",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-stand1_action01-20261030",
+        "groupId": "native:0821a125b3bc93c6",
+        "name": "Stand1_Action01",
+        "sourceFamily": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action01",
+        "clipIds": [
+          "body-stand1-action01-39d6c0f416"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -40489,13 +39093,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "props": []
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "candidate",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-stand1_action02-20261030",
+        "groupId": "native:7d7d364e5da57ae0",
+        "name": "Stand1_Action02",
+        "sourceFamily": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand1_Action02",
+        "clipIds": [
+          "body-stand1-action02-68a07af608"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -40562,13 +39177,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "实测身体不是地面直立支撑；需要原特殊悬空/承接现场。",
-        "objects": [
-          "special-support"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-xa_loop_stand-20261030",
+        "groupId": "native:899df122e85e24ad",
+        "name": "XA_Loop_Stand",
+        "sourceFamily": "Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/XA_Loop_Stand",
+        "clipIds": [
+          "body-xa-loop-stand-76953dcaa5"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -43096,15 +41722,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "seated",
-        "exitSupport": "seated",
-        "contactMode": "seated",
-        "props": [
-          "chair"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "candidate",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_tanzuo03-20261030",
+        "groupId": "native:f8ad9f06284a95af",
+        "name": "DZ_Tanzuo03",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Tanzuo03",
+        "clipIds": [
+          "body-dz-tanzuo03-3571127c36"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -43234,13 +41869,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "single-character",
-        "entrySupport": "standing",
-        "exitSupport": "standing",
-        "contactMode": "standing",
-        "props": []
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "candidate",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_chiru01-20261030",
+        "groupId": "native:0dfd916932ec9a86",
+        "name": "DZ_Chiru01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Chiru01",
+        "clipIds": [
+          "body-dz-chiru01-end-31c0e7e4ff",
+          "body-dz-chiru01-loop-5ccaefa2cb",
+          "body-dz-chiru01-start-3fec81b4de"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -43370,13 +42018,26 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "入水与游动的支撑关系不能在平地冒充。",
-        "objects": [
-          "water"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_rushui01-20261030",
+        "groupId": "native:c4d8560a755b676d",
+        "name": "DZ_Rushui01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/Dongbu/DZ_Rushui01",
+        "clipIds": [
+          "body-dz-rushui01-end-b53ac20a80",
+          "body-dz-rushui01-loop-d8b59f6de0",
+          "body-dz-rushui01-start-86df900d93"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -44250,13 +42911,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "飞行姿态没有地面支撑，当前场景没有飞行能力。",
-        "objects": [
-          "flight"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_fly01-20261030",
+        "groupId": "native:80df4ff9629d8d29",
+        "name": "DZ_Fly01",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/DZ_Fly01",
+        "clipIds": [
+          "body-dz-fly01-e8306d39ba"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -44316,13 +42988,24 @@
       "missingStart": false,
       "missingEnd": false,
       "policy": {
-        "scope": "external-scene",
-        "reason": "原生后仰悬托姿态需要躯干承接面或另一承接者；当前椅子不是该承接关系。",
-        "objects": [
-          "reclining-support"
-        ]
+        "scope": "prohibited",
+        "reason": "用户点名或截图指定移除该动作。"
       },
-      "status": "external-scene",
+      "status": "prohibited",
+      "userReview": {
+        "key": "user-review-dz_hunmi-20261030",
+        "groupId": "native:843267a93253e5fc",
+        "name": "DZ_Hunmi",
+        "sourceFamily": "Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/DZ_Hunmi",
+        "clipIds": [
+          "body-dz-hunmi-09d8e97640"
+        ],
+        "status": "excluded",
+        "meaning": null,
+        "reviewedAt": "2026-10-30",
+        "reviewedBy": "user",
+        "reason": "用户点名或截图指定移除该动作。"
+      },
       "review": {
         "stage": "source-and-kinematic-inspection",
         "visualAccepted": false,
@@ -44335,10 +43018,10 @@
   "coverage": {
     "conversation": 73,
     "activities": 76,
-    "nativeRegistered": 109,
+    "nativeRegistered": 100,
     "nativeSources": 149,
     "supported": 1,
     "controls": 3
   },
-  "hash": "sha256:88c8ca9dc4fde9d8da4e86e768d97a32f1fc2dd92ce7a7eb4f129232b469116b"
+  "hash": "sha256:20fb038aabeb68169eb8dabefdc17592dec8a1b36b01c45fc2fbee71ac711f55"
 }

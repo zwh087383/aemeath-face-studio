@@ -2,6 +2,8 @@
  * Keep source identity on renamed, mirrored or retimed derivatives.
  * Archive/resource inspection pages are not autonomous scheduling entrypoints.
  */
+import { NATIVE_MOTION_REVIEWS, nativeMotionReviewFor } from './native-motion-review.js';
+
 export const USER_MOTION_EXCLUSIONS=Object.freeze([
   Object.freeze({
     key:'user-excluded-raised-hand-stand2-20261024',
@@ -10,13 +12,16 @@ export const USER_MOTION_EXCLUSIONS=Object.freeze([
     sourceFamily:'Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/Stand2',
     reason:'用户禁止截图中持续抬起一只手的 Stand2 姿态；不得用于待机、倾听、恢复或兜底，也不得以改名、镜像或变速重新启用。',
   }),
+  ...NATIVE_MOTION_REVIEWS.filter(row => row.status === 'excluded' && row.name !== 'Stand2'),
 ]);
 
 const normalizeSource=value=>String(value??'').replaceAll('\\','/').replace(/\.uasset$/i,'').toLowerCase();
 
 export function motionExclusionFor(record={}){
-  const ids=[record.id,record.sourceId,record.groupId,...(record.memberIds??[]),...(record.sourceIds??[])];
+  const ids=[record.id,record.sourceId,record.groupId,...(record.memberIds??[]),...(record.sourceIds??[])].filter(id=>typeof id==='string');
   const paths=[record.sourceAsset,record.sourceFamily,record.sourceRef,record.originalSourceAsset].filter(Boolean).map(normalizeSource);
+  const reviewed = nativeMotionReviewFor(record);
+  if (reviewed?.status === 'excluded') return USER_MOTION_EXCLUSIONS.find(rule => rule.groupId === reviewed.groupId);
   return USER_MOTION_EXCLUSIONS.find(rule=>ids.some(id=>id===rule.groupId||id===rule.clipId)||paths.includes(normalizeSource(rule.sourceFamily)))??null;
 }
 

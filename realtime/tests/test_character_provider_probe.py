@@ -51,6 +51,6 @@ def test_complete_tools_use_existing_schema_and_evidence_checks():
     trace.complete("perform_actions", '{"operation":"append","actions":[{"action":"illegal","anchor":"immediate"}]}')
     assert [x["valid"] for x in trace.value["calls"]] == [True, False, False]
     catalog = m.protocol.load_catalog()
-    assert len(catalog) == 262
+    assert len(catalog) == 253
     assert {"native:stand01", "native:thinking01", "activity:read_seated",
             "activity:approach_desk_seated", "action:chin_tap"} <= {row["id"] for row in catalog}

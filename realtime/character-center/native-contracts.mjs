@@ -1,5 +1,6 @@
 import { NATIVE_SOURCE_INVENTORY } from './native-inventory-data.mjs';
 import { assertMotionAllowed } from '../../preview/core/character-motion-policy.js';
+import { nativeMotionReviewFor } from '../../preview/core/native-motion-review.js';
 
 const BODY='Client/Content/Aki/Sequence/SequenceAnim/DialogAnim/FemaleM/Aimisi/Body/';
 const COMMON='Client/Content/Aki/Character/Role/FemaleM/Aimisi/CommonAnim/';
@@ -67,8 +68,13 @@ add(BODY,'DZ_Hunmi',external('原生后仰悬托姿态需要躯干承接面或�
 
 const supportAt=geometry=>geometry.start.pelvisHeight>.8?'standing-candidate':geometry.start.pelvisHeight>.35?'seated-candidate':'low-or-reclining';
 export const NATIVE_INVENTORY=NATIVE_SOURCE_INVENTORY.groups.map(group=>{
-  const policy=policies.get(group.sourceFamily);if(!policy)throw Error('Unreviewed exact native source '+group.sourceFamily);
+  const sourcePolicy=policies.get(group.sourceFamily);if(!sourcePolicy)throw Error('Unreviewed exact native source '+group.sourceFamily);
+  const userReview=nativeMotionReviewFor(group);
+  const policy=userReview?.status==='excluded'?blocked(userReview.reason)
+    :userReview?.status==='pending'?{scope:'semantic-review',reason:userReview.reason}
+    :userReview?.status==='confirmed'?{...sourcePolicy,meaning:userReview.meaning+'（原生）'}:sourcePolicy;
   return {...group,policy:{...policy},status:policy.scope==='single-character'?'candidate':policy.scope,
+    ...(userReview?{userReview}:{}),
     review:{stage:'source-and-kinematic-inspection',visualAccepted:false,contactAccepted:false,
       evidence:'Fingerprint-matched source samples; exact source contract. Runtime target/scene validation is mandatory.',
       entryPoseClass:supportAt(group.phases[0].geometry)}};
@@ -78,6 +84,7 @@ if(policies.size!==NATIVE_INVENTORY.length)throw Error('Native policy/inventory 
 export function compileNativeGroups(inventory=NATIVE_INVENTORY) {
   const result={};
   for(const group of inventory) {
+    if(['excluded','pending'].includes(nativeMotionReviewFor(group)?.status))continue;
     if(group.policy.scope!=='single-character')continue;
     assertMotionAllowed(group);
     const policy=group.policy,phaseData=group.phases,hasEnd=phaseData.some(p=>p.phase==='end'),loops=phaseData.filter(p=>p.phase==='loop');

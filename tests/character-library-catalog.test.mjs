@@ -98,7 +98,7 @@ test('every single-loop permission resolves to its already exercised exact route
     assert.equal(planned.phaseData.find(p=>p.phase==='loop').id,id.slice(6));
     if(loops.length===1){assert.deepEqual(planned.phaseData,def.phaseData);assert.ok(Math.abs(planned.actualSeconds-def.duration)<1e-9);sameRoute++;}else multi++;
   }
-  assert.equal(sameRoute,73);assert.equal(multi,2);
+  assert.equal(sameRoute,68);assert.equal(multi,2);
   const long=resolveNativePerformance(NATIVE_GROUPS['native:thinking01'],{total_seconds:86400});assert.ok(long.repeat>10000);
 });
 

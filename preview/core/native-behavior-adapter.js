@@ -3,6 +3,7 @@ import {NativeClip,NativeRetarget} from './native-motion.js';
 import {NativeResourceLayer} from './native-resource-layer.js';
 import {findNativeRibbonCompanion} from './native-companion.js';
 import {applyNativePose,captureNativePose,cloneNativePose} from './native-behavior.js';
+import {assertMotionAllowed} from './character-motion-policy.js';
 
 const captureBind=root=>{const rows=[];root.updateMatrixWorld(true);root.traverse(node=>{if(node.isBone&&!node.userData.nativeClothVirtual)rows.push({node,p:node.position.clone(),q:node.quaternion.clone(),s:node.scale.clone(),wq:node.getWorldQuaternion(new THREE.Quaternion())});});return rows;};
 const restore=(rows,root)=>{for(const r of rows){r.node.position.copy(r.p);r.node.quaternion.copy(r.q);r.node.scale.copy(r.s);}root.updateMatrixWorld(true);};
@@ -32,6 +33,7 @@ export class NativeBehaviorAdapter {
     const inputs=await Promise.all(pending.map(async id=>{
       const descriptor=this.manifest.clips.find(r=>r.id===id&&r.resourceKind==='body'&&r.status==='ready');
       if(!descriptor)throw Error('Native body is not ready: '+id);
+      assertMotionAllowed(descriptor);
       const companion=findNativeRibbonCompanion(descriptor,this.manifest.clips);
       const [bodyData,ribbonData]=await Promise.all([fetch(id),companion?fetch(companion.id):null]);
       return {id,descriptor,companion,bodyData,ribbonData};
@@ -99,6 +101,7 @@ export class NativeBehaviorAdapter {
 }
 
 export function buildNativeBehaviorPlan(group,manifest) {
+  assertMotionAllowed(group);
   if(group.kind!=='native-body-family'||!group.sourceFamily||!Array.isArray(group.memberIds))throw Error('Invalid source family');
   const rows=group.sources.filter(r=>group.memberIds.includes(r.id));
   if(rows.length!==group.memberIds.length)throw Error('Missing source-family member');
@@ -109,6 +112,7 @@ export function buildNativeBehaviorPlan(group,manifest) {
   for(const phase of phases){const candidates=rows.filter(r=>phaseOf(r)===phase).sort((a,b)=>a.phase.localeCompare(b.phase,undefined,{numeric:true})||a.id.localeCompare(b.id));for(const item of candidates){
     const actual=manifest.clips.find(r=>r.id===item.id&&r.status==='ready'&&r.resourceKind==='body');
     if(!actual||actual.sourceAsset!==item.sourceRef||actual.sourceAsset.replace(/\.uasset$/i,'').replace(/_(?:Start|Loop\d*|End)$/i,'')!==group.sourceFamily)throw Error('Foreign/missing source phase '+item.id);
+    assertMotionAllowed(actual);
     output.push({id:item.id,phase,sourcePhase:item.phase,duration:actual.duration,name:actual.name,sourceAsset:actual.sourceAsset});
   }}
   if(!output.length)throw Error('Empty native family');return output;
